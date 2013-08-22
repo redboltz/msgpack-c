@@ -21,11 +21,6 @@ else
 	preprocess src/msgpack/type/define.hpp
 	preprocess src/msgpack/zone.hpp
 fi
-cp -f sysdep.h          src/msgpack/
-cp -f pack_define.h     src/msgpack/
-cp -f pack_template.h   src/msgpack/
-cp -f unpack_define.h   src/msgpack/
-cp -f unpack_template.h src/msgpack/
 cp -f cases.mpac           test/
 cp -f cases_compact.mpac   test/
 
