@@ -117,5 +117,6 @@ AC_OUTPUT([Makefile
 		   msgpack.pc
 		   src/Makefile
 		   src/msgpack/version.h
+		   src/msgpack/version.hpp
 		   test/Makefile])
 
