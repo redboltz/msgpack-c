@@ -150,6 +150,8 @@ public:
 	zone(size_t chunk_size = MSGPACK_ZONE_CHUNK_SIZE);
 
 public:
+	static zone* create(size_t chunk_size);
+	static void destroy(zone* zone);
 	void* malloc(size_t size);
 	void* malloc_no_align(size_t size);
 
@@ -175,7 +177,27 @@ private:
 	void* malloc_expand(size_t size);
 };
 
+inline zone* zone::create(size_t chunk_size)
+{
+	zone* z = (zone*)::malloc(sizeof(zone) + chunk_size);
+	if (!z) {
+		return nullptr;
+	}
+	try {
+		new (z) zone(chunk_size);
+	}
+	catch (...) {
+		::free(z);
+		return nullptr;
+	}
+	return z;
+}
 
+inline void zone::destroy(zone* z)
+{
+	z->~zone();
+	::free(z);
+}
 
 inline zone::zone(size_t chunk_size):chunk_size_(chunk_size), chunk_list_(chunk_size_)
 {
@@ -210,7 +232,7 @@ inline void* zone::malloc_expand(size_t size)
 		sz *= 2;
 	}
 
-	chunk* c = (chunk*)malloc(sizeof(chunk) + sz);
+	chunk* c = (chunk*)::malloc(sizeof(chunk) + sz);
 
 	char* ptr = ((char*)c) + sizeof(chunk);
 
