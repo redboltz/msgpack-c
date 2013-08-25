@@ -41,6 +41,8 @@ public:
 		stream_.zalloc = Z_NULL;
 		stream_.zfree = Z_NULL;
 		stream_.opaque = Z_NULL;
+		stream_.next_out = Z_NULL;
+		stream_.avail_out = 0;
 		if(deflateInit(&stream_, level) != Z_OK) {
 			throw std::bad_alloc();
 		}
