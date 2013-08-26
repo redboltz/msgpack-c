@@ -178,21 +178,17 @@ inline _msgpack_atomic_counter_t get_count(void* buffer)
 	return *(volatile _msgpack_atomic_counter_t*)buffer;
 }
 
-inline void template_init(template_context* ctx)
+inline void template_init(template_context& ctx)
 {
-	ctx->cs = CS_HEADER;
-	ctx->trail = 0;
-	ctx->top = 0;
-	/*
-	ctx->stack = ctx->embed_stack;
-	ctx->stack_size = MSGPACK_EMBED_STACK_SIZE;
-	*/
-	ctx->stack[0].obj = template_callback_root(&ctx->user);
+	ctx.cs = CS_HEADER;
+	ctx.trail = 0;
+	ctx.top = 0;
+	ctx.stack[0].obj = template_callback_root(&ctx.user);
 }
 
-::msgpack::object template_data(template_context* ctx)
+::msgpack::object template_data(template_context const& ctx)
 {
-	return (ctx)->stack[0].obj;
+	return ctx.stack[0].obj;
 }
 
 template <typename T>
@@ -201,7 +197,7 @@ inline unsigned int next_cs(T p)
 	return (unsigned int)*p & 0x1f;
 }
 
-int template_execute(template_context* ctx, const char* data, size_t len, size_t* off)
+int template_execute(template_context& ctx, const char* data, size_t len, size_t* off)
 {
 	assert(len >= *off);
 
@@ -209,14 +205,14 @@ int template_execute(template_context* ctx, const char* data, size_t len, size_t
 	const unsigned char* const pe = (unsigned char*)data + len;
 	const void* n = nullptr;
 
-	unsigned int trail = ctx->trail;
-	unsigned int cs = ctx->cs;
-	unsigned int top = ctx->top;
-	detail::template_unpack_stack* stack = ctx->stack;
+	unsigned int trail = ctx.trail;
+	unsigned int cs = ctx.cs;
+	unsigned int top = ctx.top;
+	detail::template_unpack_stack* stack = ctx.stack;
 	/*
-	unsigned int stack_size = ctx->stack_size;
+	unsigned int stack_size = ctx.stack_size;
 	*/
-	unpack_user* user = &ctx->user;
+	unpack_user* user = &ctx.user;
 
 	::msgpack::object obj;
 	detail::template_unpack_stack* c = nullptr;
@@ -490,9 +486,9 @@ _out:
 	goto _end;
 
 _end:
-	ctx->cs = cs;
-	ctx->trail = trail;
-	ctx->top = top;
+	ctx.cs = cs;
+	ctx.trail = trail;
+	ctx.top = top;
 	*off = p - (const unsigned char*)data;
 
 	return ret;
@@ -638,7 +634,7 @@ private:
 	size_t parsed_;
 	zone* z_;
 	size_t initial_buffer_size_;
-	detail::template_context* ctx_;
+	detail::template_context ctx_;
 
 private:
 	unpacker(const unpacker&);
@@ -677,15 +673,8 @@ inline unpacker::unpacker(size_t initial_buffer_size)
 		throw std::bad_alloc();
 	}
 
-	void* ctx = ::malloc(sizeof(detail::template_context));
-	if(!ctx) {
-		::free(buffer);
-		throw std::bad_alloc();
-	}
-
 	zone* z = zone::create(MSGPACK_ZONE_CHUNK_SIZE);
 	if(!z) {
-		::free(ctx);
 		::free(buffer);
 		throw std::bad_alloc();
 	}
@@ -697,19 +686,17 @@ inline unpacker::unpacker(size_t initial_buffer_size)
 	parsed_ = 0;
 	initial_buffer_size_ = initial_buffer_size;
 	z_ = z;
-	ctx_ = (detail::template_context*)ctx;
 
 	detail::init_count(buffer_);
 
 	detail::template_init(ctx_);
-	ctx_->user.z = z_;
-	ctx_->user.referenced = false;
+	ctx_.user.z = z_;
+	ctx_.user.referenced = false;
 }
 
 inline unpacker::~unpacker()
 {
 	zone::destroy(z_);
-	::free(ctx_);
 	detail::decl_count(buffer_);
 }
 
@@ -723,7 +710,7 @@ inline void unpacker::reserve_buffer(size_t size)
 inline void unpacker::expand_buffer(size_t size)
 {
 	if(used_ == off_ && detail::get_count(buffer_) == 1
-			&& !ctx_->user.referenced) {
+			&& !ctx_.user.referenced) {
 		// rewind buffer
 		free_ += used_ - COUNTER_SIZE;
 		used_ = COUNTER_SIZE;
@@ -762,7 +749,7 @@ inline void unpacker::expand_buffer(size_t size)
 
 		::memcpy(tmp+COUNTER_SIZE, buffer_ + off_, not_parsed);
 
-		if(ctx_->user.referenced) {
+		if(ctx_.user.referenced) {
 			try {
 				z_->push_finalizer(&detail::decl_count, buffer_);
 			}
@@ -770,7 +757,7 @@ inline void unpacker::expand_buffer(size_t size)
 				::free(tmp);
 				throw;
 			}
-			ctx_->user.referenced = false;
+			ctx_.user.referenced = false;
 		} else {
 			detail::decl_count(buffer_);
 		}
@@ -861,7 +848,7 @@ inline zone* unpacker::release_zone()
 
 	zone* old = z_;
 	z_ = r;
-	ctx_->user.z = z_;
+	ctx_.user.z = z_;
 
 	return old;
 }
@@ -873,13 +860,13 @@ inline void unpacker::reset_zone()
 
 inline bool unpacker::flush_zone()
 {
-	if(ctx_->user.referenced) {
+	if(ctx_.user.referenced) {
 		try {
 			z_->push_finalizer(&detail::decl_count, buffer_);
 		} catch (...) {
 			return false;
 		}
-		ctx_->user.referenced = false;
+		ctx_.user.referenced = false;
 
 		detail::incr_count(buffer_);
 	}
@@ -939,12 +926,12 @@ unpack_imp(const char* data, size_t len, size_t* off,
 	}
 
 	detail::template_context ctx;
-	detail::template_init(&ctx);
+	detail::template_init(ctx);
 
 	ctx.user.z = result_zone;
 	ctx.user.referenced = false;
 
-	int e = detail::template_execute(&ctx, data, len, &noff);
+	int e = detail::template_execute(ctx, data, len, &noff);
 	if(e < 0) {
 		return UNPACK_PARSE_ERROR;
 	}
@@ -955,7 +942,7 @@ unpack_imp(const char* data, size_t len, size_t* off,
 		return UNPACK_CONTINUE;
 	}
 
-	*result = detail::template_data(&ctx);
+	*result = detail::template_data(ctx);
 
 	if(noff < len) {
 		return UNPACK_EXTRA_BYTES;
