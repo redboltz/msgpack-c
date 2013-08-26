@@ -26,9 +26,6 @@
 #include <stdexcept>
 
 
-#define CTX_CAST(m) ((detail::template_context*)(m))
-#define CTX_REFERENCED(mpac) CTX_CAST((mpac)->ctx_)->user.referenced
-
 #define COUNTER_SIZE (sizeof(_msgpack_atomic_counter_t))
 
 #ifndef MSGPACK_UNPACKER_INIT_BUFFER_SIZE
@@ -641,7 +638,7 @@ private:
 	size_t parsed_;
 	zone* z_;
 	size_t initial_buffer_size_;
-	void* ctx_;
+	detail::template_context* ctx_;
 
 private:
 	unpacker(const unpacker&);
@@ -700,13 +697,13 @@ inline unpacker::unpacker(size_t initial_buffer_size)
 	parsed_ = 0;
 	initial_buffer_size_ = initial_buffer_size;
 	z_ = z;
-	ctx_ = ctx;
+	ctx_ = (detail::template_context*)ctx;
 
 	detail::init_count(buffer_);
 
-	detail::template_init(CTX_CAST(ctx_));
-	CTX_CAST(ctx_)->user.z = z_;
-	CTX_CAST(ctx_)->user.referenced = false;
+	detail::template_init(ctx_);
+	ctx_->user.z = z_;
+	ctx_->user.referenced = false;
 }
 
 inline unpacker::~unpacker()
@@ -726,7 +723,7 @@ inline void unpacker::reserve_buffer(size_t size)
 inline void unpacker::expand_buffer(size_t size)
 {
 	if(used_ == off_ && detail::get_count(buffer_) == 1
-			&& !CTX_REFERENCED(this)) {
+			&& !ctx_->user.referenced) {
 		// rewind buffer
 		free_ += used_ - COUNTER_SIZE;
 		used_ = COUNTER_SIZE;
@@ -765,7 +762,7 @@ inline void unpacker::expand_buffer(size_t size)
 
 		::memcpy(tmp+COUNTER_SIZE, buffer_ + off_, not_parsed);
 
-		if(CTX_REFERENCED(this)) {
+		if(ctx_->user.referenced) {
 			try {
 				z_->push_finalizer(&detail::decl_count, buffer_);
 			}
@@ -773,7 +770,7 @@ inline void unpacker::expand_buffer(size_t size)
 				::free(tmp);
 				throw;
 			}
-			CTX_REFERENCED(this) = false;
+			ctx_->user.referenced = false;
 		} else {
 			detail::decl_count(buffer_);
 		}
@@ -838,7 +835,7 @@ inline bool unpacker::execute()
 inline int unpacker::execute_imp()
 {
 	size_t off = off_;
-	int ret = detail::template_execute(CTX_CAST(ctx_),
+	int ret = detail::template_execute(ctx_,
 			buffer_, used_, &off_);
 	if(off_ > off) {
 		parsed_ += off_ - off;
@@ -848,7 +845,7 @@ inline int unpacker::execute_imp()
 
 inline object unpacker::data()
 {
-	return template_data(CTX_CAST(ctx_));
+	return template_data(ctx_);
 }
 
 inline zone* unpacker::release_zone()
@@ -864,7 +861,7 @@ inline zone* unpacker::release_zone()
 
 	zone* old = z_;
 	z_ = r;
-	CTX_CAST(ctx_)->user.z = z_;
+	ctx_->user.z = z_;
 
 	return old;
 }
@@ -876,13 +873,13 @@ inline void unpacker::reset_zone()
 
 inline bool unpacker::flush_zone()
 {
-	if(CTX_REFERENCED(this)) {
+	if(ctx_->user.referenced) {
 		try {
 			z_->push_finalizer(&detail::decl_count, buffer_);
 		} catch (...) {
 			return false;
 		}
-		CTX_REFERENCED(this) = false;
+		ctx_->user.referenced = false;
 
 		detail::incr_count(buffer_);
 	}
@@ -892,7 +889,7 @@ inline bool unpacker::flush_zone()
 
 inline void unpacker::reset()
 {
-	detail::template_init(CTX_CAST(ctx_));
+	detail::template_init(ctx_);
 	// don't reset referenced flag
 	parsed_ = 0;
 }
