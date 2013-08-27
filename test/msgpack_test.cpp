@@ -893,7 +893,7 @@ TEST(MSGPACK, vrefbuffer_int64)
         obj.convert(&val);                                              \
         EXPECT_EQ(*it, val);                                            \
         ++it;                                                           \
-        msgpack_zone_free(life);                                        \
+        msgpack::zone::destroy(life);                                   \
       }                                                                 \
       p += sz;                                                          \
     }                                                                   \
