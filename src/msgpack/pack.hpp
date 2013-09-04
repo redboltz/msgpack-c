@@ -109,7 +109,7 @@ private:
 template <typename Stream, typename T>
 inline void pack(Stream* s, const T& v)
 {
-	packer<Stream>(s).pack(v);
+	packer<Stream>(*s).pack(v);
 }
 
 template <typename Stream, typename T>
@@ -117,23 +117,6 @@ inline void pack(Stream& s, const T& v)
 {
 	packer<Stream>(s).pack(v);
 }
-
-
-#define msgpack_pack_inline_func(name) \
-	template <typename Stream> \
-	inline void packer<Stream>::_pack ## name
-
-#define msgpack_pack_inline_func_cint(name) \
-	template <typename Stream> \
-	inline void packer<Stream>::_pack ## name
-
-#define msgpack_pack_inline_func_fixint(name) \
-	template <typename Stream> \
-	inline void packer<Stream>::_pack_fix ## name
-
-#define msgpack_pack_user Stream&
-
-#define msgpack_pack_append_buffer append_buffer
 
 #if defined(__LITTLE_ENDIAN__)
 #define TAKE8_8(d)  ((uint8_t*)&d)[0]
@@ -194,70 +177,70 @@ template <typename Stream>
 inline packer<Stream>& packer<Stream>::pack_fix_uint8(uint8_t d)
 {
 	unsigned char buf[2] = {0xcc, TAKE8_8(d)};
-    append_buffer(buf, 2);
-    return *this; 
+	append_buffer(buf, 2);
+	return *this;
 }
 
 template <typename Stream>
 inline packer<Stream>& packer<Stream>::pack_fix_uint16(uint16_t d)
-{ 
+{
 	unsigned char buf[3];
 	buf[0] = 0xcd; _msgpack_store16(&buf[1], d);
-    append_buffer(buf, 3);
-    return *this;
+	append_buffer(buf, 3);
+	return *this;
 }
 
 template <typename Stream>
 inline packer<Stream>& packer<Stream>::pack_fix_uint32(uint32_t d)
-{ 
+{
 	unsigned char buf[5];
 	buf[0] = 0xce; _msgpack_store32(&buf[1], d);
-    append_buffer(buf, 5);
-    return *this;
+	append_buffer(buf, 5);
+	return *this;
 }
 
 template <typename Stream>
 inline packer<Stream>& packer<Stream>::pack_fix_uint64(uint64_t d)
-{ 
+{
 	unsigned char buf[9];
 	buf[0] = 0xcf; _msgpack_store64(&buf[1], d);
-    append_buffer(buf, 9);
-    return *this;
+	append_buffer(buf, 9);
+	return *this;
 }
 
 template <typename Stream>
 inline packer<Stream>& packer<Stream>::pack_fix_int8(int8_t d)
-{ 
+{
 	unsigned char buf[2] = {0xd0, TAKE8_8(d)};
-    append_buffer(buf, 2);
-    return *this;
+	append_buffer(buf, 2);
+	return *this;
 }
 
 template <typename Stream>
 inline packer<Stream>& packer<Stream>::pack_fix_int16(int16_t d)
-{ 
+{
 	unsigned char buf[3];
 	buf[0] = 0xd1; _msgpack_store16(&buf[1], d);
-    append_buffer(buf, 3);
-    return *this;
+	append_buffer(buf, 3);
+	return *this;
 }
 
 template <typename Stream>
 inline packer<Stream>& packer<Stream>::pack_fix_int32(int32_t d)
-{ 
+{
 	unsigned char buf[5];
 	buf[0] = 0xd2; _msgpack_store32(&buf[1], d);
-    append_buffer(buf, 5);
-    return *this;
+	append_buffer(buf, 5);
+	return *this;
 }
 
 template <typename Stream>
 inline packer<Stream>& packer<Stream>::pack_fix_int64(int64_t d)
-{ 
+{
 	unsigned char buf[9];
 	buf[0] = 0xd3; _msgpack_store64(&buf[1], d);
-    append_buffer(buf, 9);
-    return *this;
+	append_buffer(buf, 9);
+	return *this;
 }
 
 
@@ -283,13 +266,13 @@ inline packer<Stream>& packer<Stream>::pack_short(short d)
 #endif
 
 #else
-if(sizeof(short) == 2) {
-	pack_real_int16(d);
-} else if(sizeof(short) == 4) {
-	pack_real_int32(d);
-} else {
-	pack_real_int64(d);
-}
+	if(sizeof(short) == 2) {
+		pack_real_int16(d);
+	} else if(sizeof(short) == 4) {
+		pack_real_int32(d);
+	} else {
+		pack_real_int64(d);
+	}
 #endif
 	return *this;
 }
@@ -316,13 +299,13 @@ inline packer<Stream>& packer<Stream>::pack_int(int d)
 #endif
 
 #else
-if(sizeof(int) == 2) {
-	pack_real_int16(d);
-} else if(sizeof(int) == 4) {
-	pack_real_int32(d);
-} else {
-	pack_real_int64(d);
-}
+	if(sizeof(int) == 2) {
+		pack_real_int16(d);
+	} else if(sizeof(int) == 4) {
+		pack_real_int32(d);
+	} else {
+		pack_real_int64(d);
+	}
 #endif
 	return *this;
 }
@@ -349,13 +332,13 @@ inline packer<Stream>& packer<Stream>::pack_long(long d)
 #endif
 
 #else
-if(sizeof(long) == 2) {
-	pack_real_int16(d);
-} else if(sizeof(long) == 4) {
-	pack_real_int32(d);
-} else {
-	pack_real_int64(d);
-}
+	if(sizeof(long) == 2) {
+		pack_real_int16(d);
+	} else if(sizeof(long) == 4) {
+		pack_real_int32(d);
+	} else {
+		pack_real_int64(d);
+	}
 #endif
 	return *this;
 }
@@ -382,13 +365,13 @@ inline packer<Stream>& packer<Stream>::pack_long_long(long long d)
 #endif
 
 #else
-if(sizeof(long long) == 2) {
-	pack_real_int16(d);
-} else if(sizeof(long long) == 4) {
-	pack_real_int32(d);
-} else {
-	pack_real_int64(d);
-}
+	if(sizeof(long long) == 2) {
+		pack_real_int16(d);
+	} else if(sizeof(long long) == 4) {
+		pack_real_int32(d);
+	} else {
+		pack_real_int64(d);
+	}
 #endif
 	return *this;
 }
@@ -416,13 +399,13 @@ inline packer<Stream>& packer<Stream>::pack_unsigned_short(unsigned short d)
 #endif
 
 #else
-if(sizeof(unsigned short) == 2) {
-	pack_real_uint16(d);
-} else if(sizeof(unsigned short) == 4) {
-	pack_real_uint32(d);
-} else {
-	pack_real_uint64(d);
-}
+	if(sizeof(unsigned short) == 2) {
+		pack_real_uint16(d);
+	} else if(sizeof(unsigned short) == 4) {
+		pack_real_uint32(d);
+	} else {
+		pack_real_uint64(d);
+	}
 #endif
 	return *this;
 }
@@ -449,13 +432,13 @@ inline packer<Stream>& packer<Stream>::pack_unsigned_int(unsigned int d)
 #endif
 
 #else
-if(sizeof(unsigned int) == 2) {
-	pack_real_uint16(d);
-} else if(sizeof(unsigned int) == 4) {
-	pack_real_uint32(d);
-} else {
-	pack_real_uint64(d);
-}
+	if(sizeof(unsigned int) == 2) {
+		pack_real_uint16(d);
+	} else if(sizeof(unsigned int) == 4) {
+		pack_real_uint32(d);
+	} else {
+		pack_real_uint64(d);
+	}
 #endif
 	return *this;
 }
@@ -482,13 +465,13 @@ inline packer<Stream>& packer<Stream>::pack_unsigned_long(unsigned long d)
 #endif
 
 #else
-if(sizeof(unsigned long) == 2) {
-	pack_real_uint16(d);
-} else if(sizeof(unsigned long) == 4) {
-	pack_real_uint32(d);
-} else {
-	pack_real_uint64(d);
-}
+	if(sizeof(unsigned long) == 2) {
+		pack_real_uint16(d);
+	} else if(sizeof(unsigned long) == 4) {
+		pack_real_uint32(d);
+	} else {
+		pack_real_uint64(d);
+	}
 #endif
 	return *this;
 }
@@ -515,13 +498,13 @@ inline packer<Stream>& packer<Stream>::pack_unsigned_long_long(unsigned long lon
 #endif
 
 #else
-if(sizeof(unsigned long long) == 2) {
-	pack_real_uint16(d);
-} else if(sizeof(unsigned long long) == 4) {
-	pack_real_uint32(d);
-} else {
-	pack_real_uint64(d);
-}
+	if(sizeof(unsigned long long) == 2) {
+		pack_real_uint16(d);
+	} else if(sizeof(unsigned long long) == 4) {
+		pack_real_uint32(d);
+	} else {
+		pack_real_uint64(d);
+	}
 #endif
 	return *this;
 }
@@ -546,10 +529,10 @@ inline packer<Stream>& packer<Stream>::pack_double(double d)
 	unsigned char buf[9];
 	buf[0] = 0xcb;
 #if defined(__arm__) && !(__ARM_EABI__) // arm-oabi
-    // https://github.com/msgpack/msgpack-perl/pull/1
-    mem.i = (mem.i & 0xFFFFFFFFUL) << 32UL | (mem.i >> 32UL);
+	// https://github.com/msgpack/msgpack-perl/pull/1
+	mem.i = (mem.i & 0xFFFFFFFFUL) << 32UL | (mem.i >> 32UL);
 #endif
-    _msgpack_store64(&buf[1], mem.i);
+	_msgpack_store64(&buf[1], mem.i);
 	append_buffer(buf, 9);
 	return *this;
 }
@@ -643,245 +626,245 @@ inline packer<Stream>& packer<Stream>::pack_raw_body(const char* b, size_t l)
 
 template <typename Stream>
 template <typename T>
-inline void packer<Stream>::pack_real_uint8(T d) 
-{ 
-	if(d < (1<<7)) { 
-		/* fixnum */ 
-		append_buffer(&TAKE8_8(d), 1); 
-	} else { 
-		/* unsigned 8 */ 
-		unsigned char buf[2] = {0xcc, TAKE8_8(d)}; 
-		append_buffer(buf, 2); 
-	} 
-} 
+inline void packer<Stream>::pack_real_uint8(T d)
+{
+	if(d < (1<<7)) {
+		/* fixnum */
+		append_buffer(&TAKE8_8(d), 1);
+	} else {
+		/* unsigned 8 */
+		unsigned char buf[2] = {0xcc, TAKE8_8(d)};
+		append_buffer(buf, 2);
+	}
+}
 
 template <typename Stream>
 template <typename T>
-inline void packer<Stream>::pack_real_uint16(T d) 
-{ 
-	if(d < (1<<7)) { 
-		/* fixnum */ 
-		append_buffer(&TAKE8_16(d), 1); 
-	} else if(d < (1<<8)) { 
-		/* unsigned 8 */ 
-		unsigned char buf[2] = {0xcc, TAKE8_16(d)}; 
-		append_buffer(buf, 2); 
-	} else { 
-		/* unsigned 16 */ 
-		unsigned char buf[3]; 
-		buf[0] = 0xcd; _msgpack_store16(&buf[1], (uint16_t)d); 
-		append_buffer(buf, 3); 
-	} 
-} 
+inline void packer<Stream>::pack_real_uint16(T d)
+{
+	if(d < (1<<7)) {
+		/* fixnum */
+		append_buffer(&TAKE8_16(d), 1);
+	} else if(d < (1<<8)) {
+		/* unsigned 8 */
+		unsigned char buf[2] = {0xcc, TAKE8_16(d)};
+		append_buffer(buf, 2);
+	} else {
+		/* unsigned 16 */
+		unsigned char buf[3];
+		buf[0] = 0xcd; _msgpack_store16(&buf[1], (uint16_t)d);
+		append_buffer(buf, 3);
+	}
+}
 
 template <typename Stream>
 template <typename T>
-inline void packer<Stream>::pack_real_uint32(T d) 
-{ 
-	if(d < (1<<8)) { 
-		if(d < (1<<7)) { 
-			/* fixnum */ 
-			append_buffer(&TAKE8_32(d), 1); 
-		} else { 
-			/* unsigned 8 */ 
-			unsigned char buf[2] = {0xcc, TAKE8_32(d)}; 
-			append_buffer(buf, 2); 
-		} 
-	} else { 
-		if(d < (1<<16)) { 
-			/* unsigned 16 */ 
-			unsigned char buf[3]; 
-			buf[0] = 0xcd; _msgpack_store16(&buf[1], (uint16_t)d); 
-			append_buffer(buf, 3); 
-		} else { 
-			/* unsigned 32 */ 
-			unsigned char buf[5]; 
-			buf[0] = 0xce; _msgpack_store32(&buf[1], (uint32_t)d); 
-			append_buffer(buf, 5); 
-		} 
-	} 
-} 
+inline void packer<Stream>::pack_real_uint32(T d)
+{
+	if(d < (1<<8)) {
+		if(d < (1<<7)) {
+			/* fixnum */
+			append_buffer(&TAKE8_32(d), 1);
+		} else {
+			/* unsigned 8 */
+			unsigned char buf[2] = {0xcc, TAKE8_32(d)};
+			append_buffer(buf, 2);
+		}
+	} else {
+		if(d < (1<<16)) {
+			/* unsigned 16 */
+			unsigned char buf[3];
+			buf[0] = 0xcd; _msgpack_store16(&buf[1], (uint16_t)d);
+			append_buffer(buf, 3);
+		} else {
+			/* unsigned 32 */
+			unsigned char buf[5];
+			buf[0] = 0xce; _msgpack_store32(&buf[1], (uint32_t)d);
+			append_buffer(buf, 5);
+		}
+	}
+}
 
 template <typename Stream>
 template <typename T>
-inline void packer<Stream>::pack_real_uint64(T d) 
-{ 
-	if(d < (1ULL<<8)) { 
-		if(d < (1ULL<<7)) { 
-			/* fixnum */ 
-			append_buffer(&TAKE8_64(d), 1); 
-		} else { 
-			/* unsigned 8 */ 
-			unsigned char buf[2] = {0xcc, TAKE8_64(d)}; 
-			append_buffer(buf, 2); 
-		} 
-	} else { 
-		if(d < (1ULL<<16)) { 
-			/* unsigned 16 */ 
-			unsigned char buf[3]; 
-			buf[0] = 0xcd; _msgpack_store16(&buf[1], (uint16_t)d); 
-			append_buffer(buf, 3); 
-		} else if(d < (1ULL<<32)) { 
-			/* unsigned 32 */ 
-			unsigned char buf[5]; 
-			buf[0] = 0xce; _msgpack_store32(&buf[1], (uint32_t)d); 
-			append_buffer(buf, 5); 
-		} else { 
-			/* unsigned 64 */ 
-			unsigned char buf[9]; 
-			buf[0] = 0xcf; _msgpack_store64(&buf[1], d); 
-			append_buffer(buf, 9); 
-		} 
-	} 
-} 
+inline void packer<Stream>::pack_real_uint64(T d)
+{
+	if(d < (1ULL<<8)) {
+		if(d < (1ULL<<7)) {
+			/* fixnum */
+			append_buffer(&TAKE8_64(d), 1);
+		} else {
+			/* unsigned 8 */
+			unsigned char buf[2] = {0xcc, TAKE8_64(d)};
+			append_buffer(buf, 2);
+		}
+	} else {
+		if(d < (1ULL<<16)) {
+			/* unsigned 16 */
+			unsigned char buf[3];
+			buf[0] = 0xcd; _msgpack_store16(&buf[1], (uint16_t)d);
+			append_buffer(buf, 3);
+		} else if(d < (1ULL<<32)) {
+			/* unsigned 32 */
+			unsigned char buf[5];
+			buf[0] = 0xce; _msgpack_store32(&buf[1], (uint32_t)d);
+			append_buffer(buf, 5);
+		} else {
+			/* unsigned 64 */
+			unsigned char buf[9];
+			buf[0] = 0xcf; _msgpack_store64(&buf[1], d);
+			append_buffer(buf, 9);
+		}
+	}
+}
 
 template <typename Stream>
 template <typename T>
-inline void packer<Stream>::pack_real_int8(T d) 
-{ 
-	if(d < -(1<<5)) { 
-		/* signed 8 */ 
-		unsigned char buf[2] = {0xd0, TAKE8_8(d)}; 
-		append_buffer(buf, 2); 
-	} else { 
-		/* fixnum */ 
-		append_buffer(&TAKE8_8(d), 1); 
-	} 
-} 
+inline void packer<Stream>::pack_real_int8(T d)
+{
+	if(d < -(1<<5)) {
+		/* signed 8 */
+		unsigned char buf[2] = {0xd0, TAKE8_8(d)};
+		append_buffer(buf, 2);
+	} else {
+		/* fixnum */
+		append_buffer(&TAKE8_8(d), 1);
+	}
+}
 
 template <typename Stream>
 template <typename T>
-inline void packer<Stream>::pack_real_int16(T d) 
-{ 
-	if(d < -(1<<5)) { 
-		if(d < -(1<<7)) { 
-			/* signed 16 */ 
-			unsigned char buf[3]; 
-			buf[0] = 0xd1; _msgpack_store16(&buf[1], (int16_t)d); 
-			append_buffer(buf, 3); 
-		} else { 
-			/* signed 8 */ 
-			unsigned char buf[2] = {0xd0, TAKE8_16(d)}; 
-			append_buffer(buf, 2); 
-		} 
-	} else if(d < (1<<7)) { 
-		/* fixnum */ 
-		append_buffer(&TAKE8_16(d), 1); 
-	} else { 
-		if(d < (1<<8)) { 
-			/* unsigned 8 */ 
-			unsigned char buf[2] = {0xcc, TAKE8_16(d)}; 
-			append_buffer(buf, 2); 
-		} else { 
-			/* unsigned 16 */ 
-			unsigned char buf[3]; 
-			buf[0] = 0xcd; _msgpack_store16(&buf[1], (uint16_t)d); 
-			append_buffer(buf, 3); 
-		} 
-	} 
-} 
+inline void packer<Stream>::pack_real_int16(T d)
+{
+	if(d < -(1<<5)) {
+		if(d < -(1<<7)) {
+			/* signed 16 */
+			unsigned char buf[3];
+			buf[0] = 0xd1; _msgpack_store16(&buf[1], (int16_t)d);
+			append_buffer(buf, 3);
+		} else {
+			/* signed 8 */
+			unsigned char buf[2] = {0xd0, TAKE8_16(d)};
+			append_buffer(buf, 2);
+		}
+	} else if(d < (1<<7)) {
+		/* fixnum */
+		append_buffer(&TAKE8_16(d), 1);
+	} else {
+		if(d < (1<<8)) {
+			/* unsigned 8 */
+			unsigned char buf[2] = {0xcc, TAKE8_16(d)};
+			append_buffer(buf, 2);
+		} else {
+			/* unsigned 16 */
+			unsigned char buf[3];
+			buf[0] = 0xcd; _msgpack_store16(&buf[1], (uint16_t)d);
+			append_buffer(buf, 3);
+		}
+	}
+}
 
 template <typename Stream>
 template <typename T>
-inline void packer<Stream>::pack_real_int32(T d) 
-{ 
-	if(d < -(1<<5)) { 
-		if(d < -(1<<15)) { 
-			/* signed 32 */ 
-			unsigned char buf[5]; 
-			buf[0] = 0xd2; _msgpack_store32(&buf[1], (int32_t)d); 
-			append_buffer(buf, 5); 
-		} else if(d < -(1<<7)) { 
-			/* signed 16 */ 
-			unsigned char buf[3]; 
-			buf[0] = 0xd1; _msgpack_store16(&buf[1], (int16_t)d); 
-			append_buffer(buf, 3); 
-		} else { 
-			/* signed 8 */ 
-			unsigned char buf[2] = {0xd0, TAKE8_32(d)}; 
-			append_buffer(buf, 2); 
-		} 
-	} else if(d < (1<<7)) { 
-		/* fixnum */ 
-		append_buffer(&TAKE8_32(d), 1); 
-	} else { 
-		if(d < (1<<8)) { 
-			/* unsigned 8 */ 
-			unsigned char buf[2] = {0xcc, TAKE8_32(d)}; 
-			append_buffer(buf, 2); 
-		} else if(d < (1<<16)) { 
-			/* unsigned 16 */ 
-			unsigned char buf[3]; 
-			buf[0] = 0xcd; _msgpack_store16(&buf[1], (uint16_t)d); 
-			append_buffer(buf, 3); 
-		} else { 
-			/* unsigned 32 */ 
-			unsigned char buf[5]; 
-			buf[0] = 0xce; _msgpack_store32(&buf[1], (uint32_t)d); 
-			append_buffer(buf, 5); 
-		} 
-	} 
-} 
+inline void packer<Stream>::pack_real_int32(T d)
+{
+	if(d < -(1<<5)) {
+		if(d < -(1<<15)) {
+			/* signed 32 */
+			unsigned char buf[5];
+			buf[0] = 0xd2; _msgpack_store32(&buf[1], (int32_t)d);
+			append_buffer(buf, 5);
+		} else if(d < -(1<<7)) {
+			/* signed 16 */
+			unsigned char buf[3];
+			buf[0] = 0xd1; _msgpack_store16(&buf[1], (int16_t)d);
+			append_buffer(buf, 3);
+		} else {
+			/* signed 8 */
+			unsigned char buf[2] = {0xd0, TAKE8_32(d)};
+			append_buffer(buf, 2);
+		}
+	} else if(d < (1<<7)) {
+		/* fixnum */
+		append_buffer(&TAKE8_32(d), 1);
+	} else {
+		if(d < (1<<8)) {
+			/* unsigned 8 */
+			unsigned char buf[2] = {0xcc, TAKE8_32(d)};
+			append_buffer(buf, 2);
+		} else if(d < (1<<16)) {
+			/* unsigned 16 */
+			unsigned char buf[3];
+			buf[0] = 0xcd; _msgpack_store16(&buf[1], (uint16_t)d);
+			append_buffer(buf, 3);
+		} else {
+			/* unsigned 32 */
+			unsigned char buf[5];
+			buf[0] = 0xce; _msgpack_store32(&buf[1], (uint32_t)d);
+			append_buffer(buf, 5);
+		}
+	}
+}
 
 template <typename Stream>
 template <typename T>
-inline void packer<Stream>::pack_real_int64(T d) 
-{ 
-	if(d < -(1LL<<5)) { 
-		if(d < -(1LL<<15)) { 
-			if(d < -(1LL<<31)) { 
-				/* signed 64 */ 
-				unsigned char buf[9]; 
-				buf[0] = 0xd3; _msgpack_store64(&buf[1], d); 
-				append_buffer(buf, 9); 
-			} else { 
-				/* signed 32 */ 
-				unsigned char buf[5]; 
-				buf[0] = 0xd2; _msgpack_store32(&buf[1], (int32_t)d); 
-				append_buffer(buf, 5); 
-			} 
-		} else { 
-			if(d < -(1<<7)) { 
-				/* signed 16 */ 
-				unsigned char buf[3]; 
-				buf[0] = 0xd1; _msgpack_store16(&buf[1], (int16_t)d); 
-				append_buffer(buf, 3); 
-			} else { 
-				/* signed 8 */ 
-				unsigned char buf[2] = {0xd0, TAKE8_64(d)}; 
-				append_buffer(buf, 2); 
-			} 
-		} 
-	} else if(d < (1<<7)) { 
-		/* fixnum */ 
-		append_buffer(&TAKE8_64(d), 1); 
-	} else { 
-		if(d < (1LL<<16)) { 
-			if(d < (1<<8)) { 
-				/* unsigned 8 */ 
-				unsigned char buf[2] = {0xcc, TAKE8_64(d)}; 
-				append_buffer(buf, 2); 
-			} else { 
-				/* unsigned 16 */ 
-				unsigned char buf[3]; 
-				buf[0] = 0xcd; _msgpack_store16(&buf[1], (uint16_t)d); 
-				append_buffer(buf, 3); 
-			} 
-		} else { 
-			if(d < (1LL<<32)) { 
-				/* unsigned 32 */ 
-				unsigned char buf[5]; 
-				buf[0] = 0xce; _msgpack_store32(&buf[1], (uint32_t)d); 
-				append_buffer(buf, 5); 
-			} else { 
-				/* unsigned 64 */ 
-				unsigned char buf[9]; 
-				buf[0] = 0xcf; _msgpack_store64(&buf[1], d); 
-				append_buffer(buf, 9); 
-			} 
-		} 
-	} 
-} 
+inline void packer<Stream>::pack_real_int64(T d)
+{
+	if(d < -(1LL<<5)) {
+		if(d < -(1LL<<15)) {
+			if(d < -(1LL<<31)) {
+				/* signed 64 */
+				unsigned char buf[9];
+				buf[0] = 0xd3; _msgpack_store64(&buf[1], d);
+				append_buffer(buf, 9);
+			} else {
+				/* signed 32 */
+				unsigned char buf[5];
+				buf[0] = 0xd2; _msgpack_store32(&buf[1], (int32_t)d);
+				append_buffer(buf, 5);
+			}
+		} else {
+			if(d < -(1<<7)) {
+				/* signed 16 */
+				unsigned char buf[3];
+				buf[0] = 0xd1; _msgpack_store16(&buf[1], (int16_t)d);
+				append_buffer(buf, 3);
+			} else {
+				/* signed 8 */
+				unsigned char buf[2] = {0xd0, TAKE8_64(d)};
+				append_buffer(buf, 2);
+			}
+		}
+	} else if(d < (1<<7)) {
+		/* fixnum */
+		append_buffer(&TAKE8_64(d), 1);
+	} else {
+		if(d < (1LL<<16)) {
+			if(d < (1<<8)) {
+				/* unsigned 8 */
+				unsigned char buf[2] = {0xcc, TAKE8_64(d)};
+				append_buffer(buf, 2);
+			} else {
+				/* unsigned 16 */
+				unsigned char buf[3];
+				buf[0] = 0xcd; _msgpack_store16(&buf[1], (uint16_t)d);
+				append_buffer(buf, 3);
+			}
+		} else {
+			if(d < (1LL<<32)) {
+				/* unsigned 32 */
+				unsigned char buf[5];
+				buf[0] = 0xce; _msgpack_store32(&buf[1], (uint32_t)d);
+				append_buffer(buf, 5);
+			} else {
+				/* unsigned 64 */
+				unsigned char buf[9];
+				buf[0] = 0xcf; _msgpack_store64(&buf[1], d);
+				append_buffer(buf, 9);
+			}
+		}
+	}
+}
 
 }  // namespace msgpack
 
