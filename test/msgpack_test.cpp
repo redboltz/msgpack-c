@@ -37,7 +37,7 @@ const double kEPS = 1e-10;
       msgpack::zone z;                                                \
       msgpack::object obj;                                            \
       msgpack::unpack_return ret =                                    \
-        msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);    \
+        msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);    \
       EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);                        \
       test_type val2;                                                 \
       obj.convert(&val2);                                             \
@@ -148,7 +148,7 @@ TEST(MSGPACK, simple_buffer_float)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     float val2;
     obj.convert(&val2);
@@ -185,7 +185,7 @@ TEST(MSGPACK, simple_buffer_double)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     double val2;
     obj.convert(&val2);
@@ -207,7 +207,7 @@ TEST(MSGPACK, simple_buffer_true)
   msgpack::zone z;
   msgpack::object obj;
   msgpack::unpack_return ret =
-    msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+    msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
   EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
   bool val2;
   obj.convert(&val2);
@@ -222,7 +222,7 @@ TEST(MSGPACK, simple_buffer_false)
   msgpack::zone z;
   msgpack::object obj;
   msgpack::unpack_return ret =
-    msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+    msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
   EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
   bool val2;
   obj.convert(&val2);
@@ -244,7 +244,7 @@ TEST(MSGPACK_STL, simple_buffer_string)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     string val2;
     obj.convert(&val2);
@@ -264,7 +264,7 @@ TEST(MSGPACK_STL, simple_buffer_vector)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     vector<int> val2;
     obj.convert(&val2);
@@ -284,7 +284,7 @@ TEST(MSGPACK_STL, simple_buffer_map)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     map<int, int> val2;
     obj.convert(&val2);
@@ -304,7 +304,7 @@ TEST(MSGPACK_STL, simple_buffer_deque)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     deque<int> val2;
     obj.convert(&val2);
@@ -324,7 +324,7 @@ TEST(MSGPACK_STL, simple_buffer_list)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     list<int> val2;
     obj.convert(&val2);
@@ -344,7 +344,7 @@ TEST(MSGPACK_STL, simple_buffer_set)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     set<int> val2;
     obj.convert(&val2);
@@ -362,7 +362,7 @@ TEST(MSGPACK_STL, simple_buffer_pair)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     pair<int, int> val2;
     obj.convert(&val2);
@@ -385,7 +385,7 @@ TEST(MSGPACK_STL, simple_buffer_multimap)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     multimap<int, int> val2;
     obj.convert(&val2);
@@ -415,7 +415,7 @@ TEST(MSGPACK_STL, simple_buffer_multiset)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     multiset<int> val2;
     obj.convert(&val2);
@@ -450,7 +450,7 @@ TEST(MSGPACK_TR1, simple_buffer_unordered_map)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     tr1::unordered_map<int, int> val2;
     obj.convert(&val2);
@@ -477,7 +477,7 @@ TEST(MSGPACK_TR1, simple_buffer_unordered_multimap)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     tr1::unordered_multimap<int, int> val2;
     obj.convert(&val2);
@@ -511,7 +511,7 @@ TEST(MSGPACK_TR1, simple_buffer_unordered_set)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     tr1::unordered_set<int> val2;
     obj.convert(&val2);
@@ -533,7 +533,7 @@ TEST(MSGPACK_TR1, simple_buffer_unordered_multiset)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     tr1::unordered_multiset<int> val2;
     obj.convert(&val2);
@@ -573,7 +573,7 @@ TEST(MSGPACK_USER_DEFINED, simple_buffer_class)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     TestClass val2;
     val2.i = -1;
@@ -606,7 +606,7 @@ TEST(MSGPACK_USER_DEFINED, simple_buffer_class_old_to_new)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     TestClass2 val2;
     val2.i = -1;
@@ -628,7 +628,7 @@ TEST(MSGPACK_USER_DEFINED, simple_buffer_class_new_to_old)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     TestClass val2;
     val2.i = -1;
@@ -667,7 +667,7 @@ TEST(MSGPACK_USER_DEFINED, simple_buffer_enum_member)
   msgpack::zone z;
   msgpack::object obj;
   msgpack::unpack_return ret =
-    msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+    msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
   EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
   TestEnumMemberClass val2;
   val2.t1 = TestEnumMemberClass::STATE_INVALID;
@@ -730,7 +730,7 @@ TEST(MSGPACK_USER_DEFINED, simple_buffer_union_member)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     TestUnionMemberClass val2;
     obj.convert(&val2);
@@ -745,7 +745,7 @@ TEST(MSGPACK_USER_DEFINED, simple_buffer_union_member)
     msgpack::zone z;
     msgpack::object obj;
     msgpack::unpack_return ret =
-      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
     TestUnionMemberClass val2;
     obj.convert(&val2);
@@ -773,7 +773,7 @@ TEST(MSGPACK_USER_DEFINED, simple_buffer_union_member)
       msgpack::zone z;                                                  \
       msgpack::object obj;                                              \
       msgpack::unpack_return ret =                                      \
-        msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);      \
+        msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, obj);      \
       EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);                          \
       test_type val2;                                                   \
       obj.convert(&val2);                                               \
