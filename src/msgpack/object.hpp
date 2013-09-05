@@ -87,6 +87,8 @@ struct object {
 
 	template <typename T>
 	void convert(T& v) const;
+	template <typename T>
+	void convert(T* v) const;
 
 	object();
 
@@ -306,6 +308,12 @@ template <typename T>
 inline void object::convert(T& v) const
 {
 	*this >> v;
+}
+
+template <typename T>
+inline void object::convert(T* v) const
+{
+	convert(*v);
 }
 
 template <typename T>
