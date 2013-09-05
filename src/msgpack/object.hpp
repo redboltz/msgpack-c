@@ -86,7 +86,7 @@ struct object {
 	T as() const;
 
 	template <typename T>
-	void convert(T* v) const;
+	void convert(T& v) const;
 
 	object();
 
@@ -303,16 +303,16 @@ inline object::implicit_type object::convert() const
 }
 
 template <typename T>
-inline void object::convert(T* v) const
+inline void object::convert(T& v) const
 {
-	*this >> *v;
+	*this >> v;
 }
 
 template <typename T>
 inline T object::as() const
 {
 	T v;
-	convert(&v);
+	convert(v);
 	return v;
 }
 
