@@ -53,7 +53,7 @@ inline void operator<< (object::with_zone& o, const std::tr1::unordered_set<T>& 
 {
 	o.type = type::ARRAY;
 	if(v.empty()) {
-		o.via.array.ptr = NULL;
+		o.via.array.ptr = nullptr;
 		o.via.array.size = 0;
 	} else {
 		object* p = static_cast<object*>(o.zone->malloc(sizeof(object)*v.size()));
@@ -99,7 +99,7 @@ inline void operator<< (object::with_zone& o, const std::tr1::unordered_multiset
 {
 	o.type = type::ARRAY;
 	if(v.empty()) {
-		o.via.array.ptr = NULL;
+		o.via.array.ptr = nullptr;
 		o.via.array.size = 0;
 	} else {
 		object* p = static_cast<object*>(o.zone->malloc(sizeof(object)*v.size()));
