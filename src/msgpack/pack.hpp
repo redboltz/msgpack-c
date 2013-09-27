@@ -21,7 +21,7 @@
 #include "pack_define.h"
 #include <stdexcept>
 #include <limits.h>
-
+#include <iterator>
 namespace msgpack {
 
 
@@ -96,7 +96,8 @@ private:
 	void pack_imp_int64(T d);
 
 	void append_buffer(const char* buf, unsigned int len)
-		{ m_stream.write(buf, len); }
+		// { m_stream.write(buf, len); }
+		{ std::ostream_iterator<char> osit(m_stream); std::copy(buf, buf + len, osit); }
 
 private:
 	Stream& m_stream;
