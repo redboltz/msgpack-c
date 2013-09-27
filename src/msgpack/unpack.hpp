@@ -140,7 +140,7 @@ inline void unpack_raw(unpack_user& u, ForwardIterator it, unsigned int l, objec
 {
 	o.type = type::RAW;
 	o.via.raw.ptr = it;
-	o.via.raw.size = l;
+	o.via.raw.size = std::advance(l;
 	u.set_referenced(true);
 }
 

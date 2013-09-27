@@ -27,6 +27,8 @@
 #include <limits>
 #include <ostream>
 
+#include "equal.hpp" // boost equal
+
 namespace msgpack {
 
 
@@ -46,35 +48,41 @@ namespace type {
 	};
 }
 
-
+template <typename ForwardIterator>
 struct object;
+
+template <typename ForwardIterator>
 struct object_kv;
 
+template <typename ForwardIterator>
 struct object_array {
 	uint32_t size;
-	object* ptr;
+	object<ForwardIterator>* ptr;
 };
 
+template <typename ForwardIterator>
 struct object_map {
 	uint32_t size;
-	object_kv* ptr;
+	object_kv<ForwardIterator>* ptr;
 };
 
+template <typename ForwardIterator>
 struct object_raw {
-	uint32_t size;
-	const char* ptr;
+	ForwardIterator begin;
+	ForwardIterator end;
 };
 
+template <typename ForwardIterator = const char *>
 struct object {
 	union union_type {
 		bool boolean;
 		uint64_t u64;
 		int64_t  i64;
 		double   dec;
-		object_array array;
-		object_map map;
-		object_raw raw;
-		object_raw ref;  // obsolete
+		object_array<ForwardIterator> array;
+		object_map<ForwardIterator> map;
+		object_raw<ForwardIterator> raw;
+		object_raw<ForwardIterator> ref;  // obsolete
 	};
 
 	type::object_type type;
@@ -114,19 +122,22 @@ public:
 	implicit_type convert() const;
 };
 
+template <typename ForwardIterator>
 struct object_kv {
-	object key;
-	object val;
+	object<ForwardIterator> key;
+	object<ForwardIterator> val;
 };
 
-struct object::with_zone : object {
+template <typename ForwardIterator>
+struct object<ForwardIterator>::with_zone : object<ForwardIterator> {
 	with_zone(msgpack::zone* zone) : zone(zone) { }
 	msgpack::zone* zone;
 private:
 	with_zone();
 };
 
-struct object::implicit_type {
+template <typename ForwardIterator>
+struct object<ForwardIterator>::implicit_type {
 	implicit_type(object const& o) : obj(o) { }
 	~implicit_type() { }
 
@@ -134,7 +145,7 @@ struct object::implicit_type {
 	operator T() { return obj.as<T>(); }
 
 private:
-	object const& obj;
+	object<ForwardIterator> const& obj;
 };
 
 
@@ -154,7 +165,8 @@ public:
 		o << static_cast<const msgpack_type&>(*this);
 	}
 
-	void msgpack_unpack(object const& o)
+	template <typename ForwardIterator>
+	void msgpack_unpack(object<ForwardIterator> const& o)
 	{
 		o >> static_cast<msgpack_type&>(*this);
 	}
@@ -169,15 +181,16 @@ inline packer<Stream>& packer<Stream>::pack(const T& v)
 	return *this;
 }
 
-inline object& operator>> (object const& o, object& v)
+template <typename ForwardIterator>
+inline object<ForwardIterator>& operator>> (object<ForwardIterator> const& o, object<ForwardIterator>& v)
 {
 	v = o;
 	return v;
 }
 
 // convert operator
-template <typename T>
-inline T& operator>> (object const& o, T& v)
+template <typename T, typename ForwardIterator>
+inline T& operator>> (object<ForwardIterator> const& o, T& v)
 {
 	v.msgpack_unpack(o.convert());
 	return v;
@@ -201,14 +214,14 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const T& v)
 }
 
 // deconvert operator
-template <typename T>
-inline void operator<< (object::with_zone& o, const T& v)
+template <typename T, typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, const T& v)
 {
-	v.msgpack_object(static_cast<object*>(&o), o.zone);
+	v.msgpack_object(static_cast<object<ForwardIterator>*>(&o), o.zone);
 }
 
-
-inline bool operator==(const object& x, const object& y)
+template <typename ForwardIterator>
+inline bool operator==(const object<ForwardIterator>& x, const object<ForwardIterator>& y)
 {
 	if(x.type != y.type) { return false; }
 
@@ -229,8 +242,7 @@ inline bool operator==(const object& x, const object& y)
 		return x.via.dec == y.via.dec;
 
 	case type::RAW:
-		return x.via.raw.size == y.via.raw.size &&
-			memcmp(x.via.raw.ptr, y.via.raw.ptr, x.via.raw.size) == 0;
+		return boost::algorithm::equal(x.via.raw.begin, x.via.raw.end, y.via.raw.begin, y.via.raw.end);
 
 	case type::ARRAY:
 		if(x.via.array.size != y.via.array.size) {
@@ -275,49 +287,54 @@ inline bool operator==(const object& x, const object& y)
 	}
 }
 
-template <typename T>
-inline bool operator==(const object& x, const T& y)
+template <typename T, typename ForwardIterator>
+inline bool operator==(const object<ForwardIterator>& x, const T& y)
 try {
-	return x == object(y);
+	return x == object<ForwardIterator>(y);
 } catch (msgpack::type_error&) {
 	return false;
 }
 
-inline bool operator!=(const object& x, const object& y)
+template <typename ForwardIterator>
+inline bool operator!=(const object<ForwardIterator>& x, const object<ForwardIterator>& y)
 { return !(x == y); }
 
-template <typename T>
-inline bool operator==(const T& y, const object x)
+template <typename T, typeanme ForwardIterator>
+inline bool operator==(const T& y, const object<ForwardIterator> x)
 { return x == y; }
 
-template <typename T>
-inline bool operator!=(const object& x, const T& y)
+template <typename T, typename ForwardIterator>
+inline bool operator!=(const object<ForwardIterator>& x, const T& y)
 { return !(x == y); }
 
-template <typename T>
-inline bool operator!=(const T& y, const object& x)
+template <typename T, typename ForwardIterator>
+inline bool operator!=(const T& y, const object<ForwardIterator>& x)
 { return x != y; }
 
 
-inline object::implicit_type object::convert() const
+template <typename ForwardIterator>
+inline object<ForwardIterator>::implicit_type object<ForwardIterator>::convert() const
 {
 	return implicit_type(*this);
 }
 
+template <typename ForwardIterator>
 template <typename T>
-inline void object::convert(T& v) const
+inline void object<ForwardIterator>::convert(T& v) const
 {
 	*this >> v;
 }
 
+template <typename ForwardIterator>
 template <typename T>
-inline void object::convert(T* v) const
+inline void object<ForwardIterator>::convert(T* v) const
 {
 	convert(*v);
 }
 
+template <typename ForwardIterator>
 template <typename T>
-inline T object::as() const
+inline T object<ForwardIterator>::as() const
 {
 	T v;
 	convert(v);
@@ -325,26 +342,30 @@ inline T object::as() const
 }
 
 
-inline object::object()
+template <typename ForwardIterator>
+inline object<ForwardIterator>::object()
 {
 	type = type::NIL;
 }
 
+template <typename ForwardIterator>
 template <typename T>
-inline object::object(const T& v)
+inline object<ForwardIterator>::object(const T& v)
 {
 	*this << v;
 }
 
+template <typename ForwardIterator>
 template <typename T>
-inline object& object::operator=(const T& v)
+inline object<ForwardIterator>& object<ForwardIterator>::operator=(const T& v)
 {
-	*this = object(v);
+	*this = object<ForwardIterator>(v);
 	return *this;
 }
 
+template <typename ForwardIterator>
 template <typename T>
-object::object(const T& v, zone* z)
+object<ForwardIterator>::object(const T& v, zone* z)
 {
 	with_zone oz(z);
 	oz << v;
@@ -353,19 +374,22 @@ object::object(const T& v, zone* z)
 }
 
 
-inline object::object(msgpack_object o)
+template <typename ForwardIterator>
+inline object<ForwardIterator>::object(msgpack_object o)
 {
 	// FIXME beter way?
 	::memcpy(this, &o, sizeof(o));
 }
 
-inline void operator<< (object& o, msgpack_object v)
+template <typename ForwardIterator>
+inline void operator<< (object<ForwardIterator>& o, msgpack_object v)
 {
 	// FIXME beter way?
 	::memcpy(&o, &v, sizeof(v));
 }
 
-inline object::operator msgpack_object() const
+template <typename ForwardIterator>
+inline object<ForwardIterator>::operator msgpack_object() const
 {
 	// FIXME beter way?
 	msgpack_object obj;
@@ -375,8 +399,8 @@ inline object::operator msgpack_object() const
 
 
 // obsolete
-template <typename T>
-inline void convert(T& v, object const& o)
+template <typename T, typename ForwardIterator>
+inline void convert(T& v, object<ForwardIterator> const& o)
 {
 	o.convert(v);
 }
@@ -396,8 +420,8 @@ inline void pack_copy(packer<Stream>& o, T v)
 }
 
 
-template <typename Stream>
-packer<Stream>& operator<< (packer<Stream>& o, const object& v)
+template <typename Stream, typename ForwardIterator>
+packer<Stream>& operator<< (packer<Stream>& o, const object<ForwardIterator>& v)
 {
 	switch(v.type) {
 	case type::NIL:
@@ -425,8 +449,8 @@ packer<Stream>& operator<< (packer<Stream>& o, const object& v)
 		return o;
 
 	case type::RAW:
-		o.pack_raw(v.via.raw.size);
-		o.pack_raw_body(v.via.raw.ptr, v.via.raw.size);
+		o.pack_raw(std::distance(v.via.raw.begin, v.via.raw.end);
+		o.pack_raw_body(v.via.raw.begin, v.via.raw.end);
 		return o;
 
 	case type::ARRAY:
@@ -453,7 +477,8 @@ packer<Stream>& operator<< (packer<Stream>& o, const object& v)
 	}
 }
 
-std::ostream& operator<< (std::ostream& s, const object& o)
+template <typename ForwardIterator>
+std::ostream& operator<< (std::ostream& s, const object<ForwardIterator>& o)
 {
 	switch(o.type) {
 	case type::NIL:
@@ -477,7 +502,9 @@ std::ostream& operator<< (std::ostream& s, const object& o)
 		break;
 
 	case type::RAW:
-		(s << '"').write(o.via.raw.ptr, o.via.raw.size) << '"';
+		s << '"';
+		std::copy(o.via.raw.begin, o.via.raw.end, std::ostream_iterator<char>(s));
+		s << '"';
 		break;
 
 	case type::ARRAY:
