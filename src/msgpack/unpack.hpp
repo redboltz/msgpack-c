@@ -25,7 +25,7 @@
 
 #include <memory>
 #include <stdexcept>
-
+#include <type_traits>
 
 
 
@@ -672,7 +672,7 @@ struct unpack_error : public std::runtime_error {
 		std::runtime_error(msg) { }
 };
 
-template <typename ForwardIterator>
+template <typename ForwardIterator = char*>
 class unpacked {
 public:
 	unpacked() { }
@@ -811,10 +811,10 @@ private:
 
 template <typename ForwardIterator>
 inline void unpack(unpacked<ForwardIterator>& result,
-		const char* data, size_t len, size_t* offset = nullptr);
+		ForwardIterator data, size_t len, size_t* offset = nullptr);
 template <typename ForwardIterator>
 inline void unpack(unpacked<ForwardIterator>* result,
-		const char* data, size_t len, size_t* offset = nullptr);
+		ForwardIterator data, size_t len, size_t* offset = nullptr);
 
 // obsolete
 typedef enum {
@@ -826,21 +826,26 @@ typedef enum {
 
 // obsolete
 template <typename ForwardIterator>
-static unpack_return unpack(const char* data, size_t len, size_t* off,
+static unpack_return unpack(ForwardIterator data, size_t len, size_t* off,
 	zone& z, object<ForwardIterator>& result);
 
 template <typename ForwardIterator>
-static unpack_return unpack(const char* data, size_t len, size_t* off,
+static unpack_return unpack(ForwardIterator data, size_t len, size_t* off,
 	zone* z, object<ForwardIterator>* result);
 
 
 // obsolete
-static object unpack(const char* data, size_t len, zone& z, size_t* off = nullptr);
-static object unpack(const char* data, size_t len, zone* z, size_t* off = nullptr);
+template <typename ForwardIterator>
+static object<ForwardIterator>
+unpack(ForwardIterator data, size_t len, zone& z, size_t* off = nullptr);
+
+template <typename ForwardIterator>
+static object<ForwardIterator>
+unpack(ForwardIterator data, size_t len, zone* z, size_t* off = nullptr);
 
 
 template <typename ForwardIterator>
-inline unpacker::unpacker(size_t initial_buffer_size)
+inline unpacker<ForwardIterator>::unpacker(size_t initial_buffer_size)
 {
 	if(initial_buffer_size < COUNTER_SIZE) {
 		initial_buffer_size = COUNTER_SIZE;
@@ -873,7 +878,7 @@ inline unpacker::unpacker(size_t initial_buffer_size)
 }
 
 template <typename ForwardIterator>
-inline unpacker::~unpacker()
+inline unpacker<ForwardIterator>::~unpacker()
 {
 	zone::destroy(z_);
 	detail::decl_count(buffer_);
@@ -881,14 +886,14 @@ inline unpacker::~unpacker()
 
 
 template <typename ForwardIterator>
-inline void unpacker::reserve_buffer(size_t size)
+inline void unpacker<ForwardIterator>::reserve_buffer(size_t size)
 {
 	if(free_ >= size) return;
 	expand_buffer(size);
 }
 
 template <typename ForwardIterator>
-inline void unpacker::expand_buffer(size_t size)
+inline void unpacker<ForwardIterator>::expand_buffer(size_t size)
 {
 	if(used_ == off_ && detail::get_count(buffer_) == 1
 		&& !ctx_.user().referenced()) {
@@ -951,26 +956,26 @@ inline void unpacker::expand_buffer(size_t size)
 }
 
 template <typename ForwardIterator>
-inline char* unpacker::buffer()
+inline char* unpacker<ForwardIterator>::buffer()
 {
 	return buffer_ + used_;
 }
 
 template <typename ForwardIterator>
-inline size_t unpacker::buffer_capacity() const
+inline size_t unpacker<ForwardIterator>::buffer_capacity() const
 {
 	return free_;
 }
 
 template <typename ForwardIterator>
-inline void unpacker::buffer_consumed(size_t size)
+inline void unpacker<ForwardIterator>::buffer_consumed(size_t size)
 {
 	used_ += size;
 	free_ -= size;
 }
 
 template <typename ForwardIterator>
-inline bool unpacker::next(unpacked* result)
+inline bool unpacker<ForwardIterator>::next(unpacked<ForwardIterator>* result)
 {
 	int ret = execute_imp();
 
@@ -980,7 +985,7 @@ inline bool unpacker::next(unpacked* result)
 
 	if(ret == 0) {
 		if (result->zone().get() != nullptr) result->zone().reset();
-		result->set(object());
+		result->set(object<ForwardIterator>());
 		return false;
 
 	} else {
@@ -993,7 +998,7 @@ inline bool unpacker::next(unpacked* result)
 
 
 template <typename ForwardIterator>
-inline bool unpacker::execute()
+inline bool unpacker<ForwardIterator>::execute()
 {
 	int ret = execute_imp();
 	if(ret < 0) {
@@ -1006,7 +1011,7 @@ inline bool unpacker::execute()
 }
 
 template <typename ForwardIterator>
-inline int unpacker::execute_imp()
+inline int unpacker<ForwardIterator>::execute_imp()
 {
 	const char *it = buffer_ + off_;
 	const char *it_org = it;
@@ -1018,13 +1023,13 @@ inline int unpacker::execute_imp()
 }
 
 template <typename ForwardIterator>
-inline object const& unpacker::data()
+inline object<ForwardIterator> const& unpacker<ForwardIterator>::data()
 {
 	return ctx_.data();
 }
 
 template <typename ForwardIterator>
-inline zone* unpacker::release_zone()
+inline zone* unpacker<ForwardIterator>::release_zone()
 {
 	if(!flush_zone()) {
 		return nullptr;
@@ -1043,13 +1048,13 @@ inline zone* unpacker::release_zone()
 }
 
 template <typename ForwardIterator>
-inline void unpacker::reset_zone()
+inline void unpacker<ForwardIterator>::reset_zone()
 {
 	z_->clear();
 }
 
 template <typename ForwardIterator>
-inline bool unpacker::flush_zone()
+inline bool unpacker<ForwardIterator>::flush_zone()
 {
 	if(ctx_.user().referenced()) {
 		try {
@@ -1066,7 +1071,7 @@ inline bool unpacker::flush_zone()
 }
 
 template <typename ForwardIterator>
-inline void unpacker::reset()
+inline void unpacker<ForwardIterator>::reset()
 {
 	ctx_.init();
 	// don't reset referenced flag
@@ -1074,37 +1079,37 @@ inline void unpacker::reset()
 }
 
 template <typename ForwardIterator>
-inline size_t unpacker::message_size() const
+inline size_t unpacker<ForwardIterator>::message_size() const
 {
 	return parsed_ - off_ + used_;
 }
 
 template <typename ForwardIterator>
-inline size_t unpacker::parsed_size() const
+inline size_t unpacker<ForwardIterator>::parsed_size() const
 {
 	return parsed_;
 }
 
 template <typename ForwardIterator>
-inline char* unpacker::nonparsed_buffer()
+inline char* unpacker<ForwardIterator>::nonparsed_buffer()
 {
 	return buffer_ + off_;
 }
 
 template <typename ForwardIterator>
-inline size_t unpacker::nonparsed_size() const
+inline size_t unpacker<ForwardIterator>::nonparsed_size() const
 {
 	return used_ - off_;
 }
 
 template <typename ForwardIterator>
-inline void unpacker::skip_nonparsed_buffer(size_t size)
+inline void unpacker<ForwardIterator>::skip_nonparsed_buffer(size_t size)
 {
 	off_ += size;
 }
 
 template <typename ForwardIterator>
-inline void unpacker::remove_nonparsed_buffer()
+inline void unpacker<ForwardIterator>::remove_nonparsed_buffer()
 {
 	used_ = off_;
 }
@@ -1121,7 +1126,7 @@ unpack_imp(ForwardIterator& it, ForwardIterator end,
 		return UNPACK_CONTINUE;
 	}
 
-	detail::template_context ctx;
+	detail::template_context<ForwardIterator> ctx;
 	ctx.init();
 
 	ctx.user().set_z(result_zone);
@@ -1138,7 +1143,7 @@ unpack_imp(ForwardIterator& it, ForwardIterator end,
 
 	result = ctx.data();
 
-	if(noff < len) {
+	if(it != end) {
 		return UNPACK_EXTRA_BYTES;
 	}
 
@@ -1149,15 +1154,20 @@ unpack_imp(ForwardIterator& it, ForwardIterator end,
 
 // reference version
 template <typename ForwardIterator>
-inline void unpack(unpacked& result,
+inline void unpack(unpacked<ForwardIterator>& result,
    ForwardIterator data, size_t len, size_t* offset)
 {
 	object<ForwardIterator> obj;
 	msgpack::unique_ptr<zone> z(new zone());
+	ForwardIterator org(data);
+
+	ForwardIterator end = data;
+	std::advance(end, len);
 
 	unpack_return ret = detail::unpack_imp(
-			data, len, offset, *z, obj);
+			data, end, *z, obj);
 
+	*offset = std::distance(org, data);
 
 	switch(ret) {
 	case UNPACK_SUCCESS:
@@ -1179,8 +1189,9 @@ inline void unpack(unpacked& result,
 	}
 }
 // pointer version
-inline void unpack(unpacked* result,
-	const char* data, size_t len, size_t* offset) {
+template <typename ForwardIterator>
+inline void unpack(unpacked<ForwardIterator>* result,
+	ForwardIterator data, size_t len, size_t* offset) {
 	unpack(*result, data, len, offset);
 }
 
@@ -1188,15 +1199,21 @@ inline void unpack(unpacked* result,
 // obsolete
 // reference version
 template <typename ForwardIterator>
-inline unpack_return unpack(ForwardIterator& data, size_t len, size_t* off,
+inline unpack_return unpack(ForwardIterator data, size_t len, size_t* off,
 	zone& z, object<ForwardIterator>& result)
 {
-	return detail::unpack_imp(data, len, off,
-			z, result);
+	ForwardIterator org = data;
+	ForwardIterator end = data;
+	std::advance(end, len);
+
+	unpack_return ret = detail::unpack_imp(data, end, z, result);
+	*off = std::distance(org, data);
+
+	return ret;
 }
 // pointer version
 template <typename ForwardIterator>
-inline unpack_return unpack(ForwardIterator& data, size_t len, size_t* off,
+inline unpack_return unpack(ForwardIterator data, size_t len, size_t* off,
 	zone* z, object<ForwardIterator>* result)
 {
 	return unpack(data, len, off, *z, *result);
@@ -1205,9 +1222,9 @@ inline unpack_return unpack(ForwardIterator& data, size_t len, size_t* off,
 // obsolete
 // reference version
 template <typename ForwardIterator>
-inline object<ForwardIterator> unpack(ForwardIterator& data, size_t len, zone& z, size_t* off)
+inline object<ForwardIterator> unpack(ForwardIterator data, size_t len, zone& z, size_t* off)
 {
-	object result;
+	object<ForwardIterator> result;
 
 	switch( unpack(data, len, off, z, result) ) {
 	case UNPACK_SUCCESS:
@@ -1229,7 +1246,8 @@ inline object<ForwardIterator> unpack(ForwardIterator& data, size_t len, zone& z
 	}
 }
 // pointer version
-inline object unpack(const char* data, size_t len, zone* z, size_t* off)
+template <typename ForwardIterator>
+inline object<ForwardIterator> unpack(ForwardIterator data, size_t len, zone* z, size_t* off)
 {
 	return unpack(data, len, *z, off);
 }

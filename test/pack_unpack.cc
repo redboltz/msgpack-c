@@ -57,7 +57,7 @@ TEST(unpack, myclass)
 	msgpack::pack(sbuf, m1);
 
 	msgpack::zone z;
-	msgpack::object obj;
+	msgpack::object<> obj;
 
 	msgpack::unpack_return ret =
 		msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
@@ -79,7 +79,7 @@ TEST(unpack, sequence)
 
 	size_t offset = 0;
 
-	msgpack::unpacked msg;
+	msgpack::unpacked<> msg;
 
 	msgpack::unpack(&msg, sbuf.data(), sbuf.size(), &offset);
 	EXPECT_EQ(1, msg.get().as<int>());
@@ -102,7 +102,7 @@ TEST(unpack, sequence_compat)
 	size_t offset = 0;
 
 	msgpack::zone z;
-	msgpack::object obj;
+	msgpack::object<> obj;
 	msgpack::unpack_return ret;
 
 	ret = msgpack::unpack(sbuf.data(), sbuf.size(), &offset, &z, &obj);

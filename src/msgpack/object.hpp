@@ -49,7 +49,7 @@ namespace type {
 	};
 }
 
-template <typename ForwardIterator>
+template <typename ForwardIterator = char *>
 struct object;
 
 template <typename ForwardIterator>
@@ -73,7 +73,7 @@ struct object_raw {
 	ForwardIterator end;
 };
 
-template <typename ForwardIterator = const char *>
+template <typename ForwardIterator>
 struct object {
 	union union_type {
 		bool boolean;
@@ -139,7 +139,7 @@ private:
 
 template <typename ForwardIterator>
 struct object<ForwardIterator>::implicit_type {
-	implicit_type(object const& o) : obj(o) { }
+	implicit_type(object<ForwardIterator> const& o) : obj(o) { }
 	~implicit_type() { }
 
 	template <typename T>
