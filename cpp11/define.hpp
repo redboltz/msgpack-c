@@ -24,7 +24,8 @@
 	{ \
 		msgpack::type::make_define(__VA_ARGS__).msgpack_pack(pk); \
 	} \
-	void msgpack_unpack(msgpack::object const& o) \
+	template <typename ForwardIterator> \
+	void msgpack_unpack(msgpack::object<ForwardIterator> const& o)	\
 	{ \
 		msgpack::type::make_define(__VA_ARGS__).msgpack_unpack(o); \
 	}\
@@ -37,16 +38,16 @@
 // MSGPACK_ADD_ENUM must be used in the global namespace.
 #define MSGPACK_ADD_ENUM(enum) \
   namespace msgpack { \
-	template <> \
-	inline enum& operator>> (object const& o, enum& v) \
+	template <typename ForwardIterator> \
+	inline enum& operator>> (object<ForwardIterator> const& o, enum& v) \
 	{ \
 	  int tmp; \
 	  o >> tmp; \
 	  v = static_cast<enum>(tmp); \
 	  return v; \
 	} \
-	template <> \
-	void operator<< (object::with_zone& o, const enum& v) \
+	template <typename ForwardIterator> \
+	void operator<< (typename object<ForwardIterator>::with_zone& o, const enum& v) \
 	{ \
 	  int tmp = static_cast<enum>(v); \
 	  o << tmp; \
@@ -63,15 +64,17 @@ struct define_imp {
 		define_imp<Tuple, N-1>::pack(pk, t);
 		pk.pack(std::get<N-1>(t));
 	}
-	static void unpack(msgpack::object const& o, Tuple& t) {
+	template <typename ForwardIterator>
+	static void unpack(msgpack::object<ForwardIterator> const& o, Tuple& t) {
 		define_imp<Tuple, N-1>::unpack(o, t);
 		const size_t size = o.via.array.size;
 		if(size <= N-1) { return; }
 		o.via.array.ptr[N-1].convert(std::get<N-1>(t));
 	}
-	static void object(msgpack::object* o, msgpack::zone* z, Tuple const& t) {
+	template <typename ForwardIterator>
+	static void object(msgpack::object<ForwardIterator>* o, msgpack::zone* z, Tuple const& t) {
 		define_imp<Tuple, N-1>::object(o, z, t);
-		o->via.array.ptr[N-1] = msgpack::object(std::get<N-1>(t), z);
+		o->via.array.ptr[N-1] = msgpack::object<ForwardIterator>(std::get<N-1>(t), z);
 	}
 };
 
@@ -81,13 +84,15 @@ struct define_imp<Tuple, 1> {
 	static void pack(Packer& pk, Tuple const& t) {
 		pk.pack(std::get<0>(t));
 	}
-	static void unpack(msgpack::object const& o, Tuple& t) {
+	template <typename ForwardIterator>
+	static void unpack(msgpack::object<ForwardIterator> const& o, Tuple& t) {
 		const size_t size = o.via.array.size;
 		if(size <= 0) { return; }
 		o.via.array.ptr[0].convert(std::get<0>(t));
 	}
-	static void object(msgpack::object* o, msgpack::zone* z, Tuple const& t) {
-		o->via.array.ptr[0] = msgpack::object(std::get<0>(t), z);
+	template <typename ForwardIterator>
+	static void object(msgpack::object<ForwardIterator>* o, msgpack::zone* z, Tuple const& t) {
+		o->via.array.ptr[0] = msgpack::object<ForwardIterator>(std::get<0>(t), z);
 	}
 };
 
@@ -104,19 +109,23 @@ struct define {
 
 		define_imp<tuple<Args&...>, sizeof...(Args)>::pack(pk, a);
 	}
-	void msgpack_unpack(msgpack::object const& o)
+	template <typename ForwardIterator>
+	void msgpack_unpack(msgpack::object<ForwardIterator> const& o)
 	{
 		if(o.type != type::ARRAY) { throw type_error(); }
 
 		define_imp<tuple<Args&...>, sizeof...(Args)>::unpack(o, a);
 	}
-	void msgpack_object(msgpack::object* o, msgpack::zone* z) const
+	template <typename ForwardIterator>
+	void msgpack_object(msgpack::object<ForwardIterator>* o, msgpack::zone* z) const
 	{
 		o->type = type::ARRAY;
-		o->via.array.ptr = static_cast<object*>(z->malloc(sizeof(object)*sizeof...(Args)));
+		o->via.array.ptr =
+			static_cast<object<ForwardIterator>*>(
+				z->malloc(sizeof(object<ForwardIterator>)*sizeof...(Args)));
 		o->via.array.size = sizeof...(Args);
 
-		define_imp<tuple<Args&...>, sizeof...(Args)>::object(o, z, a);
+		define_imp<tuple<Args&...>, sizeof...(Args)>::template object<ForwardIterator>(o, z, a);
 	}
 
 	tuple<Args&...> a;
@@ -131,11 +140,13 @@ struct define<> {
 	{
 		pk.pack_array(0);
 	}
-	void msgpack_unpack(msgpack::object const& o)
+	template <typename ForwardIterator>
+	void msgpack_unpack(msgpack::object<ForwardIterator> const& o)
 	{
 		if(o.type != type::ARRAY) { throw type_error(); }
 	}
-	void msgpack_object(msgpack::object* o, msgpack::zone* z) const
+	template <typename ForwardIterator>
+	void msgpack_object(msgpack::object<ForwardIterator>* o, msgpack::zone* z) const
 	{
 		o->type = type::ARRAY;
 		o->via.array.ptr = NULL;

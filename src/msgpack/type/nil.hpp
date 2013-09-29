@@ -28,8 +28,8 @@ struct nil { };
 
 }  // namespace type
 
-
-inline type::nil& operator>> (object const& o, type::nil& v)
+template <typename ForwardIterator>
+inline type::nil& operator>> (object<ForwardIterator> const& o, type::nil& v)
 {
 	if(o.type != type::NIL) { throw type_error(); }
 	return v;
@@ -42,22 +42,26 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const type::nil& v)
 	return o;
 }
 
-inline void operator<< (object& o, type::nil v)
+template <typename ForwardIterator>
+inline void operator<< (object<ForwardIterator>& o, type::nil v)
 {
 	o.type = type::NIL;
 }
 
-inline void operator<< (object::with_zone& o, type::nil v)
-	{ static_cast<object&>(o) << v; }
+template <typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, type::nil v)
+	{ static_cast<object<ForwardIterator>&>(o) << v; }
 
 
+#if 0
+template <typename ForwardIterator>
 template <>
-inline void object::as<void>() const
+inline void object<ForwardIterator>::as<void>() const
 {
 	msgpack::type::nil v;
 	convert(v);
 }
-
+#endif
 
 }  // namespace msgpack
 

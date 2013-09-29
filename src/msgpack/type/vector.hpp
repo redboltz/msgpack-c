@@ -24,14 +24,14 @@
 namespace msgpack {
 
 
-template <typename T>
-inline std::vector<T>& operator>> (object const& o, std::vector<T>& v)
+template <typename T, typename ForwardIterator>
+inline std::vector<T>& operator>> (object<ForwardIterator> const& o, std::vector<T>& v)
 {
 	if(o.type != type::ARRAY) { throw type_error(); }
 	v.resize(o.via.array.size);
 	if(o.via.array.size > 0) {
-		object* p = o.via.array.ptr;
-		object* const pend = o.via.array.ptr + o.via.array.size;
+		object<ForwardIterator>* p = o.via.array.ptr;
+		object<ForwardIterator>* const pend = o.via.array.ptr + o.via.array.size;
 		T* it = &v[0];
 		do {
 			p->convert(*it);
@@ -53,21 +53,23 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::vector<T>& v)
 	return o;
 }
 
-template <typename T>
-inline void operator<< (object::with_zone& o, const std::vector<T>& v)
+template <typename T, typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, const std::vector<T>& v)
 {
 	o.type = type::ARRAY;
 	if(v.empty()) {
 		o.via.array.ptr = nullptr;
 		o.via.array.size = 0;
 	} else {
-		object* p = static_cast<object*>(o.zone->malloc(sizeof(object)*v.size()));
-		object* const pend = p + v.size();
+		object<ForwardIterator>* p =
+			static_cast<object<ForwardIterator>*>(
+				o.zone->malloc(sizeof(object<ForwardIterator>)*v.size()));
+		object<ForwardIterator>* const pend = p + v.size();
 		o.via.array.ptr = p;
 		o.via.array.size = v.size();
 		typename std::vector<T>::const_iterator it(v.begin());
 		do {
-			*p = object(*it, o.zone);
+			*p = object<ForwardIterator>(*it, o.zone);
 			++p;
 			++it;
 		} while(p < pend);

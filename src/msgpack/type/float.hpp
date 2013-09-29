@@ -26,8 +26,8 @@ namespace msgpack {
 
 // FIXME check overflow, underflow
 
-
-inline float& operator>> (object const& o, float& v)
+template <typename ForwardIterator>
+inline float& operator>> (object<ForwardIterator> const& o, float& v)
 {
 	if(o.type != type::DOUBLE) { throw type_error(); }
 	v = (float)o.via.dec;
@@ -42,7 +42,8 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const float& v)
 }
 
 
-inline double& operator>> (object const& o, double& v)
+template <typename ForwardIterator>
+inline double& operator>> (object<ForwardIterator> const& o, double& v)
 {
 	if(o.type != type::DOUBLE) { throw type_error(); }
 	v = o.via.dec;
@@ -57,23 +58,27 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const double& v)
 }
 
 
-inline void operator<< (object& o, float v)
+template <typename ForwardIterator>
+inline void operator<< (object<ForwardIterator>& o, float v)
 {
 	o.type = type::DOUBLE;
 	o.via.dec = (double)v;
 }
 
-inline void operator<< (object& o, double v)
+template <typename ForwardIterator>
+inline void operator<< (object<ForwardIterator>& o, double v)
 {
 	o.type = type::DOUBLE;
 	o.via.dec = v;
 }
 
-inline void operator<< (object::with_zone& o, float v)
-	{ static_cast<object&>(o) << v; }
+template <typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, float v)
+	{ static_cast<object<ForwardIterator>&>(o) << v; }
 
-inline void operator<< (object::with_zone& o, double v)
-	{ static_cast<object&>(o) << v; }
+template <typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, double v)
+	{ static_cast<object<ForwardIterator>&>(o) << v; }
 
 
 }  // namespace msgpack

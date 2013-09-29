@@ -23,8 +23,8 @@
 
 namespace msgpack {
 
-
-inline std::string& operator>> (object const& o, std::string& v)
+template <typename ForwardIterator>
+inline std::string& operator>> (object<ForwardIterator> const& o, std::string& v)
 {
 	if(o.type != type::RAW) { throw type_error(); }
 	v.assign(o.via.raw.ptr, o.via.raw.size);
@@ -39,7 +39,8 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::string& v)
 	return o;
 }
 
-inline void operator<< (object::with_zone& o, const std::string& v)
+template <typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, const std::string& v)
 {
 	o.type = type::RAW;
 	char* ptr = static_cast<char*>(o.zone->malloc(v.size()));
@@ -48,7 +49,8 @@ inline void operator<< (object::with_zone& o, const std::string& v)
 	memcpy(ptr, v.data(), v.size());
 }
 
-inline void operator<< (object& o, const std::string& v)
+template <typename ForwardIterator>
+inline void operator<< (object<ForwardIterator>& o, const std::string& v)
 {
 	o.type = type::RAW;
 	o.via.raw.ptr = v.data();

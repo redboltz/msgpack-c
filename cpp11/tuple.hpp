@@ -135,63 +135,73 @@ const packer<Stream>& operator<< (
 
 // --- Convert from tuple to object ---
 
-template <typename Tuple, std::size_t N>
+template <typename ForwardIterator, typename Tuple, std::size_t N>
 struct Converter {
 	static void convert(
-		object const& o,
+		object<ForwardIterator> const& o,
 		Tuple& v) {
-		Converter<Tuple, N-1>::convert(o, v);
-		o.via.array.ptr[N-1].convert<typename std::remove_reference<decltype(type::get<N-1>(v))>::type>(type::get<N-1>(v));
+		Converter<ForwardIterator, Tuple, N-1>::convert(o, v);
+		o.via.array.ptr[N-1].template convert<
+			typename std::remove_reference<
+				decltype(type::get<N-1>(v))
+			>::type
+		>(type::get<N-1>(v));
 	}
 };
 
-template <typename Tuple>
-struct Converter<Tuple, 1> {
+template <typename ForwardIterator, typename Tuple>
+struct Converter<ForwardIterator, Tuple, 1> {
 	static void convert (
-		object const& o,
+		object<ForwardIterator> const& o,
 		Tuple& v) {
-		o.via.array.ptr[0].convert<typename std::remove_reference<decltype(type::get<0>(v))>::type>(type::get<0>(v));
+		o.via.array.ptr[0].template convert<
+			typename std::remove_reference<
+				decltype(type::get<0>(v))
+			>::type
+		>(type::get<0>(v));
 	}
 };
 
-template <typename... Args>
+template <typename ForwardIterator, typename... Args>
 type::tuple<Args...>& operator>> (
-	object const& o,
+	object<ForwardIterator> const& o,
 	type::tuple<Args...>& v) {
 	if(o.type != type::ARRAY) { throw type_error(); }
 	if(o.via.array.size < sizeof...(Args)) { throw type_error(); }
-	Converter<decltype(v), sizeof...(Args)>::convert(o, v);
+	Converter<ForwardIterator, decltype(v), sizeof...(Args)>::convert(o, v);
 	return v;
 }
 
 // --- Convert from tuple to object with zone ---
-template <typename Tuple, std::size_t N>
+template <typename ForwardIterator, typename Tuple, std::size_t N>
 struct TupleToObjectWithZone {
 	static void convert(
-		object::with_zone& o,
+		typename object<ForwardIterator>::with_zone& o,
 		const Tuple& v) {
-		TupleToObjectWithZone<Tuple, N-1>::convert(o, v);
-		o.via.array.ptr[N-1] = object(type::get<N-1>(v), o.zone);
+		TupleToObjectWithZone<ForwardIterator, Tuple, N-1>::convert(o, v);
+		o.via.array.ptr[N-1] = object<ForwardIterator>(type::get<N-1>(v), o.zone);
 	}
 };
 
-template <typename Tuple>
-struct TupleToObjectWithZone<Tuple, 1> {
+template <typename ForwardIterator, typename Tuple>
+struct TupleToObjectWithZone<ForwardIterator, Tuple, 1> {
 	static void convert (
-		object::with_zone& o,
+		typename object<ForwardIterator>::with_zone& o,
 		const Tuple& v) {
-		o.via.array.ptr[0] = object(type::get<0>(v), o.zone);
+		o.via.array.ptr[0] = object<ForwardIterator>(type::get<0>(v), o.zone);
 	}
 };
 
-template <typename... Args>
+template <typename ForwardIterator, typename... Args>
 inline void operator<< (
-		object::with_zone& o,
+		typename object<ForwardIterator>::with_zone& o,
 		type::tuple<Args...>& v) {
 	o.type = type::ARRAY;
-	o.via.array.ptr = static_cast<object*>(o.zone->malloc(sizeof(object)*sizeof...(Args)));
+	o.via.array.ptr =
+		static_cast<object<ForwardIterator>*>(
+			o.zone->malloc(sizeof(object<ForwardIterator>)*sizeof...(Args)));
 	o.via.array.size = sizeof...(Args);
-	TupleToObjectWithZone<decltype(v), sizeof...(Args)>::convert(o, v);
+	TupleToObjectWithZone<ForwardIterator, decltype(v), sizeof...(Args)>::convert(o, v);
 }
 
 } // msgpack

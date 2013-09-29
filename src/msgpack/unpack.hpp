@@ -62,106 +62,125 @@ private:
 	bool referenced_;
 };
 
-inline void unpack_uint8(unpack_user&, uint8_t d, object& o)
+template <typename ForwardIterator>
+inline void unpack_uint8(unpack_user&, uint8_t d, object<ForwardIterator>& o)
 { o.type = type::POSITIVE_INTEGER; o.via.u64 = d; }
 
-inline void unpack_uint16(unpack_user&, uint16_t d, object& o)
+template <typename ForwardIterator>
+inline void unpack_uint16(unpack_user&, uint16_t d, object<ForwardIterator>& o)
 { o.type = type::POSITIVE_INTEGER; o.via.u64 = d; }
 
-inline void unpack_uint32(unpack_user&, uint32_t d, object& o)
+template <typename ForwardIterator>
+inline void unpack_uint32(unpack_user&, uint32_t d, object<ForwardIterator>& o)
 { o.type = type::POSITIVE_INTEGER; o.via.u64 = d; }
 
-inline void unpack_uint64(unpack_user&, uint64_t d, object& o)
+template <typename ForwardIterator>
+inline void unpack_uint64(unpack_user&, uint64_t d, object<ForwardIterator>& o)
 { o.type = type::POSITIVE_INTEGER; o.via.u64 = d; }
 
-inline void unpack_int8(unpack_user&, int8_t d, object& o)
+template <typename ForwardIterator>
+inline void unpack_int8(unpack_user&, int8_t d, object<ForwardIterator>& o)
 { if(d >= 0) { o.type = type::POSITIVE_INTEGER; o.via.u64 = d; }
 		else { o.type = type::NEGATIVE_INTEGER; o.via.i64 = d; } }
 
-inline void unpack_int16(unpack_user&, int16_t d, object& o)
+template <typename ForwardIterator>
+inline void unpack_int16(unpack_user&, int16_t d, object<ForwardIterator>& o)
 { if(d >= 0) { o.type = type::POSITIVE_INTEGER; o.via.u64 = d; }
 		else { o.type = type::NEGATIVE_INTEGER; o.via.i64 = d; } }
 
-inline void unpack_int32(unpack_user&, int32_t d, object& o)
+template <typename ForwardIterator>
+inline void unpack_int32(unpack_user&, int32_t d, object<ForwardIterator>& o)
 { if(d >= 0) { o.type = type::POSITIVE_INTEGER; o.via.u64 = d; }
 		else { o.type = type::NEGATIVE_INTEGER; o.via.i64 = d; } }
 
-inline void unpack_int64(unpack_user&, int64_t d, object& o)
+template <typename ForwardIterator>
+inline void unpack_int64(unpack_user&, int64_t d, object<ForwardIterator>& o)
 { if(d >= 0) { o.type = type::POSITIVE_INTEGER; o.via.u64 = d; }
 		else { o.type = type::NEGATIVE_INTEGER; o.via.i64 = d; } }
 
-inline void unpack_float(unpack_user&, float d, object& o)
+template <typename ForwardIterator>
+inline void unpack_float(unpack_user&, float d, object<ForwardIterator>& o)
 { o.type = type::DOUBLE; o.via.dec = d; }
 
-inline void unpack_double(unpack_user&, double d, object& o)
+template <typename ForwardIterator>
+inline void unpack_double(unpack_user&, double d, object<ForwardIterator>& o)
 { o.type = type::DOUBLE; o.via.dec = d; }
 
-inline void unpack_nil(unpack_user&, object& o)
+template <typename ForwardIterator>
+inline void unpack_nil(unpack_user&, object<ForwardIterator>& o)
 { o.type = type::NIL; }
 
-inline void unpack_true(unpack_user&, object& o)
+template <typename ForwardIterator>
+inline void unpack_true(unpack_user&, object<ForwardIterator>& o)
 { o.type = type::BOOLEAN; o.via.boolean = true; }
 
-inline void unpack_false(unpack_user&, object& o)
+template <typename ForwardIterator>
+inline void unpack_false(unpack_user&, object<ForwardIterator>& o)
 { o.type = type::BOOLEAN; o.via.boolean = false; }
 
 struct unpack_array {
-	bool operator()(unpack_user&u, unsigned int n, object& o) const {
+	template <typename ForwardIterator>
+	bool operator()(unpack_user&u, unsigned int n, object<ForwardIterator>& o) const {
 		o.type = type::ARRAY;
 		o.via.array.size = 0;
-		o.via.array.ptr = (object*)u.z().malloc(n*sizeof(object));
+		o.via.array.ptr = (object<ForwardIterator>*)u.z().malloc(n*sizeof(object<ForwardIterator>));
 		if(o.via.array.ptr == nullptr) { return false; }
 		return true;
 	}
 };
 
-inline void unpack_array_item(unpack_user&, object& c, object const& o)
+template <typename ForwardIterator>
+inline void unpack_array_item(unpack_user&, object<ForwardIterator>& c, object<ForwardIterator> const& o)
 { c.via.array.ptr[c.via.array.size++] = o; }
 
 struct unpack_map {
-	bool operator()(unpack_user& u, unsigned int n, object& o) const {
+	template <typename ForwardIterator>
+	bool operator()(unpack_user& u, unsigned int n, object<ForwardIterator>& o) const {
 		o.type = type::MAP;
 		o.via.map.size = 0;
-		o.via.map.ptr = (object_kv*)u.z().malloc(n*sizeof(object_kv));
+		o.via.map.ptr = (object_kv<ForwardIterator>*)u.z().malloc(n*sizeof(object_kv<ForwardIterator>));
 		if(o.via.map.ptr == nullptr) { return false; }
 		return true;
 	}
 };
 
-inline void unpack_map_item(unpack_user&, object& c, object const& k, object const& v)
+template <typename ForwardIterator>
+inline void unpack_map_item(unpack_user&, object<ForwardIterator>& c, object<ForwardIterator> const& k, object<ForwardIterator> const& v)
 {
 	c.via.map.ptr[c.via.map.size].key = k;
 	c.via.map.ptr[c.via.map.size].val = v;
 	++c.via.map.size;
 }
 
-template <ForwardIterator>
-inline void unpack_raw(unpack_user& u, ForwardIterator it, unsigned int l, object& o)
+template <typename ForwardIterator>
+inline void unpack_raw(unpack_user& u, ForwardIterator it, unsigned int l, object<ForwardIterator>& o)
 {
 	o.type = type::RAW;
-	o.via.raw.ptr = it;
-	o.via.raw.size = std::advance(l;
+	o.via.raw.begin = it;
+	std::advance(it, l);
+	o.via.raw.end = it;
 	u.set_referenced(true);
 }
 
 
+template <typename ForwardIterator>
 class template_unpack_stack {
 public:
-	object const& obj() const { return obj_; }
-	object& obj() { return obj_; }
-	void setObj(object const& obj) { obj_ = obj; }
+	object<ForwardIterator> const& obj() const { return obj_; }
+	object<ForwardIterator>& obj() { return obj_; }
+	void setObj(object<ForwardIterator> const& obj) { obj_ = obj; }
 	size_t count() const { return count_; }
 	void set_count(size_t count) { count_ = count; }
 	size_t decl_count() { return --count_; }
 	unsigned int ct() const { return ct_; }
 	void set_ct(unsigned int ct) { ct_ = ct; }
-	object const& map_key() const { return map_key_; }
-	void set_map_key(object const& map_key) { map_key_ = map_key; }
+	object<ForwardIterator> const& map_key() const { return map_key_; }
+	void set_map_key(object<ForwardIterator> const& map_key) { map_key_ = map_key; }
 private:
-	object obj_;
+	object<ForwardIterator> obj_;
 	size_t count_;
 	unsigned int ct_;
-	object map_key_;
+	object<ForwardIterator> map_key_;
 };
 
 inline void init_count(void* buffer)
@@ -231,11 +250,12 @@ inline T load(const char* n, typename msgpack::enable_if<sizeof(T) == 8>::type* 
 		(static_cast<uint64_t>(reinterpret_cast<const uint8_t*>(n)[7])      ));
 }
 
+template <typename ForwardIterator>
 class template_context {
 public:
 	template_context():trail_(0), cs_(CS_HEADER), top_(0)
 	{
-		stack_[0].setObj(object());
+		stack_[0].setObj(object<ForwardIterator>());
 	}
 
 	void init()
@@ -243,10 +263,10 @@ public:
 		cs_ = CS_HEADER;
 		trail_ = 0;
 		top_ = 0;
-		stack_[0].setObj(object());
+		stack_[0].setObj(object<ForwardIterator>());
 	}
 
-	object const& data() const
+	object<ForwardIterator> const& data() const
 	{
 		return stack_[0].obj();
 	}
@@ -260,7 +280,7 @@ public:
 	{
 		return user_;
 	}
-	template <typename ForwardIterator>
+
 	int execute(ForwardIterator& it, ForwardIterator end)
 	//int execute(const char* data, size_t len, size_t& off)
 	{
@@ -273,8 +293,8 @@ public:
 		// to support register optimization
 		unsigned int trail = trail_;
 
-		object obj;
-		template_unpack_stack* c = nullptr;
+		object<ForwardIterator> obj;
+		template_unpack_stack<ForwardIterator>* c = nullptr;
 
 		if(it == end) {
 			trail_ = trail;
@@ -316,7 +336,7 @@ public:
 					case 0xc5: // bin 16
 					case 0xc6: // bin 32
 						trail = 1 << (static_cast<unsigned int>(*it) & 0x03);
-						cs_ = next_cs(p);
+						cs_ = next_cs(it);
 						fixed_trail_again = true;
 						break;
 
@@ -334,7 +354,7 @@ public:
 					case 0xd2:	// signed int 32
 					case 0xd3:	// signed int 64
 						trail = 1 << (static_cast<unsigned int>(*it) & 0x03);
-						cs_ = next_cs(p);
+						cs_ = next_cs(it);
 						fixed_trail_again = true;
 						break;
 					//case 0xd4:
@@ -346,7 +366,7 @@ public:
 					case 0xda:	// raw 16 (str 16)
 					case 0xdb:	// raw 32 (str 32)
 						trail = 1 << ((static_cast<unsigned int>(*it) & 0x03) - 1);
-						cs_ = next_cs(p);
+						cs_ = next_cs(it);
 						fixed_trail_again = true;
 						break;
 					case 0xdc:	// array 16
@@ -354,7 +374,7 @@ public:
 					case 0xde:	// map 16
 					case 0xdf:	// map 32
 						trail = 2 << (static_cast<unsigned int>(*it) & 0x01);
-						cs_ = next_cs(p);
+						cs_ = next_cs(it);
 						fixed_trail_again = true;
 						break;
 					default:
@@ -373,11 +393,11 @@ public:
 
 				} else if(0x90 <= selector && selector <= 0x9f) { // FixArray
 					int ret = push_aggregate<fix_tag>(
-						unpack_array(), CT_ARRAY_ITEM, c, obj, p, p, data, off, trail);
+						unpack_array(), CT_ARRAY_ITEM, c, obj, it, it, trail);
 					if (ret != 0) return ret;
 				} else if(0x80 <= selector && selector <= 0x8f) { // FixMap
 					int ret = push_aggregate<fix_tag>(
-						unpack_map(), CT_MAP_KEY, c, obj, p, p, data, off, trail);
+						unpack_map(), CT_MAP_KEY, c, obj, it, it, trail);
 					if (ret != 0) return ret;
 				} else {
 					trail_ = trail;
@@ -387,10 +407,10 @@ public:
 			}
 			if (cs_ != CS_HEADER || fixed_trail_again) {
 				if (fixed_trail_again) {
-					++p;
+					++it;
 					fixed_trail_again = false;
 				}
-				if((size_t)(pe - p) < trail) {
+				if(std::distance(it, end) < trail) {
 					trail_ = trail;
 					return 0;
 				}
@@ -503,24 +523,24 @@ public:
 				} break;
 				case CS_ARRAY_16: {
 					int ret = push_aggregate<uint16_t>(
-						unpack_array(), CT_ARRAY_ITEM, c, obj, p, n, data, off, trail);
+						unpack_array(), CT_ARRAY_ITEM, c, obj, it, n, trail);
 					if (ret != 0) return ret;
 				} break;
 				case CS_ARRAY_32: {
 					/* FIXME security guard */
 					int ret = push_aggregate<uint32_t>(
-						unpack_array(), CT_ARRAY_ITEM, c, obj, p, n, data, off, trail);
+						unpack_array(), CT_ARRAY_ITEM, c, obj, it, n, trail);
 					if (ret != 0) return ret;
 				} break;
 				case CS_MAP_16: {
 					int ret = push_aggregate<uint16_t>(
-						unpack_map(), CT_MAP_KEY, c, obj, p, n, data, off, trail);
+						unpack_map(), CT_MAP_KEY, c, obj, it, n, trail);
 					if (ret != 0) return ret;
 				} break;
 				case CS_MAP_32: {
 					/* FIXME security guard */
 					int ret = push_aggregate<uint32_t>(
-						unpack_map(), CT_MAP_KEY, c, obj, p, n, data, off, trail);
+						unpack_map(), CT_MAP_KEY, c, obj, it, n, trail);
 					if (ret != 0) return ret;
 				} break;
 				default:
@@ -528,14 +548,13 @@ public:
 					return -1;
 				}
 			}
-		} while(p != pe);
+		} while(it != end);
 
 		trail_ = trail;
 		return 0;
 	}
 
 private:
-	template <typename ForwardIterator>
 	static unsigned int next_cs(ForwardIterator const& it)
 	{
 		return static_cast<unsigned int>(*it) & 0x1f;
@@ -545,18 +564,16 @@ private:
 	int push_aggregate(
 		Func const& f,
 		unsigned int ct,
-		template_unpack_stack*& c,
-		object& obj,
-		const char*& current,
-		const char* load_pos,
-		const char* origin,
-		size_t& off,
+		template_unpack_stack<ForwardIterator>*& c,
+		object<ForwardIterator>& obj,
+		ForwardIterator*& current,
+		ForwardIterator* load_pos,
 		unsigned int trail) {
 		if(top_ < MSGPACK_EMBED_STACK_SIZE /* FIXME */
 		   && f(user_, load<T>(load_pos), stack_[top_].obj())) {
 			if(load<T>(load_pos) == 0) {
 				obj = stack_[top_].obj();
-				int ret = push_proc(c, obj, current, origin, off, trail);
+				int ret = push_proc(c, obj, current);
 				if (ret != 0) return ret;
 			}
 			else {
@@ -567,19 +584,18 @@ private:
 			}
 		}
 		else {
-			off = update_attributes(current, origin, trail);
+			trail_ = trail;
 			return -1;
 		}
 		return 0;
 	}
 
-	template <typename ForwardIterator>
 	void header_again(ForwardIterator& current) {
 		cs_ = CS_HEADER;
 		++current;
 	}
 
-	int push_item(template_unpack_stack*& c, object& obj) {
+	int push_item(template_unpack_stack<ForwardIterator>*& c, object<ForwardIterator>& obj) {
 		bool finish = false;
 		while (!finish) {
 			if(top_ == 0) {
@@ -622,10 +638,9 @@ private:
 		return 0;
 	}
 
-	template <typename ForwardIterator>
 	int push_proc(
-		template_unpack_stack*& c,
-		object& obj,
+		template_unpack_stack<ForwardIterator>*& c,
+		object<ForwardIterator>& obj,
 		ForwardIterator& current) {
 		int ret = push_item(c, obj);
 		if (ret > 0) {
@@ -646,7 +661,7 @@ private:
 	unpack_user user_;
 	unsigned int cs_;
 	unsigned int top_;
-	template_unpack_stack stack_[MSGPACK_EMBED_STACK_SIZE];
+	template_unpack_stack<ForwardIterator> stack_[MSGPACK_EMBED_STACK_SIZE];
 };
 
 } // detail
@@ -657,18 +672,18 @@ struct unpack_error : public std::runtime_error {
 		std::runtime_error(msg) { }
 };
 
-
+template <typename ForwardIterator>
 class unpacked {
 public:
 	unpacked() { }
 
-	unpacked(object const& obj, msgpack::unique_ptr<msgpack::zone> z) :
+	unpacked(object<ForwardIterator> const& obj, msgpack::unique_ptr<msgpack::zone> z) :
 		m_obj(obj), m_zone(msgpack::move(z)) { }
 
-	void set(object const& obj)
+	void set(object<ForwardIterator> const& obj)
 		{ m_obj = obj; }
 
-	const object& get() const
+	const object<ForwardIterator>& get() const
 		{ return m_obj; }
 
 	msgpack::unique_ptr<msgpack::zone>& zone()
@@ -678,11 +693,12 @@ public:
 		{ return m_zone; }
 
 private:
-	object m_obj;
+	object<ForwardIterator> m_obj;
 	msgpack::unique_ptr<msgpack::zone> m_zone;
 };
 
 
+template <typename ForwardIterator>
 class unpacker {
 public:
 	unpacker(size_t init_buffer_size = MSGPACK_UNPACKER_INIT_BUFFER_SIZE);
@@ -700,7 +716,7 @@ public:
 	void buffer_consumed(size_t size);
 
 	/*! 4. repeat next() until it retunrs false */
-	bool next(unpacked* result);
+	bool next(unpacked<ForwardIterator>* result);
 
 	/*! 5. check if the size of message doesn't exceed assumption. */
 	size_t message_size() const;
@@ -745,7 +761,7 @@ public:
 	bool execute();
 
 	/*! for backward compatibility */
-	object const& data();
+	object<ForwardIterator> const& data();
 
 	/*! for backward compatibility */
 	zone* release_zone();
@@ -786,16 +802,18 @@ private:
 	size_t parsed_;
 	zone* z_;
 	size_t initial_buffer_size_;
-	detail::template_context ctx_;
+	detail::template_context<ForwardIterator> ctx_;
 
 private:
 	unpacker(const unpacker&);
 };
 
 
-inline void unpack(unpacked& result,
+template <typename ForwardIterator>
+inline void unpack(unpacked<ForwardIterator>& result,
 		const char* data, size_t len, size_t* offset = nullptr);
-inline void unpack(unpacked* result,
+template <typename ForwardIterator>
+inline void unpack(unpacked<ForwardIterator>* result,
 		const char* data, size_t len, size_t* offset = nullptr);
 
 // obsolete
@@ -807,10 +825,13 @@ typedef enum {
 } unpack_return;
 
 // obsolete
+template <typename ForwardIterator>
 static unpack_return unpack(const char* data, size_t len, size_t* off,
-		zone& z, object& result);
+	zone& z, object<ForwardIterator>& result);
+
+template <typename ForwardIterator>
 static unpack_return unpack(const char* data, size_t len, size_t* off,
-		zone* z, object* result);
+	zone* z, object<ForwardIterator>* result);
 
 
 // obsolete
@@ -818,6 +839,7 @@ static object unpack(const char* data, size_t len, zone& z, size_t* off = nullpt
 static object unpack(const char* data, size_t len, zone* z, size_t* off = nullptr);
 
 
+template <typename ForwardIterator>
 inline unpacker::unpacker(size_t initial_buffer_size)
 {
 	if(initial_buffer_size < COUNTER_SIZE) {
@@ -850,6 +872,7 @@ inline unpacker::unpacker(size_t initial_buffer_size)
 	ctx_.user().set_referenced(false);
 }
 
+template <typename ForwardIterator>
 inline unpacker::~unpacker()
 {
 	zone::destroy(z_);
@@ -857,12 +880,14 @@ inline unpacker::~unpacker()
 }
 
 
+template <typename ForwardIterator>
 inline void unpacker::reserve_buffer(size_t size)
 {
 	if(free_ >= size) return;
 	expand_buffer(size);
 }
 
+template <typename ForwardIterator>
 inline void unpacker::expand_buffer(size_t size)
 {
 	if(used_ == off_ && detail::get_count(buffer_) == 1
@@ -925,22 +950,26 @@ inline void unpacker::expand_buffer(size_t size)
 	}
 }
 
+template <typename ForwardIterator>
 inline char* unpacker::buffer()
 {
 	return buffer_ + used_;
 }
 
+template <typename ForwardIterator>
 inline size_t unpacker::buffer_capacity() const
 {
 	return free_;
 }
 
+template <typename ForwardIterator>
 inline void unpacker::buffer_consumed(size_t size)
 {
 	used_ += size;
 	free_ -= size;
 }
 
+template <typename ForwardIterator>
 inline bool unpacker::next(unpacked* result)
 {
 	int ret = execute_imp();
@@ -963,6 +992,7 @@ inline bool unpacker::next(unpacked* result)
 }
 
 
+template <typename ForwardIterator>
 inline bool unpacker::execute()
 {
 	int ret = execute_imp();
@@ -975,6 +1005,7 @@ inline bool unpacker::execute()
 	}
 }
 
+template <typename ForwardIterator>
 inline int unpacker::execute_imp()
 {
 	const char *it = buffer_ + off_;
@@ -986,11 +1017,13 @@ inline int unpacker::execute_imp()
 	return ret;
 }
 
+template <typename ForwardIterator>
 inline object const& unpacker::data()
 {
 	return ctx_.data();
 }
 
+template <typename ForwardIterator>
 inline zone* unpacker::release_zone()
 {
 	if(!flush_zone()) {
@@ -1009,11 +1042,13 @@ inline zone* unpacker::release_zone()
 	return old;
 }
 
+template <typename ForwardIterator>
 inline void unpacker::reset_zone()
 {
 	z_->clear();
 }
 
+template <typename ForwardIterator>
 inline bool unpacker::flush_zone()
 {
 	if(ctx_.user().referenced()) {
@@ -1030,6 +1065,7 @@ inline bool unpacker::flush_zone()
 	return true;
 }
 
+template <typename ForwardIterator>
 inline void unpacker::reset()
 {
 	ctx_.init();
@@ -1037,31 +1073,37 @@ inline void unpacker::reset()
 	parsed_ = 0;
 }
 
+template <typename ForwardIterator>
 inline size_t unpacker::message_size() const
 {
 	return parsed_ - off_ + used_;
 }
 
+template <typename ForwardIterator>
 inline size_t unpacker::parsed_size() const
 {
 	return parsed_;
 }
 
+template <typename ForwardIterator>
 inline char* unpacker::nonparsed_buffer()
 {
 	return buffer_ + off_;
 }
 
+template <typename ForwardIterator>
 inline size_t unpacker::nonparsed_size() const
 {
 	return used_ - off_;
 }
 
+template <typename ForwardIterator>
 inline void unpacker::skip_nonparsed_buffer(size_t size)
 {
 	off_ += size;
 }
 
+template <typename ForwardIterator>
 inline void unpacker::remove_nonparsed_buffer()
 {
 	used_ = off_;
@@ -1069,14 +1111,12 @@ inline void unpacker::remove_nonparsed_buffer()
 
 namespace detail {
 
+template <typename ForwardIterator>
 inline unpack_return
-unpack_imp(const char* data, size_t len, size_t* off,
-	zone& result_zone, object& result)
+unpack_imp(ForwardIterator& it, ForwardIterator end,
+   zone& result_zone, object<ForwardIterator>& result)
 {
-	size_t noff = 0;
-	if(off != nullptr) { noff = *off; }
-
-	if(len <= noff) {
+	if(it == end) {
 		// FIXME
 		return UNPACK_CONTINUE;
 	}
@@ -1087,14 +1127,10 @@ unpack_imp(const char* data, size_t len, size_t* off,
 	ctx.user().set_z(result_zone);
 	ctx.user().set_referenced(false);
 
-	const char* it = data + noff;
-	const char* it_org = it;
-	int e = ctx.execute(it, it + len);
+	int e = ctx.execute(it, end);
 	if(e < 0) {
 		return UNPACK_PARSE_ERROR;
 	}
-
-	if(off != nullptr) { *off = it - it_org; }
 
 	if(e == 0) {
 		return UNPACK_CONTINUE;
@@ -1112,10 +1148,11 @@ unpack_imp(const char* data, size_t len, size_t* off,
 } // detail
 
 // reference version
+template <typename ForwardIterator>
 inline void unpack(unpacked& result,
-	const char* data, size_t len, size_t* offset)
+   ForwardIterator data, size_t len, size_t* offset)
 {
-	object obj;
+	object<ForwardIterator> obj;
 	msgpack::unique_ptr<zone> z(new zone());
 
 	unpack_return ret = detail::unpack_imp(
@@ -1150,22 +1187,25 @@ inline void unpack(unpacked* result,
 
 // obsolete
 // reference version
-inline unpack_return unpack(const char* data, size_t len, size_t* off,
-		zone& z, object& result)
+template <typename ForwardIterator>
+inline unpack_return unpack(ForwardIterator& data, size_t len, size_t* off,
+	zone& z, object<ForwardIterator>& result)
 {
 	return detail::unpack_imp(data, len, off,
 			z, result);
 }
 // pointer version
-inline unpack_return unpack(const char* data, size_t len, size_t* off,
-		zone* z, object* result)
+template <typename ForwardIterator>
+inline unpack_return unpack(ForwardIterator& data, size_t len, size_t* off,
+	zone* z, object<ForwardIterator>* result)
 {
 	return unpack(data, len, off, *z, *result);
 }
 
 // obsolete
 // reference version
-inline object unpack(const char* data, size_t len, zone& z, size_t* off)
+template <typename ForwardIterator>
+inline object<ForwardIterator> unpack(ForwardIterator& data, size_t len, zone& z, size_t* off)
 {
 	object result;
 

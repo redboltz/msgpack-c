@@ -61,7 +61,8 @@ struct raw_ref {
 }  // namespace type
 
 
-inline type::raw_ref& operator>> (object const& o, type::raw_ref& v)
+template <typename ForwardIterator>
+inline type::raw_ref& operator>> (object<ForwardIterator> const& o, type::raw_ref& v)
 {
 	if(o.type != type::RAW) { throw type_error(); }
 	v.ptr  = o.via.raw.ptr;
@@ -77,15 +78,17 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const type::raw_ref& v)
 	return o;
 }
 
-inline void operator<< (object& o, const type::raw_ref& v)
+template <typename ForwardIterator>
+inline void operator<< (object<ForwardIterator>& o, const type::raw_ref& v)
 {
 	o.type = type::RAW;
 	o.via.raw.ptr = v.ptr;
 	o.via.raw.size = v.size;
 }
 
-inline void operator<< (object::with_zone& o, const type::raw_ref& v)
-	{ static_cast<object&>(o) << v; }
+template <typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, const type::raw_ref& v)
+{ static_cast<object<ForwardIterator>&>(o) << v; }
 
 
 }  // namespace msgpack

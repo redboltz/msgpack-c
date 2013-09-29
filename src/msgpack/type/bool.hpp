@@ -23,8 +23,8 @@
 
 namespace msgpack {
 
-
-inline bool& operator>> (object const& o, bool& v)
+template <typename ForwardIterator>
+inline bool& operator>> (object<ForwardIterator> const& o, bool& v)
 {
 	if(o.type != type::BOOLEAN) { throw type_error(); }
 	v = o.via.boolean;
@@ -39,14 +39,16 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const bool& v)
 	return o;
 }
 
-inline void operator<< (object& o, bool v)
+template <typename ForwardIterator>
+inline void operator<< (object<ForwardIterator>& o, bool v)
 {
 	o.type = type::BOOLEAN;
 	o.via.boolean = v;
 }
 
-inline void operator<< (object::with_zone& o, bool v)
-	{ static_cast<object&>(o) << v; }
+template <typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, bool v)
+{ static_cast<object<ForwardIterator>&>(o) << v; }
 
 
 }  // namespace msgpack

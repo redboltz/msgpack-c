@@ -26,6 +26,7 @@
 #include <typeinfo>
 #include <limits>
 #include <ostream>
+#include <algorithm>
 
 #include "equal.hpp" // boost equal
 
@@ -250,9 +251,9 @@ inline bool operator==(const object<ForwardIterator>& x, const object<ForwardIte
 		} else if(x.via.array.size == 0) {
 			return true;
 		} else {
-			object* px = x.via.array.ptr;
-			object* const pxend = x.via.array.ptr + x.via.array.size;
-			object* py = y.via.array.ptr;
+			object<ForwardIterator>* px = x.via.array.ptr;
+			object<ForwardIterator>* const pxend = x.via.array.ptr + x.via.array.size;
+			object<ForwardIterator>* py = y.via.array.ptr;
 			do {
 				if(!(*px == *py)) {
 					return false;
@@ -269,9 +270,9 @@ inline bool operator==(const object<ForwardIterator>& x, const object<ForwardIte
 		} else if(x.via.map.size == 0) {
 			return true;
 		} else {
-			object_kv* px = x.via.map.ptr;
-			object_kv* const pxend = x.via.map.ptr + x.via.map.size;
-			object_kv* py = y.via.map.ptr;
+			object_kv<ForwardIterator>* px = x.via.map.ptr;
+			object_kv<ForwardIterator>* const pxend = x.via.map.ptr + x.via.map.size;
+			object_kv<ForwardIterator>* py = y.via.map.ptr;
 			do {
 				if(!(px->key == py->key) || !(px->val == py->val)) {
 					return false;
@@ -299,7 +300,7 @@ template <typename ForwardIterator>
 inline bool operator!=(const object<ForwardIterator>& x, const object<ForwardIterator>& y)
 { return !(x == y); }
 
-template <typename T, typeanme ForwardIterator>
+template <typename T, typename ForwardIterator>
 inline bool operator==(const T& y, const object<ForwardIterator> x)
 { return x == y; }
 
@@ -313,7 +314,7 @@ inline bool operator!=(const T& y, const object<ForwardIterator>& x)
 
 
 template <typename ForwardIterator>
-inline object<ForwardIterator>::implicit_type object<ForwardIterator>::convert() const
+inline typename object<ForwardIterator>::implicit_type object<ForwardIterator>::convert() const
 {
 	return implicit_type(*this);
 }
@@ -449,13 +450,13 @@ packer<Stream>& operator<< (packer<Stream>& o, const object<ForwardIterator>& v)
 		return o;
 
 	case type::RAW:
-		o.pack_raw(std::distance(v.via.raw.begin, v.via.raw.end);
+		o.pack_raw(std::distance(v.via.raw.begin, v.via.raw.end));
 		o.pack_raw_body(v.via.raw.begin, v.via.raw.end);
 		return o;
 
 	case type::ARRAY:
 		o.pack_array(v.via.array.size);
-		for(object* p(v.via.array.ptr),
+		for(object<ForwardIterator>* p(v.via.array.ptr),
 				* const pend(v.via.array.ptr + v.via.array.size);
 				p < pend; ++p) {
 			o << *p;
@@ -464,7 +465,7 @@ packer<Stream>& operator<< (packer<Stream>& o, const object<ForwardIterator>& v)
 
 	case type::MAP:
 		o.pack_map(v.via.map.size);
-		for(object_kv* p(v.via.map.ptr),
+		for(object_kv<ForwardIterator>* p(v.via.map.ptr),
 				* const pend(v.via.map.ptr + v.via.map.size);
 				p < pend; ++p) {
 			o << p->key;
@@ -510,10 +511,10 @@ std::ostream& operator<< (std::ostream& s, const object<ForwardIterator>& o)
 	case type::ARRAY:
 		s << "[";
 		if(o.via.array.size != 0) {
-			object* p(o.via.array.ptr);
+			object<ForwardIterator>* p(o.via.array.ptr);
 			s << *p;
 			++p;
-			for(object* const pend(o.via.array.ptr + o.via.array.size);
+			for(object<ForwardIterator>* const pend(o.via.array.ptr + o.via.array.size);
 					p < pend; ++p) {
 				s << ", " << *p;
 			}
@@ -524,10 +525,10 @@ std::ostream& operator<< (std::ostream& s, const object<ForwardIterator>& o)
 	case type::MAP:
 		s << "{";
 		if(o.via.map.size != 0) {
-			object_kv* p(o.via.map.ptr);
+			object_kv<ForwardIterator>* p(o.via.map.ptr);
 			s << p->key << "=>" << p->val;
 			++p;
-			for(object_kv* const pend(o.via.map.ptr + o.via.map.size);
+			for(object_kv<ForwardIterator>* const pend(o.via.map.ptr + o.via.map.size);
 					p < pend; ++p) {
 				s << ", " << p->key << "=>" << p->val;
 			}

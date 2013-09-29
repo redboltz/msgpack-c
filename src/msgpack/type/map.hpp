@@ -42,13 +42,15 @@ namespace detail {
 }  //namespace type
 
 
-template <typename K, typename V>
-inline type::assoc_vector<K,V>& operator>> (object const& o, type::assoc_vector<K,V>& v)
+template <typename K, typename V, typename ForwardIterator>
+inline type::assoc_vector<K,V>& operator>> (
+	object<ForwardIterator> const& o,
+	type::assoc_vector<K,V>& v)
 {
 	if(o.type != type::MAP) { throw type_error(); }
 	v.resize(o.via.map.size);
-	object_kv* p = o.via.map.ptr;
-	object_kv* const pend = o.via.map.ptr + o.via.map.size;
+	object_kv<ForwardIterator>* p = o.via.map.ptr;
+	object_kv<ForwardIterator>* const pend = o.via.map.ptr + o.via.map.size;
 	std::pair<K, V>* it(&v.front());
 	for(; p < pend; ++p, ++it) {
 		p->key.convert(it->first);
@@ -70,22 +72,26 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const type::assoc_vector<K
 	return o;
 }
 
-template <typename K, typename V>
-inline void operator<< (object::with_zone& o, const type::assoc_vector<K,V>& v)
+template <typename K, typename V, typename ForwardIterator>
+inline void operator<< (
+	typename object<ForwardIterator>::with_zone& o,
+	const type::assoc_vector<K,V>& v)
 {
 	o.type = type::MAP;
 	if(v.empty()) {
 		o.via.map.ptr  = nullptr;
 		o.via.map.size = 0;
 	} else {
-		object_kv* p = static_cast<object_kv*>(o.zone->malloc(sizeof(object_kv)*v.size()));
-		object_kv* const pend = p + v.size();
+		object_kv<ForwardIterator>* p =
+			static_cast<object_kv<ForwardIterator>*>(
+				o.zone->malloc(sizeof(object_kv<ForwardIterator>)*v.size()));
+		object_kv<ForwardIterator>* const pend = p + v.size();
 		o.via.map.ptr  = p;
 		o.via.map.size = v.size();
 		typename type::assoc_vector<K,V>::const_iterator it(v.begin());
 		do {
-			p->key = object(it->first, o.zone);
-			p->val = object(it->second, o.zone);
+			p->key = object<ForwardIterator>(it->first, o.zone);
+			p->val = object<ForwardIterator>(it->second, o.zone);
 			++p;
 			++it;
 		} while(p < pend);
@@ -93,12 +99,12 @@ inline void operator<< (object::with_zone& o, const type::assoc_vector<K,V>& v)
 }
 
 
-template <typename K, typename V>
-inline std::map<K, V> operator>> (object const& o, std::map<K, V>& v)
+template <typename K, typename V, typename ForwardIterator>
+inline std::map<K, V> operator>> (object<ForwardIterator> const& o, std::map<K, V>& v)
 {
 	if(o.type != type::MAP) { throw type_error(); }
-	object_kv* p(o.via.map.ptr);
-	object_kv* const pend(o.via.map.ptr + o.via.map.size);
+	object_kv<ForwardIterator>* p(o.via.map.ptr);
+	object_kv<ForwardIterator>* const pend(o.via.map.ptr + o.via.map.size);
 	for(; p != pend; ++p) {
 		K key;
 		p->key.convert(key);
@@ -126,22 +132,24 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::map<K,V>& v)
 	return o;
 }
 
-template <typename K, typename V>
-inline void operator<< (object::with_zone& o, const std::map<K,V>& v)
+template <typename K, typename V, typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, const std::map<K,V>& v)
 {
 	o.type = type::MAP;
 	if(v.empty()) {
 		o.via.map.ptr  = nullptr;
 		o.via.map.size = 0;
 	} else {
-		object_kv* p = static_cast<object_kv*>(o.zone->malloc(sizeof(object_kv)*v.size()));
-		object_kv* const pend = p + v.size();
+		object_kv<ForwardIterator>* p =
+			static_cast<object_kv<ForwardIterator>*>(
+				o.zone->malloc(sizeof(object_kv<ForwardIterator>)*v.size()));
+		object_kv<ForwardIterator>* const pend = p + v.size();
 		o.via.map.ptr  = p;
 		o.via.map.size = v.size();
 		typename std::map<K,V>::const_iterator it(v.begin());
 		do {
-			p->key = object(it->first, o.zone);
-			p->val = object(it->second, o.zone);
+			p->key = object<ForwardIterator>(it->first, o.zone);
+			p->val = object<ForwardIterator>(it->second, o.zone);
 			++p;
 			++it;
 		} while(p < pend);
@@ -149,12 +157,12 @@ inline void operator<< (object::with_zone& o, const std::map<K,V>& v)
 }
 
 
-template <typename K, typename V>
-inline std::multimap<K, V> operator>> (object const& o, std::multimap<K, V>& v)
+template <typename K, typename V, typename ForwardIterator>
+inline std::multimap<K, V> operator>> (object<ForwardIterator> const& o, std::multimap<K, V>& v)
 {
 	if(o.type != type::MAP) { throw type_error(); }
-	object_kv* p(o.via.map.ptr);
-	object_kv* const pend(o.via.map.ptr + o.via.map.size);
+	object_kv<ForwardIterator>* p(o.via.map.ptr);
+	object_kv<ForwardIterator>* const pend(o.via.map.ptr + o.via.map.size);
 	for(; p != pend; ++p) {
 		std::pair<K, V> value;
 		p->key.convert(value.first);
@@ -176,22 +184,26 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::multimap<K,V>& 
 	return o;
 }
 
-template <typename K, typename V>
-inline void operator<< (object::with_zone& o, const std::multimap<K,V>& v)
+template <typename K, typename V, typename ForwardIterator>
+inline void operator<< (
+	typename object<ForwardIterator>::with_zone& o,
+	const std::multimap<K,V>& v)
 {
 	o.type = type::MAP;
 	if(v.empty()) {
 		o.via.map.ptr  = nullptr;
 		o.via.map.size = 0;
 	} else {
-		object_kv* p = static_cast<object_kv*>(o.zone->malloc(sizeof(object_kv)*v.size()));
-		object_kv* const pend = p + v.size();
+		object_kv<ForwardIterator>* p =
+			static_cast<object_kv<ForwardIterator>*>(
+				o.zone->malloc(sizeof(object_kv<ForwardIterator>)*v.size()));
+		object_kv<ForwardIterator>* const pend = p + v.size();
 		o.via.map.ptr  = p;
 		o.via.map.size = v.size();
 		typename std::multimap<K,V>::const_iterator it(v.begin());
 		do {
-			p->key = object(it->first, o.zone);
-			p->val = object(it->second, o.zone);
+			p->key = object<ForwardIterator>(it->first, o.zone);
+			p->val = object<ForwardIterator>(it->second, o.zone);
 			++p;
 			++it;
 		} while(p < pend);

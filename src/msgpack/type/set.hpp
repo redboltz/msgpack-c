@@ -24,15 +24,15 @@
 namespace msgpack {
 
 
-template <typename T>
-inline std::set<T>& operator>> (object const& o, std::set<T>& v)
+template <typename T, typename ForwardIterator>
+inline std::set<T>& operator>> (object<ForwardIterator> const& o, std::set<T>& v)
 {
 	if(o.type != type::ARRAY) { throw type_error(); }
-	object* p = o.via.array.ptr + o.via.array.size;
-	object* const pbegin = o.via.array.ptr;
+	object<ForwardIterator>* p = o.via.array.ptr + o.via.array.size;
+	object<ForwardIterator>* const pbegin = o.via.array.ptr;
 	while(p > pbegin) {
 		--p;
-		v.insert(p->as<T>());
+		v.insert(p-> template as<T>());
 	}
 	return v;
 }
@@ -48,21 +48,23 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::set<T>& v)
 	return o;
 }
 
-template <typename T>
-inline void operator<< (object::with_zone& o, const std::set<T>& v)
+template <typename T, typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, const std::set<T>& v)
 {
 	o.type = type::ARRAY;
 	if(v.empty()) {
 		o.via.array.ptr = nullptr;
 		o.via.array.size = 0;
 	} else {
-		object* p = static_cast<object*>(o.zone->malloc(sizeof(object)*v.size()));
-		object* const pend = p + v.size();
+		object<ForwardIterator>* p =
+			static_cast<object<ForwardIterator>*>(
+				o.zone->malloc(sizeof(object<ForwardIterator>)*v.size()));
+		object<ForwardIterator>* const pend = p + v.size();
 		o.via.array.ptr = p;
 		o.via.array.size = v.size();
 		typename std::set<T>::const_iterator it(v.begin());
 		do {
-			*p = object(*it, o.zone);
+			*p = object<ForwardIterator>(*it, o.zone);
 			++p;
 			++it;
 		} while(p < pend);
@@ -70,15 +72,15 @@ inline void operator<< (object::with_zone& o, const std::set<T>& v)
 }
 
 
-template <typename T>
-inline std::multiset<T>& operator>> (object const& o, std::multiset<T>& v)
+template <typename T, typename ForwardIterator>
+inline std::multiset<T>& operator>> (object<ForwardIterator> const& o, std::multiset<T>& v)
 {
 	if(o.type != type::ARRAY) { throw type_error(); }
-	object* p = o.via.array.ptr + o.via.array.size;
-	object* const pbegin = o.via.array.ptr;
+	object<ForwardIterator>* p = o.via.array.ptr + o.via.array.size;
+	object<ForwardIterator>* const pbegin = o.via.array.ptr;
 	while(p > pbegin) {
 		--p;
-		v.insert(p->as<T>());
+		v.insert(p-> template as<T>());
 	}
 	return v;
 }
@@ -94,21 +96,23 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::multiset<T>& v)
 	return o;
 }
 
-template <typename T>
-inline void operator<< (object::with_zone& o, const std::multiset<T>& v)
+template <typename T, typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, const std::multiset<T>& v)
 {
 	o.type = type::ARRAY;
 	if(v.empty()) {
 		o.via.array.ptr = nullptr;
 		o.via.array.size = 0;
 	} else {
-		object* p = static_cast<object*>(o.zone->malloc(sizeof(object)*v.size()));
-		object* const pend = p + v.size();
+		object<ForwardIterator>* p =
+			static_cast<object<ForwardIterator>*>(
+				o.zone->malloc(sizeof(object<ForwardIterator>)*v.size()));
+		object<ForwardIterator>* const pend = p + v.size();
 		o.via.array.ptr = p;
 		o.via.array.size = v.size();
 		typename std::multiset<T>::const_iterator it(v.begin());
 		do {
-			*p = object(*it, o.zone);
+			*p = object<ForwardIterator>(*it, o.zone);
 			++p;
 			++it;
 		} while(p < pend);

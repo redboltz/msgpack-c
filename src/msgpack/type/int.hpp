@@ -31,7 +31,8 @@ namespace detail {
 
 	template <typename T>
 	struct convert_integer_sign<T, true> {
-		static inline T convert(object const& o) {
+		template <typename ForwardIterator>
+		static inline T convert(object<ForwardIterator> const& o) {
 			if(o.type == type::POSITIVE_INTEGER) {
 				if(o.via.u64 > (uint64_t)std::numeric_limits<T>::max())
 					{ throw type_error(); }
@@ -47,7 +48,8 @@ namespace detail {
 
 	template <typename T>
 	struct convert_integer_sign<T, false> {
-		static inline T convert(object const& o) {
+		template <typename ForwardIterator>
+		static inline T convert(object<ForwardIterator> const& o) {
 			if(o.type == type::POSITIVE_INTEGER) {
 				if(o.via.u64 > (uint64_t)std::numeric_limits<T>::max())
 					{ throw type_error(); }
@@ -57,8 +59,8 @@ namespace detail {
 		}
 	};
 
-	template <typename T>
-	static inline T convert_integer(object const& o)
+	template <typename T, typename ForwardIterator>
+	static inline T convert_integer(object<ForwardIterator> const& o)
 	{
 		return detail::convert_integer_sign<T, std::numeric_limits<T>::is_signed>::convert(o);
 	}
@@ -67,35 +69,45 @@ namespace detail {
 }  // namespace type
 
 
-inline signed char& operator>> (object const& o, signed char& v)
+template <typename ForwardIterator>
+inline signed char& operator>> (object<ForwardIterator> const& o, signed char& v)
 	{ v = type::detail::convert_integer<signed char>(o); return v; }
 
-inline signed short& operator>> (object const& o, signed short& v)
+template <typename ForwardIterator>
+inline signed short& operator>> (object<ForwardIterator> const& o, signed short& v)
 	{ v = type::detail::convert_integer<signed short>(o); return v; }
 
-inline signed int& operator>> (object const& o, signed int& v)
+template <typename ForwardIterator>
+inline signed int& operator>> (object<ForwardIterator> const& o, signed int& v)
 	{ v = type::detail::convert_integer<signed int>(o); return v; }
 
-inline signed long& operator>> (object const& o, signed long& v)
+template <typename ForwardIterator>
+inline signed long& operator>> (object<ForwardIterator> const& o, signed long& v)
 	{ v = type::detail::convert_integer<signed long>(o); return v; }
 
-inline signed long long& operator>> (object const& o, signed long long& v)
+template <typename ForwardIterator>
+inline signed long long& operator>> (object<ForwardIterator> const& o, signed long long& v)
 	{ v = type::detail::convert_integer<signed long long>(o); return v; }
 
 
-inline unsigned char& operator>> (object const& o, unsigned char& v)
+template <typename ForwardIterator>
+inline unsigned char& operator>> (object<ForwardIterator> const& o, unsigned char& v)
 	{ v = type::detail::convert_integer<unsigned char>(o); return v; }
 
-inline unsigned short& operator>> (object const& o, unsigned short& v)
+template <typename ForwardIterator>
+inline unsigned short& operator>> (object<ForwardIterator> const& o, unsigned short& v)
 	{ v = type::detail::convert_integer<unsigned short>(o); return v; }
 
-inline unsigned int& operator>> (object const& o, unsigned int& v)
+template <typename ForwardIterator>
+inline unsigned int& operator>> (object<ForwardIterator> const& o, unsigned int& v)
 	{ v = type::detail::convert_integer<unsigned int>(o); return v; }
 
-inline unsigned long& operator>> (object const& o, unsigned long& v)
+template <typename ForwardIterator>
+inline unsigned long& operator>> (object<ForwardIterator> const& o, unsigned long& v)
 	{ v = type::detail::convert_integer<unsigned long>(o); return v; }
 
-inline unsigned long long& operator>> (object const& o, unsigned long long& v)
+template <typename ForwardIterator>
+inline unsigned long long& operator>> (object<ForwardIterator> const& o, unsigned long long& v)
 	{ v = type::detail::convert_integer<unsigned long long>(o); return v; }
 
 
@@ -141,68 +153,88 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const unsigned long long& 
 	{ o.pack_unsigned_long_long(v); return o; }
 
 
-inline void operator<< (object& o, signed char v)
+template <typename ForwardIterator>
+inline void operator<< (object<ForwardIterator>& o, signed char v)
 	{ v < 0 ? o.type = type::NEGATIVE_INTEGER, o.via.i64 = v : o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
 
-inline void operator<< (object& o, signed short v)
+template <typename ForwardIterator>
+inline void operator<< (object<ForwardIterator>& o, signed short v)
 	{ v < 0 ? o.type = type::NEGATIVE_INTEGER, o.via.i64 = v : o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
 
-inline void operator<< (object& o, signed int v)
+template <typename ForwardIterator>
+inline void operator<< (object<ForwardIterator>& o, signed int v)
 	{ v < 0 ? o.type = type::NEGATIVE_INTEGER, o.via.i64 = v : o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
 
-inline void operator<< (object& o, signed long v)
+template <typename ForwardIterator>
+inline void operator<< (object<ForwardIterator>& o, signed long v)
 	{ v < 0 ? o.type = type::NEGATIVE_INTEGER, o.via.i64 = v : o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
 
-inline void operator<< (object& o, signed long long v)
+template <typename ForwardIterator>
+inline void operator<< (object<ForwardIterator>& o, signed long long v)
 	{ v < 0 ? o.type = type::NEGATIVE_INTEGER, o.via.i64 = v : o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
 
 
-inline void operator<< (object& o, unsigned char v)
+template <typename ForwardIterator>
+inline void operator<< (object<ForwardIterator>& o, unsigned char v)
 	{ o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
 
-inline void operator<< (object& o, unsigned short v)
+template <typename ForwardIterator>
+inline void operator<< (object<ForwardIterator>& o, unsigned short v)
 	{ o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
 
-inline void operator<< (object& o, unsigned int v)
+template <typename ForwardIterator>
+inline void operator<< (object<ForwardIterator>& o, unsigned int v)
 	{ o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
 
-inline void operator<< (object& o, unsigned long v)
+template <typename ForwardIterator>
+inline void operator<< (object<ForwardIterator>& o, unsigned long v)
 	{ o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
 
-inline void operator<< (object& o, unsigned long long v)
+template <typename ForwardIterator>
+inline void operator<< (object<ForwardIterator>& o, unsigned long long v)
 	{ o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
 
 
-inline void operator<< (object::with_zone& o, signed char v)
-	{ static_cast<object&>(o) << v; }
+template <typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, signed char v)
+	{ static_cast<object<ForwardIterator>&>(o) << v; }
 
-inline void operator<< (object::with_zone& o, signed short v)
-	{ static_cast<object&>(o) << v; }
+template <typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, signed short v)
+	{ static_cast<object<ForwardIterator>&>(o) << v; }
 
-inline void operator<< (object::with_zone& o, signed int v)
-	{ static_cast<object&>(o) << v; }
+template <typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, signed int v)
+	{ static_cast<object<ForwardIterator>&>(o) << v; }
 
-inline void operator<< (object::with_zone& o, signed long v)
-	{ static_cast<object&>(o) << v; }
+template <typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, signed long v)
+	{ static_cast<object<ForwardIterator>&>(o) << v; }
 
-inline void operator<< (object::with_zone& o, signed long long v)
-	{ static_cast<object&>(o) << v; }
+template <typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, signed long long v)
+	{ static_cast<object<ForwardIterator>&>(o) << v; }
 
 
-inline void operator<< (object::with_zone& o, unsigned char v)
-	{ static_cast<object&>(o) << v; }
+template <typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, unsigned char v)
+	{ static_cast<object<ForwardIterator>&>(o) << v; }
 
-inline void operator<< (object::with_zone& o, unsigned short v)
-	{ static_cast<object&>(o) << v; }
+template <typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, unsigned short v)
+	{ static_cast<object<ForwardIterator>&>(o) << v; }
 
-inline void operator<< (object::with_zone& o, unsigned int v)
-	{ static_cast<object&>(o) << v; }
+template <typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, unsigned int v)
+	{ static_cast<object<ForwardIterator>&>(o) << v; }
 
-inline void operator<< (object::with_zone& o, unsigned long v)
-	{ static_cast<object&>(o) << v; }
+template <typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, unsigned long v)
+	{ static_cast<object<ForwardIterator>&>(o) << v; }
 
-inline void operator<< (object::with_zone& o, unsigned long long v)
-	{ static_cast<object&>(o) << v; }
+template <typename ForwardIterator>
+inline void operator<< (typename object<ForwardIterator>::with_zone& o, unsigned long long v)
+	{ static_cast<object<ForwardIterator>&>(o) << v; }
 
 
 }  // namespace msgpack
