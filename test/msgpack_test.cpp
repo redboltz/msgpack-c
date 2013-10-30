@@ -781,6 +781,21 @@ TEST(MSGPACK_USER_DEFINED, simple_buffer_union_member)
     }                                                                   \
   } while(0);
 
+TEST(MSGPACK, vrefbuffer_char)
+{
+  GEN_TEST_VREF(char);
+}
+
+TEST(MSGPACK, vrefbuffer_signed_char)
+{
+  GEN_TEST_VREF(signed char);
+}
+
+TEST(MSGPACK, vrefbuffer_unsigned_char)
+{
+  GEN_TEST_VREF(unsigned char);
+}
+
 TEST(MSGPACK, vrefbuffer_short)
 {
   GEN_TEST_VREF(short);
@@ -900,6 +915,21 @@ TEST(MSGPACK, vrefbuffer_int64)
   out:                                                                  \
     ;                                                                   \
   }
+
+TEST(MSGPACK, stream_char)
+{
+  GEN_TEST_STREAM(char);
+}
+
+TEST(MSGPACK, stream_signed_char)
+{
+  GEN_TEST_STREAM(signed char);
+}
+
+TEST(MSGPACK, stream_unsigned_char)
+{
+  GEN_TEST_STREAM(unsigned char);
+}
 
 TEST(MSGPACK, stream_short)
 {
