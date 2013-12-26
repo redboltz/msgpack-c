@@ -54,10 +54,13 @@ public:
 	packer<Stream>& pack_fix_int32(int32_t d);
 	packer<Stream>& pack_fix_int64(int64_t d);
 
+	packer<Stream>& pack_char(char d);
+	packer<Stream>& pack_signed_char(signed char d);
 	packer<Stream>& pack_short(short d);
 	packer<Stream>& pack_int(int d);
 	packer<Stream>& pack_long(long d);
 	packer<Stream>& pack_long_long(long long d);
+	packer<Stream>& pack_unsigned_char(unsigned char d);
 	packer<Stream>& pack_unsigned_short(unsigned short d);
 	packer<Stream>& pack_unsigned_int(unsigned int d);
 	packer<Stream>& pack_unsigned_long(unsigned long d);
@@ -70,9 +73,9 @@ public:
 	packer<Stream>& pack_true();
 	packer<Stream>& pack_false();
 
-	packer<Stream>& pack_array(unsigned int n);
+	packer<Stream>& pack_array(size_t n);
 
-	packer<Stream>& pack_map(unsigned int n);
+	packer<Stream>& pack_map(size_t n);
 
 	packer<Stream>& pack_raw(size_t l);
 	packer<Stream>& pack_raw_body(const char* b, size_t l);
@@ -95,7 +98,7 @@ private:
 	template <typename T>
 	void pack_imp_int64(T d);
 
-	void append_buffer(const char* buf, unsigned int len)
+	void append_buffer(const char* buf, size_t len)
 		{ m_stream.write(buf, len); }
 
 private:
@@ -272,6 +275,14 @@ inline packer<Stream>& packer<Stream>::pack_fix_int64(int64_t d)
 
 
 template <typename Stream>
+inline packer<Stream>& packer<Stream>::pack_char(char d)
+{ _pack_char(m_stream, d); return *this; }
+
+template <typename Stream>
+inline packer<Stream>& packer<Stream>::pack_signed_char(signed char d)
+{ _pack_signed_char(m_stream, d); return *this; }
+
+template <typename Stream>
 inline packer<Stream>& packer<Stream>::pack_short(short d)
 {
 #if defined(SIZEOF_SHORT)
@@ -403,6 +414,10 @@ inline packer<Stream>& packer<Stream>::pack_long_long(long long d)
 	return *this;
 }
 
+
+template <typename Stream>
+inline packer<Stream>& packer<Stream>::pack_unsigned_char(unsigned char d)
+{ _pack_unsigned_char(m_stream, d); return *this; }
 
 template <typename Stream>
 inline packer<Stream>& packer<Stream>::pack_unsigned_short(unsigned short d)
@@ -591,7 +606,7 @@ inline packer<Stream>& packer<Stream>::pack_false()
 
 
 template <typename Stream>
-inline packer<Stream>& packer<Stream>::pack_array(unsigned int n)
+inline packer<Stream>& packer<Stream>::pack_array(size_t n)
 {
 	if(n < 16) {
 		char d = static_cast<char>(0x90 | n);
@@ -609,7 +624,7 @@ inline packer<Stream>& packer<Stream>::pack_array(unsigned int n)
 }
 
 template <typename Stream>
-inline packer<Stream>& packer<Stream>::pack_map(unsigned int n)
+inline packer<Stream>& packer<Stream>::pack_map(size_t n)
 {
 	if(n < 16) {
 		unsigned char d = 0x80 | n;

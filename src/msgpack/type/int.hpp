@@ -152,7 +152,6 @@ inline unsigned long& operator>> (object const& o, unsigned long& v)
 inline unsigned long long& operator>> (object const& o, unsigned long long& v)
 	{ v = type::detail::convert_integer<unsigned long long>(o); return v; }
 
-
 template <typename Stream>
 inline packer<Stream>& operator<< (packer<Stream>& o, char v)
 	{ return type::detail::pack_char(o, v); }
@@ -175,28 +174,28 @@ inline packer<Stream>& operator<< (packer<Stream>& o, signed long v)
 	{ o.pack_long(v); return o; }
 
 template <typename Stream>
-inline packer<Stream>& operator<< (packer<Stream>& o, const signed long long& v)
+inline packer<Stream>& operator<< (packer<Stream>& o, signed long long v)
 	{ o.pack_long_long(v); return o; }
 
 
 template <typename Stream>
-inline packer<Stream>& operator<< (packer<Stream>& o, const unsigned char& v)
+inline packer<Stream>& operator<< (packer<Stream>& o, unsigned char v)
 	{ o.pack_uint8(v); return o; }
 
 template <typename Stream>
-inline packer<Stream>& operator<< (packer<Stream>& o, const unsigned short& v)
+inline packer<Stream>& operator<< (packer<Stream>& o, unsigned short v)
 	{ o.pack_unsigned_short(v); return o; }
 
 template <typename Stream>
-inline packer<Stream>& operator<< (packer<Stream>& o, const unsigned int& v)
+inline packer<Stream>& operator<< (packer<Stream>& o, unsigned int v)
 	{ o.pack_unsigned_int(v); return o; }
 
 template <typename Stream>
-inline packer<Stream>& operator<< (packer<Stream>& o, const unsigned long& v)
+inline packer<Stream>& operator<< (packer<Stream>& o, unsigned long v)
 	{ o.pack_unsigned_long(v); return o; }
 
 template <typename Stream>
-inline packer<Stream>& operator<< (packer<Stream>& o, const unsigned long long& v)
+inline packer<Stream>& operator<< (packer<Stream>& o, unsigned long long v)
 	{ o.pack_unsigned_long_long(v); return o; }
 
 
@@ -236,7 +235,6 @@ inline void operator<< (object& o, unsigned long long v)
 	{ o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
 
 
-
 inline void operator<< (object::with_zone& o, char v)
 	{ static_cast<object&>(o) << v; }
 
@@ -253,7 +251,7 @@ inline void operator<< (object::with_zone& o, signed int v)
 inline void operator<< (object::with_zone& o, signed long v)
 	{ static_cast<object&>(o) << v; }
 
-inline void operator<< (object::with_zone& o, signed long long v)
+inline void operator<< (object::with_zone& o, const signed long long& v)
 	{ static_cast<object&>(o) << v; }
 
 
@@ -269,7 +267,7 @@ inline void operator<< (object::with_zone& o, unsigned int v)
 inline void operator<< (object::with_zone& o, unsigned long v)
 	{ static_cast<object&>(o) << v; }
 
-inline void operator<< (object::with_zone& o, unsigned long long v)
+inline void operator<< (object::with_zone& o, const unsigned long long& v)
 	{ static_cast<object&>(o) << v; }
 
 

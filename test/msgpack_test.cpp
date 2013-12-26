@@ -45,6 +45,22 @@ const double kEPS = 1e-10;
     }                                                                 \
 } while(0)
 
+TEST(MSGPACK, simple_buffer_char)
+{
+  GEN_TEST(char);
+}
+
+TEST(MSGPACK, simple_buffer_signed_char)
+{
+  GEN_TEST(signed char);
+}
+
+TEST(MSGPACK, simple_buffer_unsigned_char)
+{
+  GEN_TEST(unsigned char);
+}
+
+
 TEST(MSGPACK, simple_buffer_short)
 {
   GEN_TEST(short);

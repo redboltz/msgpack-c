@@ -372,6 +372,28 @@ msgpack_pack_inline_func(_int64)(msgpack_pack_user x, int64_t d)
 	msgpack_pack_real_int64(x, d);
 }
 
+msgpack_pack_inline_func(_char)(msgpack_pack_user x, char d)
+{
+#if defined(CHAR_MIN)
+#if CHAR_MIN < 0
+		msgpack_pack_real_int8(x, d);
+#else
+		msgpack_pack_real_uint8(x, d);
+#endif
+#else
+#error CHAR_MIN is not defined
+#endif
+}
+
+msgpack_pack_inline_func(_signed_char)(msgpack_pack_user x, signed char d)
+{
+	msgpack_pack_real_int8(x, d);
+}
+
+msgpack_pack_inline_func(_unsigned_char)(msgpack_pack_user x, unsigned char d)
+{
+	msgpack_pack_real_uint8(x, d);
+}
 
 #ifdef msgpack_pack_inline_func_cint
 
@@ -688,7 +710,7 @@ msgpack_pack_inline_func(_false)(msgpack_pack_user x)
  * Array
  */
 
-msgpack_pack_inline_func(_array)(msgpack_pack_user x, unsigned int n)
+msgpack_pack_inline_func(_array)(msgpack_pack_user x, size_t n)
 {
 	if(n < 16) {
 		unsigned char d = 0x90 | n;
@@ -709,7 +731,7 @@ msgpack_pack_inline_func(_array)(msgpack_pack_user x, unsigned int n)
  * Map
  */
 
-msgpack_pack_inline_func(_map)(msgpack_pack_user x, unsigned int n)
+msgpack_pack_inline_func(_map)(msgpack_pack_user x, size_t n)
 {
 	if(n < 16) {
 		unsigned char d = 0x80 | n;

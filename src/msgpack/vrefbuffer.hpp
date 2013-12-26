@@ -102,7 +102,7 @@ public:
 	}
 
 public:
-	void write(const char* buf, unsigned int len)
+	void write(const char* buf, size_t len)
 	{
 		if(len < ref_size_) {
 			append_copy(buf, len);
