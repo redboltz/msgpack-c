@@ -77,8 +77,11 @@ public:
 
 	packer<Stream>& pack_map(size_t n);
 
-	packer<Stream>& pack_raw(size_t l);
-	packer<Stream>& pack_raw_body(const char* b, size_t l);
+	packer<Stream>& pack_str(size_t l);
+	packer<Stream>& pack_str_body(const char* b, size_t l);
+
+	packer<Stream>& pack_bin(size_t l);
+	packer<Stream>& pack_bin_body(const char* b, size_t l);
 
 private:
 	static void _pack_uint8(Stream& x, uint8_t d);
@@ -123,8 +126,11 @@ private:
 
 	static void _pack_map(Stream& x, size_t n);
 
-	static void _pack_raw(Stream& x, size_t l);
-	static void _pack_raw_body(Stream& x, const void* b, size_t l);
+	static void _pack_str(Stream& x, size_t l);
+	static void _pack_str_body(Stream& x, const void* b, size_t l);
+
+	static void _pack_bin(Stream& x, size_t l);
+	static void _pack_bin_body(Stream& x, const void* b, size_t l);
 
 	static void append_buffer(Stream& x, const unsigned char* buf, size_t len)
 		{ x.write((const char*)buf, len); }
@@ -321,14 +327,21 @@ template <typename Stream>
 inline packer<Stream>& packer<Stream>::pack_map(size_t n)
 { _pack_map(m_stream, n); return *this; }
 
+template <typename Stream>
+inline packer<Stream>& packer<Stream>::pack_str(size_t l)
+{ _pack_str(m_stream, l); return *this; }
 
 template <typename Stream>
-inline packer<Stream>& packer<Stream>::pack_raw(size_t l)
-{ _pack_raw(m_stream, l); return *this; }
+inline packer<Stream>& packer<Stream>::pack_str_body(const char* b, size_t l)
+{ _pack_str_body(m_stream, b, l); return *this; }
 
 template <typename Stream>
-inline packer<Stream>& packer<Stream>::pack_raw_body(const char* b, size_t l)
-{ _pack_raw_body(m_stream, b, l); return *this; }
+inline packer<Stream>& packer<Stream>::pack_bin(size_t l)
+{ _pack_bin(m_stream, l); return *this; }
+
+template <typename Stream>
+inline packer<Stream>& packer<Stream>::pack_bin_body(const char* b, size_t l)
+{ _pack_bin_body(m_stream, b, l); return *this; }
 
 
 }  // namespace msgpack
