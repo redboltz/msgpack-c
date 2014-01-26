@@ -43,8 +43,12 @@ std::ostream& operator<< (std::ostream& s, const object o)
 		s << o.via.dec;
 		break;
 
-	case type::RAW:
-		(s << '"').write(o.via.raw.ptr, o.via.raw.size) << '"';
+	case type::STR:
+		(s << '"').write(o.via.str.ptr, o.via.str.size) << '"';
+		break;
+
+	case type::BIN:
+		(s << '"').write(o.via.bin.ptr, o.via.bin.size) << '"';
 		break;
 
 	case type::ARRAY:
