@@ -55,7 +55,7 @@ public:
 	}
 
 public:
-	void write(const char* buf, unsigned int len)
+	void write(const char* buf, size_t len)
 	{
 		stream_.next_in = reinterpret_cast<Bytef*>(const_cast<char*>(buf));
 		stream_.avail_in = len;
