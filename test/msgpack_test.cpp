@@ -7,6 +7,7 @@
 #include <deque>
 #include <set>
 #include <list>
+#include <type_traits>
 
 #include <gtest/gtest.h>
 
@@ -177,6 +178,59 @@ TEST(MSGPACK, simple_buffer_float)
       EXPECT_TRUE(fabs(val2 - val1) <= kEPS);
   }
 }
+
+namespace {
+template<typename F, typename I>
+struct TypePair {
+  typedef F float_type;
+  typedef I integer_type;
+};
+} // namespace
+
+template <typename T>
+class IntegerToFloatingPointTest : public testing::Test {
+};
+TYPED_TEST_CASE_P(IntegerToFloatingPointTest);
+
+TYPED_TEST_P(IntegerToFloatingPointTest, simple_buffer)
+{
+  typedef typename TypeParam::float_type float_type;
+  typedef typename TypeParam::integer_type integer_type;
+  vector<integer_type> v;
+  v.push_back(0);
+  v.push_back(1);
+  if (is_signed<integer_type>::value) v.push_back(-1);
+  else v.push_back(2);
+  v.push_back(numeric_limits<integer_type>::min());
+  v.push_back(numeric_limits<integer_type>::max());
+  for (unsigned int i = 0; i < kLoop; i++) {
+    v.push_back(rand());
+  }
+  for (unsigned int i = 0; i < v.size() ; i++) {
+    msgpack::sbuffer sbuf;
+    integer_type val1 = v[i];
+    msgpack::pack(sbuf, val1);
+    msgpack::zone z;
+    msgpack::object obj;
+    msgpack::unpack_return ret =
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+    EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
+    float_type val2;
+    obj.convert(&val2);
+    EXPECT_TRUE(fabs(val2 - val1) <= kEPS);
+  }
+}
+
+REGISTER_TYPED_TEST_CASE_P(IntegerToFloatingPointTest,
+                           simple_buffer);
+
+typedef testing::Types<TypePair<float, signed long long>,
+                       TypePair<float, unsigned long long>,
+                       TypePair<double, signed long long>,
+                       TypePair<double, unsigned long long> > IntegerToFloatingPointTestTypes;
+INSTANTIATE_TYPED_TEST_CASE_P(IntegerToFloatingPointTestInstance,
+                              IntegerToFloatingPointTest,
+                              IntegerToFloatingPointTestTypes);
 
 TEST(MSGPACK, simple_buffer_double)
 {
@@ -452,10 +506,10 @@ TEST(MSGPACK_STL, simple_buffer_multiset)
 
 // TR1
 
-#ifdef HAVE_TR1_UNORDERED_MAP
+#ifdef MSGPACK_HAS_STD_TR1_UNOURDERED_MAP
 #include <tr1/unordered_map>
 #include "msgpack/type/tr1/unordered_map.hpp"
-TEST(MSGPACK_TR1, simple_buffer_unordered_map)
+TEST(MSGPACK_TR1, simple_buffer_tr1_unordered_map)
 {
   for (unsigned int k = 0; k < kLoop; k++) {
     tr1::unordered_map<int, int> val1;
@@ -479,7 +533,7 @@ TEST(MSGPACK_TR1, simple_buffer_unordered_map)
   }
 }
 
-TEST(MSGPACK_TR1, simple_buffer_unordered_multimap)
+TEST(MSGPACK_TR1, simple_buffer_tr1_unordered_multimap)
 {
   for (unsigned int k = 0; k < kLoop; k++) {
     tr1::unordered_multimap<int, int> val1;
@@ -513,10 +567,10 @@ TEST(MSGPACK_TR1, simple_buffer_unordered_multimap)
 }
 #endif
 
-#ifdef HAVE_TR1_UNORDERED_SET
+#ifdef MSGPACK_HAS_STD_TR1_UNOURDERED_SET
 #include <tr1/unordered_set>
 #include "msgpack/type/tr1/unordered_set.hpp"
-TEST(MSGPACK_TR1, simple_buffer_unordered_set)
+TEST(MSGPACK_TR1, simple_buffer_tr1_unordered_set)
 {
   for (unsigned int k = 0; k < kLoop; k++) {
     tr1::unordered_set<int> val1;
@@ -538,7 +592,7 @@ TEST(MSGPACK_TR1, simple_buffer_unordered_set)
   }
 }
 
-TEST(MSGPACK_TR1, simple_buffer_unordered_multiset)
+TEST(MSGPACK_TR1, simple_buffer_tr1_unordered_multiset)
 {
   for (unsigned int k = 0; k < kLoop; k++) {
     tr1::unordered_multiset<int> val1;
@@ -556,6 +610,123 @@ TEST(MSGPACK_TR1, simple_buffer_unordered_multiset)
 
     vector<int> v1, v2;
     tr1::unordered_multiset<int>::const_iterator it;
+    for (it = val1.begin(); it != val1.end(); ++it)
+      v1.push_back(*it);
+    for (it = val2.begin(); it != val2.end(); ++it)
+      v2.push_back(*it);
+    EXPECT_EQ(val1.size(), val2.size());
+    EXPECT_EQ(v1.size(), v2.size());
+    sort(v1.begin(), v1.end());
+    sort(v2.begin(), v2.end());
+    EXPECT_TRUE(v1 == v2);
+  }
+}
+#endif
+
+#ifdef MSGPACK_HAS_STD_UNOURDERED_MAP
+#include <unordered_map>
+#include "msgpack/type/tr1/unordered_map.hpp"
+TEST(MSGPACK_TR1, simple_buffer_unordered_map)
+{
+  for (unsigned int k = 0; k < kLoop; k++) {
+    unordered_map<int, int> val1;
+    for (unsigned int i = 0; i < kElements; i++)
+      val1[rand()] = rand();
+    msgpack::sbuffer sbuf;
+    msgpack::pack(sbuf, val1);
+    msgpack::zone z;
+    msgpack::object obj;
+    msgpack::unpack_return ret =
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+    EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
+    unordered_map<int, int> val2;
+    obj.convert(&val2);
+    EXPECT_EQ(val1.size(), val2.size());
+    unordered_map<int, int>::const_iterator it;
+    for (it = val1.begin(); it != val1.end(); ++it) {
+      EXPECT_TRUE(val2.find(it->first) != val2.end());
+      EXPECT_EQ(it->second, val2.find(it->first)->second);
+    }
+  }
+}
+
+TEST(MSGPACK_TR1, simple_buffer_unordered_multimap)
+{
+  for (unsigned int k = 0; k < kLoop; k++) {
+    unordered_multimap<int, int> val1;
+    for (unsigned int i = 0; i < kElements; i++) {
+      int i1 = rand();
+      val1.insert(make_pair(i1, rand()));
+      val1.insert(make_pair(i1, rand()));
+    }
+    msgpack::sbuffer sbuf;
+    msgpack::pack(sbuf, val1);
+    msgpack::zone z;
+    msgpack::object obj;
+    msgpack::unpack_return ret =
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+    EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
+    unordered_multimap<int, int> val2;
+    obj.convert(&val2);
+
+    vector<pair<int, int> > v1, v2;
+    unordered_multimap<int, int>::const_iterator it;
+    for (it = val1.begin(); it != val1.end(); ++it)
+      v1.push_back(make_pair(it->first, it->second));
+    for (it = val2.begin(); it != val2.end(); ++it)
+      v2.push_back(make_pair(it->first, it->second));
+    EXPECT_EQ(val1.size(), val2.size());
+    EXPECT_EQ(v1.size(), v2.size());
+    sort(v1.begin(), v1.end());
+    sort(v2.begin(), v2.end());
+    EXPECT_TRUE(v1 == v2);
+  }
+}
+#endif
+
+#ifdef MSGPACK_HAS_STD_UNOURDERED_SET
+#include <unordered_set>
+#include "msgpack/type/tr1/unordered_set.hpp"
+TEST(MSGPACK_TR1, simple_buffer_unordered_set)
+{
+  for (unsigned int k = 0; k < kLoop; k++) {
+    unordered_set<int> val1;
+    for (unsigned int i = 0; i < kElements; i++)
+      val1.insert(rand());
+    msgpack::sbuffer sbuf;
+    msgpack::pack(sbuf, val1);
+    msgpack::zone z;
+    msgpack::object obj;
+    msgpack::unpack_return ret =
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+    EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
+    unordered_set<int> val2;
+    obj.convert(&val2);
+    EXPECT_EQ(val1.size(), val2.size());
+    unordered_set<int>::const_iterator it;
+    for (it = val1.begin(); it != val1.end(); ++it)
+      EXPECT_TRUE(val2.find(*it) != val2.end());
+  }
+}
+
+TEST(MSGPACK_TR1, simple_buffer_unordered_multiset)
+{
+  for (unsigned int k = 0; k < kLoop; k++) {
+    unordered_multiset<int> val1;
+    for (unsigned int i = 0; i < kElements; i++)
+      val1.insert(rand());
+    msgpack::sbuffer sbuf;
+    msgpack::pack(sbuf, val1);
+    msgpack::zone z;
+    msgpack::object obj;
+    msgpack::unpack_return ret =
+      msgpack::unpack(sbuf.data(), sbuf.size(), NULL, &z, &obj);
+    EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
+    unordered_multiset<int> val2;
+    obj.convert(&val2);
+
+    vector<int> v1, v2;
+    unordered_multiset<int>::const_iterator it;
     for (it = val1.begin(); it != val1.end(); ++it)
       v1.push_back(*it);
     for (it = val2.begin(); it != val2.end(); ++it)
