@@ -30,7 +30,8 @@ void check_convert() {
 	msgpack::pack(sbuf, v1);
 
 	msgpack::unpacked msg;
-	msgpack::unpack(&msg, sbuf.data(), sbuf.size());
+	std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+	msgpack::unpack(&msg, sp, sbuf.size());
 
 	T v2;
 	msg.get().convert(&v2);

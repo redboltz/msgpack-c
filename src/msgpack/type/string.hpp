@@ -23,20 +23,28 @@
 
 namespace msgpack {
 
+namespace detail {
+	class string_visitor : public boost::static_visitor<void> {
+	public:
+		string_visitor(std::string& s):s_(s) {}
+		void operator()(object_bin const& v) const {
+			s_.assign(v.ptr.get(), v.size);
+		}
+		void operator()(object_str const& v) const {
+			s_.assign(v.ptr.get(), v.size);
+		}
+		template <typename U>
+		void operator()(U const&) const {
+			throw type_error();
+		}
+	private:
+		std::string& s_;
+	};
+}
 
 inline std::string& operator>> (object const& o, std::string& v)
 {
-	switch (o.type) {
-	case type::BIN:
-		v.assign(o.via.bin.ptr, o.via.bin.size);
-		break;
-	case type::STR:
-		v.assign(o.via.str.ptr, o.via.str.size);
-		break;
-	default:
-		throw type_error();
-		break;
-	}
+	boost::apply_visitor(detail::string_visitor(v), o.via);
 	return v;
 }
 
@@ -48,21 +56,18 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::string& v)
 	return o;
 }
 
-inline void operator<< (object::with_zone& o, const std::string& v)
-{
-	o.type = type::BIN;
-	char* ptr = (char*)o.zone->allocate_align(v.size());
-	o.via.bin.ptr = ptr;
-	o.via.bin.size = (uint32_t)v.size();
-	memcpy(ptr, v.data(), v.size());
-}
-
 inline void operator<< (object& o, const std::string& v)
 {
-	o.type = type::BIN;
-	o.via.bin.ptr = v.data();
-	o.via.bin.size = (uint32_t)v.size();
+	object_bin ob;
+	ob.size = v.size();
+	char* p = reinterpret_cast<char*>(malloc(ob.size));
+	if (!p) throw std::bad_alloc();
+	ob.ptr.reset(p, free);
+	memcpy(p, v.data(), ob.size);
+	o.via = std::move(ob);
 }
+
+// Are reference version and move version required?
 
 
 }  // namespace msgpack

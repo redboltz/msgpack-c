@@ -27,10 +27,11 @@ namespace msgpack {
 template <typename T1, typename T2>
 inline std::pair<T1, T2>& operator>> (object const& o, std::pair<T1, T2>& v)
 {
-	if(o.type != type::ARRAY) { throw type_error(); }
-	if(o.via.array.size != 2) { throw type_error(); }
-	o.via.array.ptr[0].convert(v.first);
-	o.via.array.ptr[1].convert(v.second);
+	object_array const* oa = boost::get<object_array>(&o.via);
+	if (!oa) { throw type_error(); }
+	if (oa->size() != 2) { throw type_error(); }
+	(*oa)[0].convert(v.first);
+	(*oa)[1].convert(v.second);
 	return v;
 }
 
@@ -44,14 +45,13 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::pair<T1, T2>& v
 }
 
 template <typename T1, typename T2>
-inline void operator<< (object::with_zone& o, const std::pair<T1, T2>& v)
+inline void operator<< (object& o, const std::pair<T1, T2>& v)
 {
-	o.type = type::ARRAY;
-	object* p = static_cast<object*>(o.zone->allocate_align(sizeof(object)*2));
-	o.via.array.ptr = p;
-	o.via.array.size = 2;
-	p[0] = object(v.first, o.zone);
-	p[1] = object(v.second, o.zone);
+	object_array oa;
+	oa.reserve(2);
+	oa.push_back(v.first);
+	oa.push_back(v.second);
+	o.via = oa;
 }
 
 

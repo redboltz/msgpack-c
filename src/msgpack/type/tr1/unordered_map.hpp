@@ -46,13 +46,24 @@ namespace msgpack {
 template <typename K, typename V>
 inline MSGPACK_STD_TR1::unordered_map<K, V> operator>> (object o, MSGPACK_STD_TR1::unordered_map<K, V>& v)
 {
-	if(o.type != type::MAP) { throw type_error(); }
-	object_kv* p(o.via.map.ptr);
-	object_kv* const pend(o.via.map.ptr + o.via.map.size);
-	for(; p != pend; ++p) {
+	object_map const* om = boost::get<object_map>(&o.via);
+	if (!om) { throw type_error(); }
+
+	std::vector<object_kv>::const_iterator b(om->begin());
+	std::vector<object_kv>::const_iterator e(om->end());
+	while (b != e) {
 		K key;
-		p->key.convert(key);
-		p->val.convert(v[key]);
+		b->key.convert(key);
+		typename MSGPACK_STD_TR1::unordered_map<K,V>::iterator it(v.find(key));
+		if (it == v.end()) {
+			V val;
+			b->val.convert(val);
+			v.insert(it, std::pair<K,V>(key, val));
+		}
+		else {
+			b->val.convert(it->second);
+		}
+		++b;
 	}
 	return v;
 }
@@ -62,7 +73,7 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const MSGPACK_STD_TR1::uno
 {
 	o.pack_map(v.size());
 	for(typename MSGPACK_STD_TR1::unordered_map<K,V>::const_iterator it(v.begin()), it_end(v.end());
-			it != it_end; ++it) {
+		it != it_end; ++it) {
 		o.pack(it->first);
 		o.pack(it->second);
 	}
@@ -70,39 +81,31 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const MSGPACK_STD_TR1::uno
 }
 
 template <typename K, typename V>
-inline void operator<< (object::with_zone& o, const MSGPACK_STD_TR1::unordered_map<K,V>& v)
+inline void operator<< (object& o, const MSGPACK_STD_TR1::unordered_map<K,V>& v)
 {
-	o.type = type::MAP;
-	if(v.empty()) {
-		o.via.map.ptr  = nullptr;
-		o.via.map.size = 0;
-	} else {
-		object_kv* p = static_cast<object_kv*>(o.zone->allocate_align(sizeof(object_kv)*v.size()));
-		object_kv* const pend = p + v.size();
-		o.via.map.ptr  = p;
-		o.via.map.size = v.size();
-		typename MSGPACK_STD_TR1::unordered_map<K,V>::const_iterator it(v.begin());
-		do {
-			p->key = object(it->first, o.zone);
-			p->val = object(it->second, o.zone);
-			++p;
-			++it;
-		} while(p < pend);
-	}
+	object_map om;
+	om.reserve(v.size());
+	std::for_each(v.begin(), v.end(), [&om](std::pair<K,V> const& e){
+		om.emplace_back(e.first, e.second);
+	});
+	o.via = std::move(om);
 }
 
 
 template <typename K, typename V>
 inline MSGPACK_STD_TR1::unordered_multimap<K, V> operator>> (object o, MSGPACK_STD_TR1::unordered_multimap<K, V>& v)
 {
-	if(o.type != type::MAP) { throw type_error(); }
-	object_kv* p(o.via.map.ptr);
-	object_kv* const pend(o.via.map.ptr + o.via.map.size);
-	for(; p != pend; ++p) {
-		std::pair<K, V> value;
-		p->key.convert(value.first);
-		p->val.convert(value.second);
-		v.insert(value);
+	object_map const* om = boost::get<object_map>(&o.via);
+	if (!om) { throw type_error(); }
+
+	std::vector<object_kv>::const_iterator b(om->begin());
+	std::vector<object_kv>::const_iterator e(om->end());
+	while (b != e) {
+		std::pair<K,V> pair;
+		b->key.convert(pair.first);
+		b->val.convert(pair.second);
+		v.insert(pair);
+		++b;
 	}
 	return v;
 }
@@ -112,7 +115,7 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const MSGPACK_STD_TR1::uno
 {
 	o.pack_map(v.size());
 	for(typename MSGPACK_STD_TR1::unordered_multimap<K,V>::const_iterator it(v.begin()), it_end(v.end());
-			it != it_end; ++it) {
+		it != it_end; ++it) {
 		o.pack(it->first);
 		o.pack(it->second);
 	}
@@ -120,25 +123,14 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const MSGPACK_STD_TR1::uno
 }
 
 template <typename K, typename V>
-inline void operator<< (object::with_zone& o, const MSGPACK_STD_TR1::unordered_multimap<K,V>& v)
+inline void operator<< (object& o, const MSGPACK_STD_TR1::unordered_multimap<K,V>& v)
 {
-	o.type = type::MAP;
-	if(v.empty()) {
-		o.via.map.ptr  = nullptr;
-		o.via.map.size = 0;
-	} else {
-		object_kv* p = static_cast<object_kv*>(o.zone->allocate_align(sizeof(object_kv)*v.size()));
-		object_kv* const pend = p + v.size();
-		o.via.map.ptr  = p;
-		o.via.map.size = v.size();
-		typename MSGPACK_STD_TR1::unordered_multimap<K,V>::const_iterator it(v.begin());
-		do {
-			p->key = object(it->first, o.zone);
-			p->val = object(it->second, o.zone);
-			++p;
-			++it;
-		} while(p < pend);
-	}
+	object_map om;
+	om.reserve(v.size());
+	std::for_each(v.begin(), v.end(), [&om](std::pair<K,V> const& e){
+		om.emplace_back(e.first, e.second);
+	});
+	o.via = std::move(om);
 }
 
 

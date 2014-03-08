@@ -27,14 +27,18 @@ namespace msgpack {
 template <typename T>
 inline std::deque<T>& operator>> (object const& o, std::deque<T>& v)
 {
-	if(o.type != type::ARRAY) { throw type_error(); }
-	v.resize(o.via.array.size);
-	object* p = o.via.array.ptr;
-	object* const pend = o.via.array.ptr + o.via.array.size;
-	typename std::deque<T>::iterator it = v.begin();
-	for(; p < pend; ++p, ++it) {
-		p->convert(*it);
+	object_array const* oa = boost::get<object_array>(&o.via);
+	if(!oa) { throw type_error(); }
+	v.resize(oa->size());
+
+	std::vector<object>::const_iterator b(oa->begin());
+	std::vector<object>::const_iterator e(oa->end());
+	typename std::deque<T>::iterator it(v.begin());
+	while (b != e) {
+		b->convert(*it++);
+		++b;
 	}
+
 	return v;
 }
 
@@ -50,24 +54,14 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::deque<T>& v)
 }
 
 template <typename T>
-inline void operator<< (object::with_zone& o, const std::deque<T>& v)
+inline void operator<< (object& o, const std::deque<T>& v)
 {
-	o.type = type::ARRAY;
-	if(v.empty()) {
-		o.via.array.ptr = nullptr;
-		o.via.array.size = 0;
-	} else {
-		object* p = static_cast<object*>(o.zone->allocate_align(sizeof(object)*v.size()));
-		object* const pend = p + v.size();
-		o.via.array.ptr = p;
-		o.via.array.size = v.size();
-		typename std::deque<T>::const_iterator it(v.begin());
-		do {
-			*p = object(*it, o.zone);
-			++p;
-			++it;
-		} while(p < pend);
-	}
+	object_array oa;
+	oa.reserve(v.size());
+	std::for_each(v.begin(), v.end(), [&oa](T const& e){
+		oa.push_back(e);
+	});
+	o.via = std::move(oa);
 }
 
 

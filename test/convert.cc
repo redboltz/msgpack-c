@@ -16,8 +16,7 @@ TEST(convert, compatibility_less)
 	std::vector<std::string> src(1);
 	src[0] = "kumofs";
 
-	msgpack::zone z;
-	msgpack::object obj(src, &z);
+	msgpack::object obj(src);
 
 	compatibility c;
 	EXPECT_NO_THROW( obj.convert(&c) );
@@ -33,8 +32,7 @@ TEST(convert, compatibility_more)
 	src[1] = "mpio";
 	src[2] = "cloudy";
 
-	msgpack::zone z;
-	msgpack::object obj(src, &z);
+	msgpack::object obj(src);
 
 	compatibility to;
 	EXPECT_NO_THROW( obj.convert(&to) );
@@ -65,8 +63,7 @@ TEST(convert, enum_member)
 	enum_member src;
 	src.flag = enum_member::B;
 
-	msgpack::zone z;
-	msgpack::object obj(src, &z);
+	msgpack::object obj(src);
 
 	enum_member to;
 	EXPECT_NO_THROW( obj.convert(&to) );

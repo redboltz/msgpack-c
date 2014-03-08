@@ -56,11 +56,10 @@ TEST(unpack, myclass)
 	myclass m1(1, "phraser");
 	msgpack::pack(sbuf, m1);
 
-	msgpack::zone z;
 	msgpack::object obj;
-
+	std::shared_ptr<char> sp(sbuf.data(), [](char*){});
 	msgpack::unpack_return ret =
-		msgpack::unpack(sbuf.data(), sbuf.size(), NULL, z, obj);
+		msgpack::unpack(sp, sbuf.size(), NULL, obj);
 
 	EXPECT_EQ(ret, msgpack::UNPACK_SUCCESS);
 
@@ -80,14 +79,15 @@ TEST(unpack, sequence)
 	size_t offset = 0;
 
 	msgpack::unpacked msg;
+	std::shared_ptr<char> sp(sbuf.data(), [](char*){});
 
-	msgpack::unpack(&msg, sbuf.data(), sbuf.size(), &offset);
+	msgpack::unpack(&msg, sp, sbuf.size(), &offset);
 	EXPECT_EQ(1, msg.get().as<int>());
 
-	msgpack::unpack(&msg, sbuf.data(), sbuf.size(), &offset);
+	msgpack::unpack(&msg, sp, sbuf.size(), &offset);
 	EXPECT_EQ(2, msg.get().as<int>());
 
-	msgpack::unpack(&msg, sbuf.data(), sbuf.size(), &offset);
+	msgpack::unpack(&msg, sp, sbuf.size(), &offset);
 	EXPECT_EQ(3, msg.get().as<int>());
 }
 
@@ -101,21 +101,21 @@ TEST(unpack, sequence_compat)
 
 	size_t offset = 0;
 
-	msgpack::zone z;
 	msgpack::object obj;
 	msgpack::unpack_return ret;
 
-	ret = msgpack::unpack(sbuf.data(), sbuf.size(), &offset, z, obj);
+	std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+	ret = msgpack::unpack(sp, sbuf.size(), &offset, obj);
 	EXPECT_TRUE(ret >= 0);
 	EXPECT_EQ(ret, msgpack::UNPACK_EXTRA_BYTES);
 	EXPECT_EQ(1, obj.as<int>());
 
-	ret = msgpack::unpack(sbuf.data(), sbuf.size(), &offset, z, obj);
+	ret = msgpack::unpack(sp, sbuf.size(), &offset, obj);
 	EXPECT_TRUE(ret >= 0);
 	EXPECT_EQ(ret, msgpack::UNPACK_EXTRA_BYTES);
 	EXPECT_EQ(2, obj.as<int>());
 
-	ret = msgpack::unpack(sbuf.data(), sbuf.size(), &offset, z, obj);
+	ret = msgpack::unpack(sp, sbuf.size(), &offset, obj);
 	EXPECT_TRUE(ret >= 0);
 	EXPECT_EQ(ret, msgpack::UNPACK_SUCCESS);
 	EXPECT_EQ(3, obj.as<int>());

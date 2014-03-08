@@ -26,92 +26,89 @@
 #include <typeinfo>
 #include <limits>
 #include <ostream>
+#include <memory>
+#include <boost/variant.hpp>
 
 namespace msgpack {
 
+namespace type {
+
+struct nil { };
+inline bool operator==(nil const&, nil const&) { return true; }
+
+}  // namespace type
 
 class type_error : public std::bad_cast { };
-
-
-namespace type {
-	enum object_type {
-		NIL				= MSGPACK_OBJECT_NIL,
-		BOOLEAN			= MSGPACK_OBJECT_BOOLEAN,
-		POSITIVE_INTEGER	= MSGPACK_OBJECT_POSITIVE_INTEGER,
-		NEGATIVE_INTEGER	= MSGPACK_OBJECT_NEGATIVE_INTEGER,
-		DOUBLE				= MSGPACK_OBJECT_DOUBLE,
-		STR				= MSGPACK_OBJECT_STR,
-		BIN				= MSGPACK_OBJECT_BIN,
-		ARRAY				= MSGPACK_OBJECT_ARRAY,
-		MAP				= MSGPACK_OBJECT_MAP
-	};
-}
 
 
 struct object;
 struct object_kv;
 
-struct object_array {
-	uint32_t size;
-	object* ptr;
-};
-
-struct object_map {
-	uint32_t size;
-	object_kv* ptr;
-};
+typedef std::vector<object> object_array;
+typedef std::vector<object_kv> object_map;
 
 struct object_str {
 	uint32_t size;
-	const char* ptr;
+	std::shared_ptr<const char> ptr;
 };
+
+inline bool operator==(object_str const& lhs, object_str const& rhs) {
+	return lhs.size == rhs.size && memcmp(lhs.ptr.get(), rhs.ptr.get(), lhs.size) == 0;
+}
 
 struct object_bin {
 	uint32_t size;
-	const char* ptr;
+	std::shared_ptr<const char> ptr;
 };
 
+inline bool operator==(object_bin const& lhs, object_bin const& rhs) {
+	return lhs.size == rhs.size && memcmp(lhs.ptr.get(), rhs.ptr.get(), lhs.size) == 0;
+}
+
 struct object {
-	union union_type {
-		bool boolean;
-		uint64_t u64;
-		int64_t  i64;
-		double   dec;
-		object_array array;
-		object_map map;
-		object_str str;
-		object_bin bin;
-	};
+	typedef boost::variant<
+		type::nil,
+		bool,
+		uint64_t,
+		int64_t,
+		double,
+		object_array,
+		object_map,
+		object_str,
+		object_bin
+	> union_type;
 
-	type::object_type type;
 	union_type via;
-
-	bool is_nil() const { return type == type::NIL; }
 
 	template <typename T>
 	T as() const;
+
+	bool is_nil() const {
+		return boost::get<type::nil>(&via);
+	}
 
 	template <typename T>
 	void convert(T& v) const;
 	template <typename T>
 	void convert(T* v) const;
 
-	object();
-
 	object(msgpack_object o);
 
 	template <typename T>
 	explicit object(const T& v);
 
-	template <typename T>
-	object(const T& v, zone* z);
+	object() = default;
+
+	object(object const&) = default;
+	object(object&&) = default;
 
 	template <typename T>
 	object& operator=(const T& v);
 
-	operator msgpack_object() const;
+	object& operator=(object const&) = default;
+	object& operator=(object&&) = default;
 
-	struct with_zone;
+	operator msgpack_object() const;
 
 private:
 	struct implicit_type;
@@ -120,17 +117,24 @@ public:
 	implicit_type convert() const;
 };
 
+inline bool operator==(object const& lhs, object const& rhs) {
+	return lhs.via == rhs.via;
+}
+
 struct object_kv {
+	object_kv()=default;
+	object_kv(object&& k, object&& v):key(std::move(k)), val(std::move(v)) {}
+	object_kv(object_kv const&) = default;
+	object_kv(object_kv&&) = default;
+	object_kv& operator=(object_kv const&) = default;
+	object_kv& operator=(object_kv&&) = default;
 	object key;
 	object val;
 };
 
-struct object::with_zone : object {
-	with_zone(msgpack::zone* zone) : zone(zone) { }
-	msgpack::zone* zone;
-private:
-	with_zone();
-};
+inline bool operator==(object_kv const& lhs, object_kv const& rhs) {
+	return lhs.key == rhs.key && lhs.val == rhs.val;
+}
 
 struct object::implicit_type {
 	implicit_type(object const& o) : obj(o) { }
@@ -206,84 +210,6 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const T& v)
 	return detail::packer_serializer<Stream, T>::pack(o, v);
 }
 
-// deconvert operator
-template <typename T>
-inline void operator<< (object::with_zone& o, const T& v)
-{
-	v.msgpack_object(static_cast<object*>(&o), o.zone);
-}
-
-
-inline bool operator==(const object& x, const object& y)
-{
-	if(x.type != y.type) { return false; }
-
-	switch(x.type) {
-	case type::NIL:
-		return true;
-
-	case type::BOOLEAN:
-		return x.via.boolean == y.via.boolean;
-
-	case type::POSITIVE_INTEGER:
-		return x.via.u64 == y.via.u64;
-
-	case type::NEGATIVE_INTEGER:
-		return x.via.i64 == y.via.i64;
-
-	case type::DOUBLE:
-		return x.via.dec == y.via.dec;
-
-	case type::STR:
-		return x.via.str.size == y.via.str.size &&
-			memcmp(x.via.str.ptr, y.via.str.ptr, x.via.str.size) == 0;
-
-	case type::BIN:
-		return x.via.bin.size == y.via.bin.size &&
-			memcmp(x.via.bin.ptr, y.via.bin.ptr, x.via.bin.size) == 0;
-
-	case type::ARRAY:
-		if(x.via.array.size != y.via.array.size) {
-			return false;
-		} else if(x.via.array.size == 0) {
-			return true;
-		} else {
-			object* px = x.via.array.ptr;
-			object* const pxend = x.via.array.ptr + x.via.array.size;
-			object* py = y.via.array.ptr;
-			do {
-				if(!(*px == *py)) {
-					return false;
-				}
-				++px;
-				++py;
-			} while(px < pxend);
-			return true;
-		}
-
-	case type::MAP:
-		if(x.via.map.size != y.via.map.size) {
-			return false;
-		} else if(x.via.map.size == 0) {
-			return true;
-		} else {
-			object_kv* px = x.via.map.ptr;
-			object_kv* const pxend = x.via.map.ptr + x.via.map.size;
-			object_kv* py = y.via.map.ptr;
-			do {
-				if(!(px->key == py->key) || !(px->val == py->val)) {
-					return false;
-				}
-				++px;
-				++py;
-			} while(px < pxend);
-			return true;
-		}
-
-	default:
-		return false;
-	}
-}
 
 template <typename T>
 inline bool operator==(const object& x, const T& y)
@@ -335,11 +261,6 @@ inline T object::as() const
 }
 
 
-inline object::object()
-{
-	type = type::NIL;
-}
-
 template <typename T>
 inline object::object(const T& v)
 {
@@ -353,21 +274,19 @@ inline object& object::operator=(const T& v)
 	return *this;
 }
 
-template <typename T>
-object::object(const T& v, zone* z)
-{
-	with_zone oz(z);
-	oz << v;
-	type = oz.type;
-	via = oz.via;
-}
-
 
 inline object::object(msgpack_object o)
 {
 	// FIXME beter way?
 	::memcpy(this, &o, sizeof(o));
 }
+
+template <typename T>
+void operator<< (object& o, const T& v)
+{
+	v.msgpack_object(static_cast<object*>(&o));
+}
+
 
 inline void operator<< (object& o, msgpack_object v)
 {
@@ -405,133 +324,126 @@ inline void pack_copy(packer<Stream>& o, T v)
 	pack(o, v);
 }
 
-
 template <typename Stream>
-packer<Stream>& operator<< (packer<Stream>& o, const object& v)
+class pack_visitor :public boost::static_visitor<void>
 {
-	switch(v.type) {
-	case type::NIL:
-		o.pack_nil();
-		return o;
-
-	case type::BOOLEAN:
-		if(v.via.boolean) {
-			o.pack_true();
-		} else {
-			o.pack_false();
-		}
-		return o;
-
-	case type::POSITIVE_INTEGER:
-		o.pack_uint64(v.via.u64);
-		return o;
-
-	case type::NEGATIVE_INTEGER:
-		o.pack_int64(v.via.i64);
-		return o;
-
-	case type::DOUBLE:
-		o.pack_double(v.via.dec);
-		return o;
-
-	case type::STR:
-		o.pack_str(v.via.str.size);
-		o.pack_str_body(v.via.str.ptr, v.via.str.size);
-		return o;
-
-	case type::BIN:
-		o.pack_bin(v.via.bin.size);
-		o.pack_bin_body(v.via.bin.ptr, v.via.bin.size);
-		return o;
-
-	case type::ARRAY:
-		o.pack_array(v.via.array.size);
-		for(object* p(v.via.array.ptr),
-				* const pend(v.via.array.ptr + v.via.array.size);
-				p < pend; ++p) {
-			o << *p;
-		}
-		return o;
-
-	case type::MAP:
-		o.pack_map(v.via.map.size);
-		for(object_kv* p(v.via.map.ptr),
-				* const pend(v.via.map.ptr + v.via.map.size);
-				p < pend; ++p) {
-			o << p->key;
-			o << p->val;
-		}
-		return o;
-
-	default:
+public:
+	pack_visitor(packer<Stream>& packer):packer_(packer) {}
+	void operator()(type::nil) const {
+		packer_.pack_nil();
+	}
+	void operator()(bool v) const {
+		v ? packer_.pack_true() : packer_.pack_false();
+	}
+	void operator()(uint64_t v) const {
+		packer_.pack_uint64(v);
+	}
+	void operator()(int64_t v) const {
+		packer_.pack_int64(v);
+	}
+	void operator()(double v) const {
+		packer_.pack_double(v);
+	}
+	void operator()(object_array const& v) const {
+		packer_.pack_array(v.size());
+		for_each(v.begin(), v.end(), [this](object const& o) { packer_ << o; });
+	}
+	void operator()(object_map const& v) const {
+		packer_.pack_map(v.size());
+		for_each(v.begin(), v.end(),
+			[this](object_kv const& o) {
+				packer_ << o.key;
+				packer_ << o.val;
+			}
+		);
+	}
+	void operator()(object_str const& v) const {
+		packer_.pack_str(v.size);
+		packer_.pack_str_body(v.ptr.get(), v.size);
+	}
+	void operator()(object_bin const& v) const {
+		packer_.pack_bin(v.size);
+		packer_.pack_bin_body(v.ptr.get(), v.size);
+	}
+	void operator()(...) const {
 		throw type_error();
 	}
+
+private:
+	packer<Stream>& packer_;
+};
+
+template <typename Stream>
+packer<Stream>& operator<< (packer<Stream>& s, const object& o)
+{
+	boost::apply_visitor(pack_visitor<Stream>(s), o.via);
+	return s;
 }
+
+std::ostream& operator<< (std::ostream& s, const object& o);
+
+class ostream_visitor :public boost::static_visitor<void>
+{
+public:
+	ostream_visitor(std::ostream& stream):stream_(stream) {}
+	void operator()(type::nil) const {
+		stream_ << "nil";
+	}
+	void operator()(bool v) const {
+		stream_ << std::boolalpha << v;
+	}
+	void operator()(uint64_t v) const {
+		stream_ << v;
+	}
+	void operator()(int64_t v) const {
+		stream_ << v;
+	}
+	void operator()(double v) const {
+		stream_ << v;
+	}
+	void operator()(object_array const& v) const {
+		std::vector<object>::const_iterator b(v.begin());
+		std::vector<object>::const_iterator e(v.end());
+		stream_ << "[";
+		if (b != e) {
+			stream_ << *b++;
+			while (b != e) {
+				stream_ << ", " << *b++;
+			}
+		}
+		stream_ << "]";
+	}
+	void operator()(object_map const& v) const {
+		std::vector<object_kv>::const_iterator b(v.begin());
+		std::vector<object_kv>::const_iterator e(v.end());
+		stream_ << "{";
+		if (b != e) {
+			stream_ << b->key << "=>" << b->val;
+			++b;
+			while (b != e) {
+				stream_ << ", " << b->key << "=>" << b->val;
+				++b;
+			}
+		}
+		stream_ << "}";
+	}
+	void operator()(object_str const& v) const {
+		(stream_ << '"').write(v.ptr.get(), v.size) << '"';
+	}
+	void operator()(object_bin const& v) const {
+		(stream_ << '"').write(v.ptr.get(), v.size) << '"';
+	}
+	void operator()(...) const {
+		stream_ << "#<UNKNOWN>";
+	}
+
+private:
+	std::ostream& stream_;
+};
 
 std::ostream& operator<< (std::ostream& s, const object& o)
 {
-	switch(o.type) {
-	case type::NIL:
-		s << "nil";
-		break;
-
-	case type::BOOLEAN:
-		s << (o.via.boolean ? "true" : "false");
-		break;
-
-	case type::POSITIVE_INTEGER:
-		s << o.via.u64;
-		break;
-
-	case type::NEGATIVE_INTEGER:
-		s << o.via.i64;
-		break;
-
-	case type::DOUBLE:
-		s << o.via.dec;
-		break;
-
-	case type::STR:
-		(s << '"').write(o.via.str.ptr, o.via.str.size) << '"';
-		break;
-
-	case type::BIN:
-		(s << '"').write(o.via.bin.ptr, o.via.bin.size) << '"';
-		break;
-
-
-	case type::ARRAY:
-		s << "[";
-		if(o.via.array.size != 0) {
-			object* p(o.via.array.ptr);
-			s << *p;
-			++p;
-			for(object* const pend(o.via.array.ptr + o.via.array.size);
-					p < pend; ++p) {
-				s << ", " << *p;
-			}
-		}
-		s << "]";
-		break;
-
-	case type::MAP:
-		s << "{";
-		if(o.via.map.size != 0) {
-			object_kv* p(o.via.map.ptr);
-			s << p->key << "=>" << p->val;
-			++p;
-			for(object_kv* const pend(o.via.map.ptr + o.via.map.size);
-					p < pend; ++p) {
-				s << ", " << p->key << "=>" << p->val;
-			}
-		}
-		s << "}";
-		break;
-
-	default:
-		// FIXME
-		s << "#<UNKNOWN " << (uint16_t)o.type << ">";
-	}
+	boost::apply_visitor(ostream_visitor(s), o.via);
 	return s;
 }
 
