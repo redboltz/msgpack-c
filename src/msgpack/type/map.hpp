@@ -45,14 +45,18 @@ namespace detail {
 template <typename K, typename V>
 inline type::assoc_vector<K,V>& operator>> (object const& o, type::assoc_vector<K,V>& v)
 {
-	if(o.type != type::MAP) { throw type_error(); }
-	v.resize(o.via.map.size);
-	object_kv* p = o.via.map.ptr;
-	object_kv* const pend = o.via.map.ptr + o.via.map.size;
-	std::pair<K, V>* it(&v.front());
-	for(; p < pend; ++p, ++it) {
-		p->key.convert(it->first);
-		p->val.convert(it->second);
+	object_map const* om = boost::get<object_map>(&o.via);
+	if (!om) { throw type_error(); }
+	v.resize(om->size());
+
+	std::vector<object_kv>::const_iterator b(om->begin());
+	std::vector<object_kv>::const_iterator e(om->end());
+	typename type::assoc_vector<K,V>::iterator it(v.begin());
+	while (b != e) {
+		b->key.convert(it->first);
+		b->val.convert(it->second);
+		++b;
+		++it;
 	}
 	std::sort(v.begin(), v.end(), type::detail::pair_first_less<K,V>());
 	return v;
@@ -71,45 +75,38 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const type::assoc_vector<K
 }
 
 template <typename K, typename V>
-inline void operator<< (object::with_zone& o, const type::assoc_vector<K,V>& v)
+inline void operator<< (object& o, const type::assoc_vector<K,V>& v)
 {
-	o.type = type::MAP;
-	if(v.empty()) {
-		o.via.map.ptr  = nullptr;
-		o.via.map.size = 0;
-	} else {
-		object_kv* p = static_cast<object_kv*>(o.zone->allocate_align(sizeof(object_kv)*v.size()));
-		object_kv* const pend = p + v.size();
-		o.via.map.ptr  = p;
-		o.via.map.size = v.size();
-		typename type::assoc_vector<K,V>::const_iterator it(v.begin());
-		do {
-			p->key = object(it->first, o.zone);
-			p->val = object(it->second, o.zone);
-			++p;
-			++it;
-		} while(p < pend);
-	}
+	object_map om;
+	om.reserve(v.size());
+	std::for_each(v.begin(), v.end(), [&om](std::pair<K,V> const& e){
+		om.emplace_back(e.first, e.second);
+	});
+	o.via = std::move(om);
 }
 
 
 template <typename K, typename V>
 inline std::map<K, V> operator>> (object const& o, std::map<K, V>& v)
 {
-	if(o.type != type::MAP) { throw type_error(); }
-	object_kv* p(o.via.map.ptr);
-	object_kv* const pend(o.via.map.ptr + o.via.map.size);
-	for(; p != pend; ++p) {
+	object_map const* om = boost::get<object_map>(&o.via);
+	if (!om) { throw type_error(); }
+
+	std::vector<object_kv>::const_iterator b(om->begin());
+	std::vector<object_kv>::const_iterator e(om->end());
+	while (b != e) {
 		K key;
-		p->key.convert(key);
-		typename std::map<K,V>::iterator it(v.lower_bound(key));
-		if(it != v.end() && !(key < it->first)) {
-			p->val.convert(it->second);
-		} else {
+		b->key.convert(key);
+		typename std::map<K,V>::iterator it(v.find(key));
+		if (it == v.end()) {
 			V val;
-			p->val.convert(val);
+			b->val.convert(val);
 			v.insert(it, std::pair<K,V>(key, val));
 		}
+		else {
+			b->val.convert(it->second);
+		}
+		++b;
 	}
 	return v;
 }
@@ -127,39 +124,31 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::map<K,V>& v)
 }
 
 template <typename K, typename V>
-inline void operator<< (object::with_zone& o, const std::map<K,V>& v)
+inline void operator<< (object& o, const std::map<K,V>& v)
 {
-	o.type = type::MAP;
-	if(v.empty()) {
-		o.via.map.ptr  = nullptr;
-		o.via.map.size = 0;
-	} else {
-		object_kv* p = static_cast<object_kv*>(o.zone->allocate_align(sizeof(object_kv)*v.size()));
-		object_kv* const pend = p + v.size();
-		o.via.map.ptr  = p;
-		o.via.map.size = v.size();
-		typename std::map<K,V>::const_iterator it(v.begin());
-		do {
-			p->key = object(it->first, o.zone);
-			p->val = object(it->second, o.zone);
-			++p;
-			++it;
-		} while(p < pend);
-	}
+	object_map om;
+	om.reserve(v.size());
+	std::for_each(v.begin(), v.end(), [&om](std::pair<K,V> const& e){
+		om.emplace_back(e.first, e.second);
+	});
+	o.via = std::move(om);
 }
 
 
 template <typename K, typename V>
 inline std::multimap<K, V> operator>> (object const& o, std::multimap<K, V>& v)
 {
-	if(o.type != type::MAP) { throw type_error(); }
-	object_kv* p(o.via.map.ptr);
-	object_kv* const pend(o.via.map.ptr + o.via.map.size);
-	for(; p != pend; ++p) {
-		std::pair<K, V> value;
-		p->key.convert(value.first);
-		p->val.convert(value.second);
-		v.insert(value);
+	object_map const* om = boost::get<object_map>(&o.via);
+	if (!om) { throw type_error(); }
+
+	std::vector<object_kv>::const_iterator b(om->begin());
+	std::vector<object_kv>::const_iterator e(om->end());
+	while (b != e) {
+		std::pair<K,V> pair;
+		b->key.convert(pair.first);
+		b->val.convert(pair.second);
+		v.insert(pair);
+		++b;
 	}
 	return v;
 }
@@ -177,25 +166,14 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::multimap<K,V>& 
 }
 
 template <typename K, typename V>
-inline void operator<< (object::with_zone& o, const std::multimap<K,V>& v)
+inline void operator<< (object& o, const std::multimap<K,V>& v)
 {
-	o.type = type::MAP;
-	if(v.empty()) {
-		o.via.map.ptr  = nullptr;
-		o.via.map.size = 0;
-	} else {
-		object_kv* p = static_cast<object_kv*>(o.zone->allocate_align(sizeof(object_kv)*v.size()));
-		object_kv* const pend = p + v.size();
-		o.via.map.ptr  = p;
-		o.via.map.size = v.size();
-		typename std::multimap<K,V>::const_iterator it(v.begin());
-		do {
-			p->key = object(it->first, o.zone);
-			p->val = object(it->second, o.zone);
-			++p;
-			++it;
-		} while(p < pend);
-	}
+	object_map om;
+	om.reserve(v.size());
+	std::for_each(v.begin(), v.end(), [&om](std::pair<K,V> const& e){
+		om.emplace_back(e.first, e.second);
+	});
+	o.via = std::move(om);
 }
 
 

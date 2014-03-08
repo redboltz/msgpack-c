@@ -63,9 +63,10 @@ struct raw_ref {
 
 inline type::raw_ref& operator>> (object const& o, type::raw_ref& v)
 {
-	if(o.type != type::BIN) { throw type_error(); }
-	v.ptr  = o.via.bin.ptr;
-	v.size = o.via.bin.size;
+	object_bin const* ob = boost::get<object_bin>(&o.via);
+	if (!ob) { throw type_error(); }
+	v.ptr  = ob->ptr.get();
+	v.size = ob->size;
 	return v;
 }
 
@@ -79,14 +80,11 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const type::raw_ref& v)
 
 inline void operator<< (object& o, const type::raw_ref& v)
 {
-	o.type = type::BIN;
-	o.via.bin.ptr = v.ptr;
-	o.via.bin.size = v.size;
+	object_bin ob;
+	ob.ptr.reset(v.ptr, [](char const*){});
+	ob.size = v.size;
+	o.via = ob;
 }
-
-inline void operator<< (object::with_zone& o, const type::raw_ref& v)
-	{ static_cast<object&>(o) << v; }
-
 
 }  // namespace msgpack
 

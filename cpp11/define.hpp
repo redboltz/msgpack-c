@@ -29,26 +29,26 @@
 		msgpack::type::make_define(__VA_ARGS__).msgpack_unpack(o); \
 	}\
 	template <typename MSGPACK_OBJECT> \
-	void msgpack_object(MSGPACK_OBJECT* o, msgpack::zone* z) const \
+	void msgpack_object(MSGPACK_OBJECT* o) const \
 	{ \
-		msgpack::type::make_define(__VA_ARGS__).msgpack_object(o, z); \
+		msgpack::type::make_define(__VA_ARGS__).msgpack_object(o); \
 	}
 
 // MSGPACK_ADD_ENUM must be used in the global namespace.
-#define MSGPACK_ADD_ENUM(enum) \
+#define MSGPACK_ADD_ENUM(enum_type) \
   namespace msgpack { \
 	template <> \
-	inline enum& operator>> (object const& o, enum& v) \
+	inline enum_type& operator>> (object const& o, enum_type& v) \
 	{ \
 	  int tmp; \
 	  o >> tmp; \
-	  v = static_cast<enum>(tmp); \
+	  v = static_cast<enum_type>(tmp); \
 	  return v; \
 	} \
 	template <> \
-	void operator<< (object::with_zone& o, const enum& v) \
+	inline void operator<< (object& o, const enum_type& v) \
 	{ \
-	  int tmp = static_cast<enum>(v); \
+	  int tmp = static_cast<enum_type>(v); \
 	  o << tmp; \
 	} \
   }
@@ -63,15 +63,15 @@ struct define_imp {
 		define_imp<Tuple, N-1>::pack(pk, t);
 		pk.pack(std::get<N-1>(t));
 	}
-	static void unpack(msgpack::object const& o, Tuple& t) {
-		define_imp<Tuple, N-1>::unpack(o, t);
-		const size_t size = o.via.array.size;
+	static void unpack(msgpack::object_array const& oa, Tuple& t) {
+		define_imp<Tuple, N-1>::unpack(oa, t);
+		const size_t size = oa.size();
 		if(size <= N-1) { return; }
-		o.via.array.ptr[N-1].convert(std::get<N-1>(t));
+		oa[N-1].convert(std::get<N-1>(t));
 	}
-	static void object(msgpack::object* o, msgpack::zone* z, Tuple const& t) {
-		define_imp<Tuple, N-1>::object(o, z, t);
-		o->via.array.ptr[N-1] = msgpack::object(std::get<N-1>(t), z);
+	static void object(msgpack::object_array& oa, Tuple const& t) {
+		define_imp<Tuple, N-1>::object(oa, t);
+		oa.push_back(msgpack::object(std::get<N-1>(t)));
 	}
 };
 
@@ -81,13 +81,13 @@ struct define_imp<Tuple, 1> {
 	static void pack(Packer& pk, Tuple const& t) {
 		pk.pack(std::get<0>(t));
 	}
-	static void unpack(msgpack::object const& o, Tuple& t) {
-		const size_t size = o.via.array.size;
+	static void unpack(msgpack::object_array const& oa, Tuple& t) {
+		const size_t size = oa.size();
 		if(size <= 0) { return; }
-		o.via.array.ptr[0].convert(std::get<0>(t));
+		oa[0].convert(std::get<0>(t));
 	}
-	static void object(msgpack::object* o, msgpack::zone* z, Tuple const& t) {
-		o->via.array.ptr[0] = msgpack::object(std::get<0>(t), z);
+	static void object(msgpack::object_array& oa, Tuple const& t) {
+		oa.push_back(msgpack::object(std::get<0>(t)));
 	}
 };
 
@@ -106,17 +106,18 @@ struct define {
 	}
 	void msgpack_unpack(msgpack::object const& o)
 	{
-		if(o.type != type::ARRAY) { throw type_error(); }
+		msgpack::object_array const* oa = boost::get<msgpack::object_array>(&o.via);
+		if (!oa) { throw msgpack::type_error(); }
 
-		define_imp<tuple<Args&...>, sizeof...(Args)>::unpack(o, a);
+		define_imp<tuple<Args&...>, sizeof...(Args)>::unpack(*oa, a);
 	}
-	void msgpack_object(msgpack::object* o, msgpack::zone* z) const
+	void msgpack_object(msgpack::object* o) const
 	{
-		o->type = type::ARRAY;
-		o->via.array.ptr = static_cast<object*>(z->allocate_align(sizeof(object)*sizeof...(Args)));
-		o->via.array.size = sizeof...(Args);
+		msgpack::object_array oa;
+		oa.reserve(sizeof...(Args));
 
-		define_imp<tuple<Args&...>, sizeof...(Args)>::object(o, z, a);
+		define_imp<tuple<Args&...>, sizeof...(Args)>::object(oa, a);
+		o->via = std::move(oa);
 	}
 
 	tuple<Args&...> a;
@@ -133,13 +134,12 @@ struct define<> {
 	}
 	void msgpack_unpack(msgpack::object const& o)
 	{
-		if(o.type != type::ARRAY) { throw type_error(); }
+		msgpack::object_array const* oa = boost::get<msgpack::object_array>(&o.via);
+		if (!oa) { throw msgpack::type_error(); }
 	}
-	void msgpack_object(msgpack::object* o, msgpack::zone* z) const
+	void msgpack_object(msgpack::object* o) const
 	{
-		o->type = type::ARRAY;
-		o->via.array.ptr = NULL;
-		o->via.array.size = 0;
+		o->via = msgpack::object_array();
 	}
 };
 

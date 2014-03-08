@@ -31,29 +31,40 @@ namespace detail {
 
 	template <typename T>
 	struct convert_integer_sign<T, true> {
-		static inline T convert(object const& o) {
-			if(o.type == type::POSITIVE_INTEGER) {
-				if(o.via.u64 > (uint64_t)std::numeric_limits<T>::max())
-					{ throw type_error(); }
-				return (T)o.via.u64;
-			} else if(o.type == type::NEGATIVE_INTEGER) {
-				if(o.via.i64 < (int64_t)std::numeric_limits<T>::min())
-					{ throw type_error(); }
-				return (T)o.via.i64;
+		struct integer_sign_visitor : boost::static_visitor<T>
+		{
+			T operator()(uint64_t v) const {
+				if (v > static_cast<uint64_t>(std::numeric_limits<T>::max())) {
+					throw type_error();
+				}
+				return static_cast<T>(v);
 			}
-			throw type_error();
+			T operator()(int64_t v) const {
+				if (v < static_cast<int64_t>(std::numeric_limits<T>::min())) {
+					throw type_error();
+				}
+				return static_cast<T>(v);
+			}
+			template <typename U>
+			T operator()(U const&) const {
+				throw type_error();
+				return 0;
+			}
+		};
+		static inline T convert(object const& o) {
+			return boost::apply_visitor(integer_sign_visitor(), o.via);
 		}
 	};
 
 	template <typename T>
 	struct convert_integer_sign<T, false> {
 		static inline T convert(object const& o) {
-			if(o.type == type::POSITIVE_INTEGER) {
-				if(o.via.u64 > (uint64_t)std::numeric_limits<T>::max())
-					{ throw type_error(); }
-				return (T)o.via.u64;
+			uint64_t const* pv = boost::get<uint64_t>(&o.via);
+			if (!pv) throw type_error();
+			if (*pv > static_cast<uint64_t>(std::numeric_limits<T>::max())) {
+				throw type_error();
 			}
-			throw type_error();
+			return static_cast<T>(*pv);
 		}
 	};
 
@@ -98,15 +109,15 @@ namespace detail {
 	template <>
 	struct object_char_sign<true> {
 		static inline void make(object& o, char v) {
-			v < 0 ? o.type = type::NEGATIVE_INTEGER, o.via.i64 = v
-				  : o.type = type::POSITIVE_INTEGER, o.via.u64 = v;
+			v < 0 ? o.via = static_cast<int64_t>(v)
+				  : o.via = static_cast<uint64_t>(v);
 		}
 	};
 
 	template <>
 	struct object_char_sign<false> {
 		static inline void make(object& o, char v) {
-			o.type = type::POSITIVE_INTEGER, o.via.u64 = v;
+			o.via = static_cast<uint64_t>(v);
 		}
 	};
 
@@ -205,73 +216,36 @@ inline void operator<< (object& o, char v)
 
 
 inline void operator<< (object& o, signed char v)
-	{ v < 0 ? o.type = type::NEGATIVE_INTEGER, o.via.i64 = v : o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
+	{ v < 0 ? o.via = static_cast<int64_t>(v) : o.via = static_cast<uint64_t>(v); }
 
 inline void operator<< (object& o, signed short v)
-	{ v < 0 ? o.type = type::NEGATIVE_INTEGER, o.via.i64 = v : o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
+	{ v < 0 ? o.via = static_cast<int64_t>(v) : o.via = static_cast<uint64_t>(v); }
+
 
 inline void operator<< (object& o, signed int v)
-	{ v < 0 ? o.type = type::NEGATIVE_INTEGER, o.via.i64 = v : o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
+	{ v < 0 ? o.via = static_cast<int64_t>(v) : o.via = static_cast<uint64_t>(v); }
 
 inline void operator<< (object& o, signed long v)
-	{ v < 0 ? o.type = type::NEGATIVE_INTEGER, o.via.i64 = v : o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
+	{ v < 0 ? o.via = static_cast<int64_t>(v) : o.via = static_cast<uint64_t>(v); }
 
 inline void operator<< (object& o, signed long long v)
-	{ v < 0 ? o.type = type::NEGATIVE_INTEGER, o.via.i64 = v : o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
+	{ v < 0 ? o.via = static_cast<int64_t>(v) : o.via = static_cast<uint64_t>(v); }
 
 
 inline void operator<< (object& o, unsigned char v)
-	{ o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
+	{ o.via = static_cast<uint64_t>(v); }
 
 inline void operator<< (object& o, unsigned short v)
-	{ o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
+	{ o.via = static_cast<uint64_t>(v); }
 
 inline void operator<< (object& o, unsigned int v)
-	{ o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
+	{ o.via = static_cast<uint64_t>(v); }
 
 inline void operator<< (object& o, unsigned long v)
-	{ o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
+	{ o.via = static_cast<uint64_t>(v); }
 
 inline void operator<< (object& o, unsigned long long v)
-	{ o.type = type::POSITIVE_INTEGER, o.via.u64 = v; }
-
-
-
-inline void operator<< (object::with_zone& o, char v)
-	{ static_cast<object&>(o) << v; }
-
-
-inline void operator<< (object::with_zone& o, signed char v)
-	{ static_cast<object&>(o) << v; }
-
-inline void operator<< (object::with_zone& o, signed short v)
-	{ static_cast<object&>(o) << v; }
-
-inline void operator<< (object::with_zone& o, signed int v)
-	{ static_cast<object&>(o) << v; }
-
-inline void operator<< (object::with_zone& o, signed long v)
-	{ static_cast<object&>(o) << v; }
-
-inline void operator<< (object::with_zone& o, const signed long long& v)
-	{ static_cast<object&>(o) << v; }
-
-
-inline void operator<< (object::with_zone& o, unsigned char v)
-	{ static_cast<object&>(o) << v; }
-
-inline void operator<< (object::with_zone& o, unsigned short v)
-	{ static_cast<object&>(o) << v; }
-
-inline void operator<< (object::with_zone& o, unsigned int v)
-	{ static_cast<object&>(o) << v; }
-
-inline void operator<< (object::with_zone& o, unsigned long v)
-	{ static_cast<object&>(o) << v; }
-
-inline void operator<< (object::with_zone& o, const unsigned long long& v)
-	{ static_cast<object&>(o) << v; }
-
+	{ o.via = static_cast<uint64_t>(v); }
 
 }  // namespace msgpack
 

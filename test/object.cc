@@ -33,11 +33,11 @@ TEST(object, convert)
 	msgpack::sbuffer sbuf;
 	msgpack::pack(sbuf, m1);
 
-	msgpack::zone z;
 	msgpack::object obj;
 
+	std::shared_ptr<char> sp(sbuf.data(), [](char*){});
 	msgpack::unpack_return ret =
-		msgpack::unpack(sbuf.data(), sbuf.size(), NULL, z, obj);
+		msgpack::unpack(sp, sbuf.size(), NULL,  obj);
 	EXPECT_EQ(ret, msgpack::UNPACK_SUCCESS);
 
 	myclass m2;
@@ -54,11 +54,11 @@ TEST(object, as)
 	msgpack::sbuffer sbuf;
 	msgpack::pack(sbuf, m1);
 
-	msgpack::zone z;
 	msgpack::object obj;
 
+	std::shared_ptr<char> sp(sbuf.data(), [](char*){});
 	msgpack::unpack_return ret =
-		msgpack::unpack(sbuf.data(), sbuf.size(), NULL, z, obj);
+		msgpack::unpack(sp, sbuf.size(), NULL, obj);
 	EXPECT_EQ(ret, msgpack::UNPACK_SUCCESS);
 
 	EXPECT_EQ(m1, obj.as<myclass>());
@@ -113,22 +113,26 @@ TEST(object, equal_primitive)
 TEST(object, construct_primitive)
 {
 	msgpack::object obj_nil;
-	EXPECT_EQ(msgpack::type::NIL, obj_nil.type);
+	EXPECT_TRUE(boost::get<msgpack::type::nil>(&obj_nil.via) != nullptr);
 
 	msgpack::object obj_uint(1);
-	EXPECT_EQ(msgpack::type::POSITIVE_INTEGER, obj_uint.type);
-	EXPECT_EQ(1u, obj_uint.via.u64);
+	uint64_t* ui64 = boost::get<uint64_t>(&obj_uint.via);
+	EXPECT_TRUE(ui64 != nullptr);
+	EXPECT_EQ(1u, *ui64);
 
 	msgpack::object obj_int(-1);
-	EXPECT_EQ(msgpack::type::NEGATIVE_INTEGER, obj_int.type);
-	EXPECT_EQ(-1, obj_int.via.i64);
+	int64_t* i64 = boost::get<int64_t>(&obj_int.via);
+	EXPECT_TRUE(i64 != nullptr);
+	EXPECT_EQ(-1, *i64);
 
 	msgpack::object obj_double(1.2);
-	EXPECT_EQ(msgpack::type::DOUBLE, obj_double.type);
-	EXPECT_EQ(1.2, obj_double.via.dec);
+	double* d = boost::get<double>(&obj_double.via);
+	EXPECT_TRUE(d != nullptr);
+	EXPECT_EQ(1.2, *d);
 
 	msgpack::object obj_bool(true);
-	EXPECT_EQ(msgpack::type::BOOLEAN, obj_bool.type);
-	EXPECT_EQ(true, obj_bool.via.boolean);
+	bool* b = boost::get<bool>(&obj_bool.via);
+	EXPECT_TRUE(b != nullptr);
+	EXPECT_EQ(true, *b);
 }
 

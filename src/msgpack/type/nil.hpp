@@ -22,17 +22,11 @@
 
 namespace msgpack {
 
-namespace type {
-
-struct nil { };
-
-}  // namespace type
-
-
 inline type::nil& operator>> (object const& o, type::nil& v)
 {
-	if(o.type != type::NIL) { throw type_error(); }
-	return v;
+	type::nil const* on = boost::get<type::nil>(&o.via);
+	if (!on) { throw type_error(); }
+	return v = *on;
 }
 
 template <typename Stream>
@@ -42,14 +36,10 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const type::nil& v)
 	return o;
 }
 
-inline void operator<< (object& o, type::nil v)
+inline void operator<< (object& o, type::nil)
 {
-	o.type = type::NIL;
+	o = type::nil();
 }
-
-inline void operator<< (object::with_zone& o, type::nil v)
-	{ static_cast<object&>(o) << v; }
-
 
 template <>
 inline void object::as<void>() const
