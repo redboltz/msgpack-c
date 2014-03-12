@@ -29,9 +29,9 @@
 		msgpack::type::make_define(__VA_ARGS__).msgpack_unpack(o); \
 	}\
 	template <typename MSGPACK_OBJECT> \
-	void msgpack_object(MSGPACK_OBJECT* o, msgpack::zone* z) const \
+	void msgpack_object(MSGPACK_OBJECT* o) const \
 	{ \
-		msgpack::type::make_define(__VA_ARGS__).msgpack_object(o, z); \
+		msgpack::type::make_define(__VA_ARGS__).msgpack_object(o); \
 	}
 
 // MSGPACK_ADD_ENUM must be used in the global namespace.
@@ -46,7 +46,7 @@
       return v; \
     } \
     template <> \
-    void operator<< (object::with_zone& o, const enum& v) \
+    void operator<< (object& o, const enum& v) \
     { \
       o << static_cast<int>(v); \
     } \
@@ -80,13 +80,12 @@ struct define<> {
 	}
 	void msgpack_unpack(msgpack::object const& o)
 	{
-		if(o.type != type::ARRAY) { throw type_error(); }
+		msgpack::object_array const* oa = boost::get<msgpack::object_array>(&o.via);
+		if (!oa) { throw msgpack::type_error(); }
 	}
-	void msgpack_object(msgpack::object* o, msgpack::zone* z) const
+	void msgpack_object(msgpack::object* o) const
 	{
-		o->type = type::ARRAY;
-		o->via.array.ptr = nullptr;
-		o->via.array.size = 0;
+		o->via = msgpack::object_array();
 	}
 };
 <%0.upto(GENERATION_LIMIT) {|i|%>
@@ -105,23 +104,26 @@ struct define<A0<%1.upto(i) {|j|%>, A<%=j%><%}%>> {
 	}
 	void msgpack_unpack(msgpack::object const& o)
 	{
-		if(o.type != type::ARRAY) { throw type_error(); }
-		const size_t size = o.via.array.size;
+		msgpack::object_array const* oa = boost::get<msgpack::object_array>(&o.via);
+		if (!oa) { throw msgpack::type_error(); }
+		const size_t size = oa->size();
+
 		if(size > 0) {
-			msgpack::object *ptr = o.via.array.ptr;
 			switch(size) {
 			default:<%(i).downto(0) {|j|%>
-			case <%=j+1%>: ptr[<%=j%>].convert(a<%=j%>);<%}%>
+			case <%=j+1%>: (*oa)[<%=j%>].convert(a<%=j%>);<%}%>
 			}
 		}
 	}
-	void msgpack_object(msgpack::object* o, msgpack::zone* z) const
+	void msgpack_object(msgpack::object* o) const
 	{
-		o->type = type::ARRAY;
-		o->via.array.ptr = static_cast<object*>(z->allocate_align(sizeof(object)*<%=i+1%>));
-		o->via.array.size = <%=i+1%>;
+		msgpack::object_array oa;
+		oa.reserve(<%=i+1%>);
+
 		<%0.upto(i) {|j|%>
-		o->via.array.ptr[<%=j%>] = object(a<%=j%>, z);<%}%>
+		oa.push_back(object(a<%=j%>));<%}%>
+
+		o->via = boost::move(oa);
 	}
 	<%0.upto(i) {|j|%>
 	A<%=j%>& a<%=j%>;<%}%>

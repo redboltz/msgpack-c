@@ -96,48 +96,49 @@ struct unpack_array {
 	void operator()(unsigned int n, object& o) const {
 		object_array oa;
 		oa.reserve(n);
-		o.via = std::move(oa);
+		o.via = boost::move(oa);
 	}
 };
 
-inline void unpack_array_item(object_array& oa, object&& o)
-{ oa.emplace_back(std::move(o)); }
+inline void unpack_array_item(object_array& oa, BOOST_RV_REF(object) o)
+{ oa.emplace_back(boost::move(o)); }
 
 struct unpack_map {
 	void operator()(unsigned int n, object& o) const {
 		object_map om;
 		om.reserve(n);
-		o.via = std::move(om);
+		o.via = boost::move(om);
 	}
 };
 
-inline void unpack_map_item(object_map& om, object&& k, object&& v)
+inline void unpack_map_item(object_map& om, BOOST_RV_REF(object) k, BOOST_RV_REF(object) v)
 {
-	om.emplace_back(std::move(k), std::move(v));
+	om.emplace_back(boost::move(k), boost::move(v));
 }
 
-inline void unpack_str(std::shared_ptr<const char> const&  b, const char* p, unsigned int l, object& o)
+inline void unpack_str(boost::shared_ptr<const char> const&  b, const char* p, unsigned int l, object& o)
 {
 	object_str os;
-	os.ptr = std::shared_ptr<const char>(b, p);
+	os.ptr = boost::shared_ptr<const char>(b, p);
 	os.size = l;
-	o.via = std::move(os);
+	o.via = boost::move(os);
 }
 
-inline void unpack_bin(std::shared_ptr<const char> const&  b, const char* p, unsigned int l, object& o)
+inline void unpack_bin(boost::shared_ptr<const char> const&  b, const char* p, unsigned int l, object& o)
 {
 	object_bin ob;
-	ob.ptr = std::shared_ptr<const char>(b, p);
+	ob.ptr = boost::shared_ptr<const char>(b, p);
 	ob.size = l;
-	o.via = std::move(ob);
+	o.via = boost::move(ob);
 }
 
 
 class unpack_stack {
 public:
+	unpack_stack() {}
 	object const& obj() const { return obj_; }
 	object& obj() { return obj_; }
-	void set_obj(object&& obj) { obj_ = std::move(obj); }
+	void set_obj(BOOST_RV_REF(object) obj) { obj_ = boost::move(obj); }
 	size_t count() const { return count_; }
 	void set_count(size_t count) { count_ = count; }
 	size_t decl_count() { return --count_; }
@@ -145,8 +146,10 @@ public:
 	void set_ct(unsigned int ct) { ct_ = ct; }
 	object const& map_key() const { return map_key_; }
 	object& map_key() { return map_key_; }
-	void set_map_key(object&& map_key) { map_key_ = std::move(map_key); }
+	void set_map_key(BOOST_RV_REF(object) map_key) { map_key_ = boost::move(map_key); }
 private:
+	unpack_stack(unpack_stack const&);
+	unpack_stack& operator=(unpack_stack const&);
 	object obj_;
 	size_t count_;
 	unsigned int ct_;
@@ -240,7 +243,7 @@ public:
 		return stack_[0].obj();
 	}
 
-	int execute(std::shared_ptr<const char> const& data, size_t len, size_t& off)
+	int execute(boost::shared_ptr<const char> const& data, size_t len, size_t& off)
 	{
 		assert(len >= off);
 
@@ -553,9 +556,9 @@ public:
 
 private:
 	template <typename T>
-	static unsigned int next_cs(T p)
+	static int next_cs(T p)
 	{
-		return static_cast<unsigned int>(*p) & 0x1f;
+		return static_cast<int>(*p) & 0x1f;
 	}
 
 	template <typename T, typename Func>
@@ -612,9 +615,9 @@ private:
 			switch(c->ct()) {
 			case CT_ARRAY_ITEM: {
 				object_array& oa(boost::get<object_array>(c->obj().via));
-				unpack_array_item(oa, std::move(obj));
+				unpack_array_item(oa, boost::move(obj));
 				if(c->decl_count() == 0) {
-					obj = std::move(c->obj());
+					obj = boost::move(c->obj());
 					--top_;
 					/*printf("stack pop %d\n", top_);*/
 				}
@@ -623,15 +626,15 @@ private:
 				}
 			} break;
 			case CT_MAP_KEY:
-				c->set_map_key(std::move(obj));
+				c->set_map_key(boost::move(obj));
 				c->set_ct(CT_MAP_VALUE);
 				finish = true;
 				break;
 			case CT_MAP_VALUE: {
 				object_map& om(boost::get<object_map>(c->obj().via));
-				unpack_map_item(om, std::move(c->map_key()), std::move(obj));
+				unpack_map_item(om, boost::move(c->map_key()), boost::move(obj));
 				if(c->decl_count() == 0) {
-					obj = std::move(c->obj());
+					obj = boost::move(c->obj());
 					--top_;
 					/*printf("stack pop %d\n", top_);*/
 				}
@@ -656,7 +659,7 @@ private:
 		unsigned int trail) {
 		int ret = push_item(c, obj);
 		if (ret > 0) {
-			stack_[0].set_obj(std::move(obj));
+			stack_[0].set_obj(boost::move(obj));
 			++current;
 			/*printf("-- finish --\n"); */
 			off = update_attributes(current, origin, trail);
@@ -672,7 +675,7 @@ private:
 
 private:
 	unsigned int trail_;
-	unsigned int cs_;
+	int cs_;
 	unsigned int top_;
 	unpack_stack stack_[MSGPACK_EMBED_STACK_SIZE];
 };
@@ -690,11 +693,11 @@ class unpacked {
 public:
 	unpacked() { }
 
-	unpacked(object&& obj) :
-		m_obj(std::move(obj)) { }
+	unpacked(BOOST_RV_REF(object) obj) :
+		m_obj(boost::move(obj)) { }
 
-	void set(object&& obj)
-		{ m_obj = std::move(obj); }
+	void set(BOOST_RV_REF(object) obj)
+		{ m_obj = boost::move(obj); }
 
 	object get()
 		{ return m_obj; }
@@ -804,7 +807,7 @@ private:
 	int execute_imp();
 
 private:
-	std::shared_ptr<char> buffer_;
+	boost::shared_ptr<char> buffer_;
 	size_t used_;
 	size_t free_;
 	size_t off_;
@@ -818,11 +821,11 @@ private:
 
 
 inline void unpack(unpacked& result,
-				   std::shared_ptr<const char> const& data,
+				   boost::shared_ptr<const char> const& data,
 				   size_t len,
 				   size_t* offset = nullptr);
 inline void unpack(unpacked* result,
-				   std::shared_ptr<const char> const& data,
+				   boost::shared_ptr<const char> const& data,
 				   size_t len,
 				   size_t* offset = nullptr);
 
@@ -835,18 +838,18 @@ typedef enum {
 } unpack_return;
 
 // obsolete
-static unpack_return unpack(std::shared_ptr<const char> const& data,
+static unpack_return unpack(boost::shared_ptr<const char> const& data,
 							size_t len,
 							size_t* off,
 							object& result);
-static unpack_return unpack(std::shared_ptr<const char> const& data,
+static unpack_return unpack(boost::shared_ptr<const char> const& data,
 							size_t len,
 							size_t* off,
 							object* result);
 
 
 // obsolete
-static object unpack(std::shared_ptr<const char> const& data,
+static object unpack(boost::shared_ptr<const char> const& data,
 					 size_t len,
 					 size_t* off = nullptr);
 
@@ -898,7 +901,7 @@ inline void unpacker::expand_buffer(size_t size)
 			throw std::bad_alloc();
 		}
 		if (current != tmp) {
-			std::get_deleter<deleter>(buffer_)->no_delete();
+			boost::get_deleter<deleter>(buffer_)->no_delete();
 			buffer_.reset(tmp, deleter());
 		}
 
@@ -1028,7 +1031,7 @@ inline void unpacker::remove_nonparsed_buffer()
 namespace detail {
 
 inline unpack_return
-unpack_imp(std::shared_ptr<const char> const& data, size_t len, size_t* off,
+unpack_imp(boost::shared_ptr<const char> const& data, size_t len, size_t* off,
 	object& result)
 {
 	size_t noff = 0;
@@ -1066,7 +1069,7 @@ unpack_imp(std::shared_ptr<const char> const& data, size_t len, size_t* off,
 
 // reference version
 inline void unpack(unpacked& result,
-				   std::shared_ptr<const char> const& data, size_t len, size_t* offset)
+				   boost::shared_ptr<const char> const& data, size_t len, size_t* offset)
 {
 	object obj;
 	unpack_return ret = detail::unpack_imp(
@@ -1075,11 +1078,11 @@ inline void unpack(unpacked& result,
 
 	switch(ret) {
 	case UNPACK_SUCCESS:
-		result.set(std::move(obj));
+		result.set(boost::move(obj));
 		return;
 
 	case UNPACK_EXTRA_BYTES:
-		result.set(std::move(obj));
+		result.set(boost::move(obj));
 		return;
 
 	case UNPACK_CONTINUE:
@@ -1092,28 +1095,28 @@ inline void unpack(unpacked& result,
 }
 // pointer version
 inline void unpack(unpacked* result,
-				   std::shared_ptr<const char> const& data, size_t len, size_t* offset) {
+				   boost::shared_ptr<const char> const& data, size_t len, size_t* offset) {
 	unpack(*result, data, len, offset);
 }
 
 
 // obsolete
 // reference version
-inline unpack_return unpack(std::shared_ptr<const char> const& data, size_t len, size_t* off,
+inline unpack_return unpack(boost::shared_ptr<const char> const& data, size_t len, size_t* off,
 							object& result)
 {
 	return detail::unpack_imp(data, len, off,
 			result);
 }
 // pointer version
-inline unpack_return unpack(std::shared_ptr<const char> const& data, size_t len, size_t* off,
+inline unpack_return unpack(boost::shared_ptr<const char> const& data, size_t len, size_t* off,
 							object* result)
 {
 	return unpack(data, len, off, *result);
 }
 
 // obsolete
-inline object unpack(std::shared_ptr<const char> const& data, size_t len, size_t* off)
+inline object unpack(boost::shared_ptr<const char> const& data, size_t len, size_t* off)
 {
 	object result;
 

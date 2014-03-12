@@ -78,10 +78,16 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const type::raw_ref& v)
 	return o;
 }
 
+namespace detail {
+struct null_deleter {
+	void operator()(char const*) const {}
+};
+} // detail
+
 inline void operator<< (object& o, const type::raw_ref& v)
 {
 	object_bin ob;
-	ob.ptr.reset(v.ptr, [](char const*){});
+	ob.ptr.reset(v.ptr, detail::null_deleter());
 	ob.size = v.size;
 	o.via = ob;
 }

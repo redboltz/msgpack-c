@@ -30,8 +30,8 @@ inline std::set<T>& operator>> (object const& o, std::set<T>& v)
 	object_array const* oa = boost::get<object_array>(&o.via);
 	if (!oa) { throw type_error(); }
 
-	std::vector<object>::const_iterator b(oa->begin());
-	std::vector<object>::const_iterator e(oa->end());
+	boost::container::vector<object>::const_iterator b(oa->begin());
+	boost::container::vector<object>::const_iterator e(oa->end());
 	while (b != e) {
 		v.insert(b->as<T>());
 		++b;
@@ -55,10 +55,8 @@ inline void operator<< (object& o, const std::set<T>& v)
 {
 	object_array oa;
 	oa.reserve(v.size());
-	std::for_each(v.begin(), v.end(), [&oa](T const& e){
-		oa.push_back(e);
-	});
-	o.via = std::move(oa);
+	std::for_each(v.begin(), v.end(), std::back_inserter(oa));
+	o.via = boost::move(oa);
 }
 
 
@@ -68,8 +66,8 @@ inline std::multiset<T>& operator>> (object const& o, std::multiset<T>& v)
 	object_array const* oa = boost::get<object_array>(&o.via);
 	if (!oa) { throw type_error(); }
 
-	std::vector<object>::const_iterator b(oa->begin());
-	std::vector<object>::const_iterator e(oa->end());
+	boost::container::vector<object>::const_iterator b(oa->begin());
+	boost::container::vector<object>::const_iterator e(oa->end());
 	while (b != e) {
 		v.insert(b->as<T>());
 		++b;
@@ -93,10 +91,8 @@ inline void operator<< (object& o, const std::multiset<T>& v)
 {
 	object_array oa;
 	oa.reserve(v.size());
-	std::for_each(v.begin(), v.end(), [&oa](T const& e){
-		oa.push_back(e);
-	});
-	o.via = std::move(oa);
+	std::for_each(v.begin(), v.end(), std::back_inserter(oa));
+	o.via = boost::move(oa);
 }
 
 

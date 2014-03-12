@@ -49,8 +49,8 @@ inline MSGPACK_STD_TR1::unordered_map<K, V> operator>> (object o, MSGPACK_STD_TR
 	object_map const* om = boost::get<object_map>(&o.via);
 	if (!om) { throw type_error(); }
 
-	std::vector<object_kv>::const_iterator b(om->begin());
-	std::vector<object_kv>::const_iterator e(om->end());
+	boost::container::vector<object_kv>::const_iterator b(om->begin());
+	boost::container::vector<object_kv>::const_iterator e(om->end());
 	while (b != e) {
 		K key;
 		b->key.convert(key);
@@ -80,15 +80,25 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const MSGPACK_STD_TR1::uno
 	return o;
 }
 
+namespace detail {
+struct emplace_unordered_map {
+	emplace_unordered_map(object_map& om):om_(om) {}
+	template <typename K, typename V>
+	void operator()(std::pair<K,V> const& e) const {
+		om_.emplace_back(e.first, e.second);
+	}
+private:
+	object_map& om_;
+};
+} // detail
+
 template <typename K, typename V>
 inline void operator<< (object& o, const MSGPACK_STD_TR1::unordered_map<K,V>& v)
 {
 	object_map om;
 	om.reserve(v.size());
-	std::for_each(v.begin(), v.end(), [&om](std::pair<K,V> const& e){
-		om.emplace_back(e.first, e.second);
-	});
-	o.via = std::move(om);
+	std::for_each(v.begin(), v.end(), detail::emplace_unordered_map(om));
+	o.via = boost::move(om);
 }
 
 
@@ -98,8 +108,8 @@ inline MSGPACK_STD_TR1::unordered_multimap<K, V> operator>> (object o, MSGPACK_S
 	object_map const* om = boost::get<object_map>(&o.via);
 	if (!om) { throw type_error(); }
 
-	std::vector<object_kv>::const_iterator b(om->begin());
-	std::vector<object_kv>::const_iterator e(om->end());
+	boost::container::vector<object_kv>::const_iterator b(om->begin());
+	boost::container::vector<object_kv>::const_iterator e(om->end());
 	while (b != e) {
 		std::pair<K,V> pair;
 		b->key.convert(pair.first);
@@ -127,10 +137,8 @@ inline void operator<< (object& o, const MSGPACK_STD_TR1::unordered_multimap<K,V
 {
 	object_map om;
 	om.reserve(v.size());
-	std::for_each(v.begin(), v.end(), [&om](std::pair<K,V> const& e){
-		om.emplace_back(e.first, e.second);
-	});
-	o.via = std::move(om);
+	std::for_each(v.begin(), v.end(), detail::emplace_unordered_map(om));
+	o.via = boost::move(om);
 }
 
 

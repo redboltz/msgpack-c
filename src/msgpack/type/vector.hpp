@@ -31,8 +31,8 @@ inline std::vector<T>& operator>> (object const& o, std::vector<T>& v)
 	if(!oa) { throw type_error(); }
 	v.resize(oa->size());
 
-	std::vector<object>::const_iterator b(oa->begin());
-	std::vector<object>::const_iterator e(oa->end());
+	boost::container::vector<object>::const_iterator b(oa->begin());
+	boost::container::vector<object>::const_iterator e(oa->end());
 	typename std::vector<T>::iterator it(v.begin());
 	while (b != e) {
 		b->convert(*it++);
@@ -58,10 +58,15 @@ inline void operator<< (object& o, const std::vector<T>& v)
 {
 	object_array oa;
 	oa.reserve(v.size());
-	std::for_each(v.begin(), v.end(), [&oa](T const& e){
-		oa.emplace_back(e);
-	});
-	o.via = std::move(oa);
+	// std::copy(v.begin(), v.end(), std::back_inserter(oa));
+	for (typename std::vector<T>::const_iterator
+		 i = v.begin(),
+		 e = v.end();
+		 i != e;
+		 ++i) {
+		oa.emplace_back(*i);
+	}
+	o.via = boost::move(oa);
 }
 
 

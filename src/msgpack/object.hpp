@@ -26,8 +26,13 @@
 #include <typeinfo>
 #include <limits>
 #include <ostream>
-#include <memory>
 #include <boost/variant.hpp>
+#include <boost/move/move.hpp>
+#include <boost/container/vector.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/bind.hpp>
+#include <boost/type_traits/is_same.hpp>
+#include <boost/utility/enable_if.hpp>
 
 namespace msgpack {
 
@@ -44,12 +49,12 @@ class type_error : public std::bad_cast { };
 struct object;
 struct object_kv;
 
-typedef std::vector<object> object_array;
-typedef std::vector<object_kv> object_map;
+typedef boost::container::vector<object> object_array;
+typedef boost::container::vector<object_kv> object_map;
 
 struct object_str {
 	uint32_t size;
-	std::shared_ptr<const char> ptr;
+	boost::shared_ptr<const char> ptr;
 };
 
 inline bool operator==(object_str const& lhs, object_str const& rhs) {
@@ -58,7 +63,7 @@ inline bool operator==(object_str const& lhs, object_str const& rhs) {
 
 struct object_bin {
 	uint32_t size;
-	std::shared_ptr<const char> ptr;
+	boost::shared_ptr<const char> ptr;
 };
 
 inline bool operator==(object_bin const& lhs, object_bin const& rhs) {
@@ -66,6 +71,8 @@ inline bool operator==(object_bin const& lhs, object_bin const& rhs) {
 }
 
 struct object {
+	BOOST_COPYABLE_AND_MOVABLE(object);
+public:
 	typedef boost::variant<
 		type::nil,
 		bool,
@@ -94,19 +101,28 @@ struct object {
 
 	object(msgpack_object o);
 
+	object() {};
+
+	object(object const& other):via(other.via) {}
+	object(BOOST_RV_REF(object) other):via(boost::move(other.via)) {}
 	template <typename T>
-	explicit object(const T& v);
+	explicit object(const T& v, typename boost::disable_if<boost::is_same<T, object> >::type* = nullptr) {
+		*this << v;
+	}
 
-	object() = default;
-
-	object(object const&) = default;
-	object(object&&) = default;
-
+	object& operator=(BOOST_COPY_ASSIGN_REF(object) other) {
+		this->via = other.via;
+		return *this;
+	}
+	object& operator=(BOOST_RV_REF(object) other) {
+		this->via = boost::move(other.via);
+		return *this;
+	}
 	template <typename T>
-	object& operator=(const T& v);
-
-	object& operator=(object const&) = default;
-	object& operator=(object&&) = default;
+	typename boost::disable_if<boost::is_same<T, object>, object>::type& operator=(const T& v) {
+		*this = object(v);
+		return *this;
+	}
 
 	operator msgpack_object() const;
 
@@ -122,12 +138,22 @@ inline bool operator==(object const& lhs, object const& rhs) {
 }
 
 struct object_kv {
-	object_kv()=default;
-	object_kv(object&& k, object&& v):key(std::move(k)), val(std::move(v)) {}
-	object_kv(object_kv const&) = default;
-	object_kv(object_kv&&) = default;
-	object_kv& operator=(object_kv const&) = default;
-	object_kv& operator=(object_kv&&) = default;
+	BOOST_COPYABLE_AND_MOVABLE(object_kv);
+public:
+	object_kv(BOOST_RV_REF(object) k, BOOST_RV_REF(object) v):key(boost::move(k)), val(boost::move(v)) {}
+
+	object_kv(object_kv const& other):key(other.key), val(other.val) {}
+	object_kv(BOOST_RV_REF(object_kv) other):key(boost::move(other.key)), val(boost::move(other.val)) {}
+	object_kv& operator=(BOOST_RV_REF(object_kv) other) {
+		key = boost::move(other.key);
+		val = boost::move(other.val);
+		return *this;
+	}
+	object_kv& operator=(BOOST_COPY_ASSIGN_REF(object_kv) other) {
+		key = other.key;
+		val = other.val;
+		return *this;
+	}
 	object key;
 	object val;
 };
@@ -260,21 +286,6 @@ inline T object::as() const
 	return v;
 }
 
-
-template <typename T>
-inline object::object(const T& v)
-{
-	*this << v;
-}
-
-template <typename T>
-inline object& object::operator=(const T& v)
-{
-	*this = object(v);
-	return *this;
-}
-
-
 inline object::object(msgpack_object o)
 {
 	// FIXME beter way?
@@ -346,16 +357,11 @@ public:
 	}
 	void operator()(object_array const& v) const {
 		packer_.pack_array(v.size());
-		for_each(v.begin(), v.end(), [this](object const& o) { packer_ << o; });
+		std::for_each(v.begin(), v.end(), boost::bind(&pack_visitor::pack_array, this, _1));
 	}
 	void operator()(object_map const& v) const {
 		packer_.pack_map(v.size());
-		for_each(v.begin(), v.end(),
-			[this](object_kv const& o) {
-				packer_ << o.key;
-				packer_ << o.val;
-			}
-		);
+		std::for_each(v.begin(), v.end(), boost::bind(&pack_visitor::pack_map, this, _1));
 	}
 	void operator()(object_str const& v) const {
 		packer_.pack_str(v.size);
@@ -370,6 +376,14 @@ public:
 	}
 
 private:
+	void pack_array(object const& o) const {
+		packer_ << o;
+	}
+	void pack_map(object_kv const& o) const {
+		packer_ << o.key;
+		packer_ << o.val;
+	}
+
 	packer<Stream>& packer_;
 };
 
@@ -402,8 +416,8 @@ public:
 		stream_ << v;
 	}
 	void operator()(object_array const& v) const {
-		std::vector<object>::const_iterator b(v.begin());
-		std::vector<object>::const_iterator e(v.end());
+		boost::container::vector<object>::const_iterator b(v.begin());
+		boost::container::vector<object>::const_iterator e(v.end());
 		stream_ << "[";
 		if (b != e) {
 			stream_ << *b++;
@@ -414,8 +428,8 @@ public:
 		stream_ << "]";
 	}
 	void operator()(object_map const& v) const {
-		std::vector<object_kv>::const_iterator b(v.begin());
-		std::vector<object_kv>::const_iterator e(v.end());
+		boost::container::vector<object_kv>::const_iterator b(v.begin());
+		boost::container::vector<object_kv>::const_iterator e(v.end());
 		stream_ << "{";
 		if (b != e) {
 			stream_ << b->key << "=>" << b->val;

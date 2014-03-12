@@ -48,8 +48,8 @@ inline MSGPACK_STD_TR1::unordered_set<T>& operator>> (object o, MSGPACK_STD_TR1:
 	object_array const* oa = boost::get<object_array>(&o.via);
 	if (!oa) { throw type_error(); }
 
-	std::vector<object>::const_iterator b(oa->begin());
-	std::vector<object>::const_iterator e(oa->end());
+	boost::container::vector<object>::const_iterator b(oa->begin());
+	boost::container::vector<object>::const_iterator e(oa->end());
 	while (b != e) {
 		v.insert(b->as<T>());
 		++b;
@@ -73,10 +73,8 @@ inline void operator<< (object& o, const MSGPACK_STD_TR1::unordered_set<T>& v)
 {
 	object_array oa;
 	oa.reserve(v.size());
-	std::for_each(v.begin(), v.end(), [&oa](T const& e){
-		oa.push_back(e);
-	});
-	o.via = std::move(oa);
+	std::for_each(v.begin(), v.end(), std::back_inserter(oa));
+	o.via = boost::move(oa);
 }
 
 
@@ -86,8 +84,8 @@ inline MSGPACK_STD_TR1::unordered_multiset<T>& operator>> (object o, MSGPACK_STD
 	object_array const* oa = boost::get<object_array>(&o.via);
 	if (!oa) { throw type_error(); }
 
-	std::vector<object>::const_iterator b(oa->begin());
-	std::vector<object>::const_iterator e(oa->end());
+	boost::container::vector<object>::const_iterator b(oa->begin());
+	boost::container::vector<object>::const_iterator e(oa->end());
 	while (b != e) {
 		v.insert(b->as<T>());
 		++b;
@@ -111,10 +109,8 @@ inline void operator<< (object& o, const MSGPACK_STD_TR1::unordered_multiset<T>&
 {
 	object_array oa;
 	oa.reserve(v.size());
-	std::for_each(v.begin(), v.end(), [&oa](T const& e){
-		oa.push_back(e);
-	});
-	o.via = std::move(oa);
+	std::for_each(v.begin(), v.end(), std::back_inserter(oa));
+	o.via = boost::move(oa);
 }
 
 

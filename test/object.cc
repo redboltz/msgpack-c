@@ -25,6 +25,12 @@ std::ostream& operator<<(std::ostream& o, const myclass& m)
 	return o << "myclass("<<m.num<<",\""<<m.str<<"\")";
 }
 
+namespace {
+struct null_deleter {
+	void operator()(char *) const {}
+};
+}
+
 
 TEST(object, convert)
 {
@@ -35,7 +41,7 @@ TEST(object, convert)
 
 	msgpack::object obj;
 
-	std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+	boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
 	msgpack::unpack_return ret =
 		msgpack::unpack(sp, sbuf.size(), NULL,  obj);
 	EXPECT_EQ(ret, msgpack::UNPACK_SUCCESS);
@@ -56,7 +62,7 @@ TEST(object, as)
 
 	msgpack::object obj;
 
-	std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+	boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
 	msgpack::unpack_return ret =
 		msgpack::unpack(sp, sbuf.size(), NULL, obj);
 	EXPECT_EQ(ret, msgpack::UNPACK_SUCCESS);

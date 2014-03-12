@@ -49,6 +49,11 @@ TEST(pack, myclass)
 	msgpack::pack(sbuf, m);
 }
 
+namespace {
+struct null_deleter {
+	void operator()(char *) const {}
+};
+}
 
 TEST(unpack, myclass)
 {
@@ -57,7 +62,7 @@ TEST(unpack, myclass)
 	msgpack::pack(sbuf, m1);
 
 	msgpack::object obj;
-	std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+	boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
 	msgpack::unpack_return ret =
 		msgpack::unpack(sp, sbuf.size(), NULL, obj);
 
@@ -79,7 +84,7 @@ TEST(unpack, sequence)
 	size_t offset = 0;
 
 	msgpack::unpacked msg;
-	std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+	boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
 
 	msgpack::unpack(&msg, sp, sbuf.size(), &offset);
 	EXPECT_EQ(1, msg.get().as<int>());
@@ -104,7 +109,7 @@ TEST(unpack, sequence_compat)
 	msgpack::object obj;
 	msgpack::unpack_return ret;
 
-	std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+	boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
 	ret = msgpack::unpack(sp, sbuf.size(), &offset, obj);
 	EXPECT_TRUE(ret >= 0);
 	EXPECT_EQ(ret, msgpack::UNPACK_EXTRA_BYTES);

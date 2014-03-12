@@ -22,6 +22,11 @@ TEST(fixint, size)
 	check_size<msgpack::type::fix_uint64>(9);
 }
 
+namespace {
+struct null_deleter {
+	void operator()(char *) const {}
+};
+}
 
 template <typename T>
 void check_convert() {
@@ -30,7 +35,7 @@ void check_convert() {
 	msgpack::pack(sbuf, v1);
 
 	msgpack::unpacked msg;
-	std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+	boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
 	msgpack::unpack(&msg, sp, sbuf.size());
 
 	T v2;

@@ -21,6 +21,12 @@ const unsigned int kLoop = 10000;
 const unsigned int kElements = 100;
 const double kEPS = 1e-10;
 
+namespace {
+struct null_deleter {
+	void operator()(char *) const {}
+};
+}
+
 #define GEN_TEST(test_type)                                           \
   do {                                                                \
     vector<test_type> v;                                              \
@@ -36,7 +42,7 @@ const double kEPS = 1e-10;
       test_type val1 = v[i];                                          \
       msgpack::pack(sbuf, val1);                                      \
       msgpack::object obj;                                            \
-      std::shared_ptr<char> sp(sbuf.data(), [](char*){});             \
+      boost::shared_ptr<char> sp(sbuf.data(), null_deleter());        \
       msgpack::unpack_return ret =                                    \
         msgpack::unpack(sp, sbuf.size(), NULL, obj);                  \
       EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);                        \
@@ -163,7 +169,7 @@ TEST(MSGPACK, simple_buffer_float)
     float val1 = v[i];
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-	std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+	boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -211,7 +217,7 @@ TYPED_TEST_P(IntegerToFloatingPointTest, simple_buffer)
     integer_type val1 = v[i];
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-	std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+	boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -253,7 +259,7 @@ TEST(MSGPACK, simple_buffer_double)
     double val1 = v[i];
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -275,7 +281,7 @@ TEST(MSGPACK, simple_buffer_true)
   bool val1 = true;
   msgpack::pack(sbuf, val1);
   msgpack::object obj;
-  std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+  boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
   msgpack::unpack_return ret =
     msgpack::unpack(sp, sbuf.size(), NULL, obj);
   EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -290,7 +296,7 @@ TEST(MSGPACK, simple_buffer_false)
   bool val1 = false;
   msgpack::pack(sbuf, val1);
   msgpack::object obj;
-  std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+  boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
   msgpack::unpack_return ret =
     msgpack::unpack(sp, sbuf.size(), NULL, obj);
   EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -312,7 +318,7 @@ TEST(MSGPACK_STL, simple_buffer_string)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -332,7 +338,7 @@ TEST(MSGPACK_STL, simple_buffer_vector)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -352,7 +358,7 @@ TEST(MSGPACK_STL, simple_buffer_map)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -372,7 +378,7 @@ TEST(MSGPACK_STL, simple_buffer_deque)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -392,7 +398,7 @@ TEST(MSGPACK_STL, simple_buffer_list)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -412,7 +418,7 @@ TEST(MSGPACK_STL, simple_buffer_set)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -430,7 +436,7 @@ TEST(MSGPACK_STL, simple_buffer_pair)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -453,7 +459,7 @@ TEST(MSGPACK_STL, simple_buffer_multimap)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -483,7 +489,7 @@ TEST(MSGPACK_STL, simple_buffer_multiset)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -518,7 +524,7 @@ TEST(MSGPACK_TR1, simple_buffer_tr1_unordered_map)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -545,7 +551,7 @@ TEST(MSGPACK_TR1, simple_buffer_tr1_unordered_multimap)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -579,7 +585,7 @@ TEST(MSGPACK_TR1, simple_buffer_tr1_unordered_set)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -601,7 +607,7 @@ TEST(MSGPACK_TR1, simple_buffer_tr1_unordered_multiset)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -635,7 +641,7 @@ TEST(MSGPACK_TR1, simple_buffer_unordered_map)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -662,7 +668,7 @@ TEST(MSGPACK_TR1, simple_buffer_unordered_multimap)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -696,7 +702,7 @@ TEST(MSGPACK_TR1, simple_buffer_unordered_set)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -718,7 +724,7 @@ TEST(MSGPACK_TR1, simple_buffer_unordered_multiset)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -758,7 +764,7 @@ TEST(MSGPACK_USER_DEFINED, simple_buffer_class)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -791,7 +797,7 @@ TEST(MSGPACK_USER_DEFINED, simple_buffer_class_old_to_new)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -813,7 +819,7 @@ TEST(MSGPACK_USER_DEFINED, simple_buffer_class_new_to_old)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -852,7 +858,7 @@ TEST(MSGPACK_USER_DEFINED, simple_buffer_enum_member)
   msgpack::sbuffer sbuf;
   msgpack::pack(sbuf, val1);
   msgpack::object obj;
-  std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+  boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
   msgpack::unpack_return ret =
     msgpack::unpack(sp, sbuf.size(), NULL, obj);
   EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -915,7 +921,7 @@ TEST(MSGPACK_USER_DEFINED, simple_buffer_union_member)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -930,7 +936,7 @@ TEST(MSGPACK_USER_DEFINED, simple_buffer_union_member)
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, val1);
     msgpack::object obj;
-    std::shared_ptr<char> sp(sbuf.data(), [](char*){});
+    boost::shared_ptr<char> sp(sbuf.data(), null_deleter());
     msgpack::unpack_return ret =
       msgpack::unpack(sp, sbuf.size(), NULL, obj);
     EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);
@@ -958,7 +964,7 @@ TEST(MSGPACK_USER_DEFINED, simple_buffer_union_member)
       for(; cur != end; ++cur)                                          \
         sbuf.write((const char*)cur->iov_base, cur->iov_len);           \
       msgpack::object obj;                                              \
-      std::shared_ptr<char> sp(sbuf.data(), [](char*){});               \
+      boost::shared_ptr<char> sp(sbuf.data(), null_deleter());          \
       msgpack::unpack_return ret =                                      \
         msgpack::unpack(sp, sbuf.size(), NULL, obj);                    \
       EXPECT_EQ(msgpack::UNPACK_SUCCESS, ret);                          \

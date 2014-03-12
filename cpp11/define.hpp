@@ -117,7 +117,7 @@ struct define {
 		oa.reserve(sizeof...(Args));
 
 		define_imp<tuple<Args&...>, sizeof...(Args)>::object(oa, a);
-		o->via = std::move(oa);
+		o->via = boost::move(oa);
 	}
 
 	tuple<Args&...> a;

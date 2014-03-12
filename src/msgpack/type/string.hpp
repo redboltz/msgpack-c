@@ -64,7 +64,7 @@ inline void operator<< (object& o, const std::string& v)
 	if (!p) throw std::bad_alloc();
 	ob.ptr.reset(p, free);
 	memcpy(p, v.data(), ob.size);
-	o.via = std::move(ob);
+	o.via = boost::move(ob);
 }
 
 // Are reference version and move version required?

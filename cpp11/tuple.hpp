@@ -177,7 +177,7 @@ inline void operator<< (
 	object_array oa;
 	oa.reserve(sizeof...(Args));
 	TupleToObject<decltype(v), sizeof...(Args)>::convert(oa, v);
-	o.via = std::move(oa);
+	o.via = boost::move(oa);
 }
 
 } // msgpack
