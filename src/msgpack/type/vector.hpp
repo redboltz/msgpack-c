@@ -29,16 +29,12 @@ inline std::vector<T>& operator>> (object const& o, std::vector<T>& v)
 {
 	object_array const* oa = boost::get<object_array>(&o.via);
 	if(!oa) { throw type_error(); }
-	v.resize(oa->size());
+	v.reserve(oa->size());
 
-	std::vector<object>::const_iterator b(oa->begin());
-	std::vector<object>::const_iterator e(oa->end());
-	typename std::vector<T>::iterator it(v.begin());
-	while (b != e) {
-		b->convert(*it++);
-		++b;
+	std::size_t max = oa->size();
+	for (std::size_t idx = 0; idx < max; ++idx) {
+		v.emplace_back((*oa)[idx].as<T>());
 	}
-
 	return v;
 }
 
@@ -56,11 +52,10 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::vector<T>& v)
 template <typename T>
 inline void operator<< (object& o, const std::vector<T>& v)
 {
-	object_array oa;
-	oa.reserve(v.size());
+	object_array oa(v.size());
 	std::for_each(v.begin(), v.end(), [&oa](T const& e){
-		oa.emplace_back(e);
-	});
+			oa.emplace_back(e);
+		});
 	o.via = std::move(oa);
 }
 

@@ -30,10 +30,9 @@ inline std::set<T>& operator>> (object const& o, std::set<T>& v)
 	object_array const* oa = boost::get<object_array>(&o.via);
 	if (!oa) { throw type_error(); }
 
-	std::vector<object>::const_iterator b(oa->begin());
-	std::vector<object>::const_iterator e(oa->end());
-	while (b != e) {
-		v.insert(b->as<T>());
+	std::size_t max = oa.size();
+	for (std::size_t idx = 0; idx < max; ++idx) {
+		v.insert(oa[idx].as<T>());
 		++b;
 	}
 	return v;
@@ -53,7 +52,7 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::set<T>& v)
 template <typename T>
 inline void operator<< (object& o, const std::set<T>& v)
 {
-	object_array oa;
+	object_array oa(v.size());
 	oa.reserve(v.size());
 	std::for_each(v.begin(), v.end(), [&oa](T const& e){
 		oa.push_back(e);

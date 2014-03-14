@@ -43,8 +43,28 @@ class type_error : public std::bad_cast { };
 
 struct object;
 struct object_kv;
+class object_array;
 
-typedef std::vector<object> object_array;
+class object_array {
+public:
+	object_array();
+	object_array(size_t size);
+	object_array(object_array const& other);
+	object_array(object_array&& other) throw();
+	object_array& operator=(object_array const& other);
+	object_array& operator=(object_array&& other) noexcept;
+	friend bool operator==(object_array const& lhs, object_array const& rhs) noexcept;
+	object& operator[](size_t idx);
+	object operator[](size_t idx) const;
+	size_t size() const;
+	template <typename... Args>
+	void emplace_back(Args&&... args);
+	~object_array() { ::free(ptr_); }
+private:
+	size_t size_;
+	object* ptr_;
+};
+
 typedef std::vector<object_kv> object_map;
 
 struct object_str {
@@ -281,6 +301,65 @@ inline object::object(msgpack_object o)
 	::memcpy(this, &o, sizeof(o));
 }
 
+
+object_array::object_array():size_(0), ptr_(nullptr) {}
+object_array::object_array(size_t size)
+	:size_(0),
+	 ptr_(reinterpret_cast<object*>(::malloc(sizeof(object) * size))) {
+	if (!ptr_) throw std::bad_alloc();
+}
+object_array::object_array(object_array const& other)
+	:size_(other.size_),
+	 ptr_(reinterpret_cast<object*>(::malloc(sizeof(object) * size_))) {
+	if (!ptr_) throw std::bad_alloc();
+	std::copy(other.ptr_, &other.ptr_[other.size_], ptr_);
+}
+object_array::object_array(object_array&& other) noexcept
+	:size_(other.size_),
+	 ptr_(other.ptr_) {
+	other.size_ = 0;
+	other.ptr_ = nullptr;
+}
+object_array& object_array::operator=(object_array const& other) {
+	size_ = other.size_;
+	ptr_ = reinterpret_cast<object*>(::malloc(sizeof(object) * size_));
+	if (!ptr_) throw std::bad_alloc();
+	std::copy(other.ptr_, &other.ptr_[other.size_], ptr_);
+	return *this;
+}
+object_array& object_array::operator=(object_array&& other) throw() {
+	size_ = other.size_;
+	ptr_ = other.ptr_;
+	other.size_ = 0;
+	other.ptr_ = nullptr;
+}
+inline bool operator==(object_array const& lhs, object_array const& rhs) noexcept {
+	if (lhs.size_ != rhs.size_) return false;
+	if (lhs.size_ == 0) return true;
+	size_t size = lhs.size_;
+	object const* lobj = reinterpret_cast<object const*>(lhs.ptr_);
+	object const* robj = reinterpret_cast<object const*>(rhs.ptr_);
+	while(size-- > 0) {
+		if (!(*lobj++ == *robj++)) return false;
+	}
+	return true;
+}
+object& object_array::operator[](size_t idx) {
+	return ptr_[idx];
+}
+object object_array::operator[](size_t idx) const {
+	return ptr_[idx];
+}
+size_t object_array::size() const {
+	return size_;
+};
+
+template <typename... Args>
+void object_array::emplace_back(Args&&... args) {
+	new (ptr_ + size_) object (std::forward<Args>(args)...);
+	++size_;
+}
+
 template <typename T>
 void operator<< (object& o, const T& v)
 {
@@ -346,7 +425,10 @@ public:
 	}
 	void operator()(object_array const& v) const {
 		packer_.pack_array(v.size());
-		for_each(v.begin(), v.end(), [this](object const& o) { packer_ << o; });
+		size_t max = v.size();
+		for (size_t i = 0; i < max; ++i) {
+			packer_ << v[i];
+		}
 	}
 	void operator()(object_map const& v) const {
 		packer_.pack_map(v.size());
@@ -402,13 +484,13 @@ public:
 		stream_ << v;
 	}
 	void operator()(object_array const& v) const {
-		std::vector<object>::const_iterator b(v.begin());
-		std::vector<object>::const_iterator e(v.end());
+		size_t max = v.size();
+		size_t i = 0;
 		stream_ << "[";
-		if (b != e) {
-			stream_ << *b++;
-			while (b != e) {
-				stream_ << ", " << *b++;
+		if (max > 0) {
+			stream_ << v[i++];
+			for (; i < max; ++i) {
+				stream_ << ", " << v[i];
 			}
 		}
 		stream_ << "]";

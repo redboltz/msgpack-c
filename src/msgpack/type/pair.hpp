@@ -48,10 +48,9 @@ template <typename T1, typename T2>
 inline void operator<< (object& o, const std::pair<T1, T2>& v)
 {
 	object_array oa;
-	oa.reserve(2);
-	oa.push_back(v.first);
-	oa.push_back(v.second);
-	o.via = oa;
+	oa.emplace_back(v.first);
+	oa.emplace_back(v.second);
+	o.via = std::move(oa);
 }
 
 

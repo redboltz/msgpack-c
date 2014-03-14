@@ -94,8 +94,7 @@ inline void unpack_false(object& o)
 
 struct unpack_array {
 	void operator()(unsigned int n, object& o) const {
-		object_array oa;
-		oa.reserve(n);
+		object_array oa(n);
 		o.via = std::move(oa);
 	}
 };
