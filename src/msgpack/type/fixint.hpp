@@ -139,33 +139,6 @@ inline void operator<< (object& o, type::fix_uint32 v)
 inline void operator<< (object& o, type::fix_uint64 v)
 	{ o.type = type::POSITIVE_INTEGER, o.via.u64 = v.get(); }
 
-
-inline void operator<< (object::with_zone& o, type::fix_int8 v)
-	{ static_cast<object&>(o) << v; }
-
-inline void operator<< (object::with_zone& o, type::fix_int16 v)
-	{ static_cast<object&>(o) << v; }
-
-inline void operator<< (object::with_zone& o, type::fix_int32 v)
-	{ static_cast<object&>(o) << v; }
-
-inline void operator<< (object::with_zone& o, type::fix_int64 v)
-	{ static_cast<object&>(o) << v; }
-
-
-inline void operator<< (object::with_zone& o, type::fix_uint8 v)
-	{ static_cast<object&>(o) << v; }
-
-inline void operator<< (object::with_zone& o, type::fix_uint16 v)
-	{ static_cast<object&>(o) << v; }
-
-inline void operator<< (object::with_zone& o, type::fix_uint32 v)
-	{ static_cast<object&>(o) << v; }
-
-inline void operator<< (object::with_zone& o, type::fix_uint64 v)
-	{ static_cast<object&>(o) << v; }
-
-
 }  // namespace msgpack
 
 #endif /* msgpack/type/fixint.hpp */

@@ -111,6 +111,14 @@ private:
 	packer();
 };
 
+template <typename Stream>
+template <typename T>
+inline packer<Stream>& packer<Stream>::pack(const T& v)
+{
+	*this << v;
+	return *this;
+}
+
 
 template <typename Stream, typename T>
 inline void pack(Stream* s, const T& v)

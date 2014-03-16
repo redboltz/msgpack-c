@@ -54,26 +54,26 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::vector<T>& v)
 }
 
 template <typename T>
-inline void operator<< (object::with_zone& o, const std::vector<T>& v)
+inline void operator<< (object& o, const std::vector<T>& v)
 {
 	o.type = type::ARRAY;
 	if(v.empty()) {
 		o.via.array.ptr = nullptr;
 		o.via.array.size = 0;
 	} else {
-		object* p = static_cast<object*>(o.zone->allocate_align(sizeof(object)*v.size()));
-		object* const pend = p + v.size();
+		object* p = static_cast<object*>(::malloc(sizeof(object)*v.size()));
+		if (!p) throw std::bad_alloc();
 		o.via.array.ptr = p;
 		o.via.array.size = v.size();
+		object* const pend = p + v.size();
 		typename std::vector<T>::const_iterator it(v.begin());
 		do {
-			*p = object(*it, o.zone);
+			*p = object(*it);
 			++p;
 			++it;
 		} while(p < pend);
 	}
 }
-
 
 }  // namespace msgpack
 

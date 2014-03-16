@@ -64,8 +64,8 @@ struct raw_ref {
 inline type::raw_ref& operator>> (object const& o, type::raw_ref& v)
 {
 	if(o.type != type::BIN) { throw type_error(); }
-	v.ptr  = o.via.bin.ptr;
-	v.size = o.via.bin.size;
+	v.ptr  = o.bin().ptr.get();
+	v.size = o.bin().size;
 	return v;
 }
 
@@ -77,16 +77,19 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const type::raw_ref& v)
 	return o;
 }
 
+namespace detail {
+struct null_deleter {
+	template <typename T>
+	void operator()(T*) const {}
+};
+}
+
 inline void operator<< (object& o, const type::raw_ref& v)
 {
 	o.type = type::BIN;
-	o.via.bin.ptr = v.ptr;
-	o.via.bin.size = v.size;
+	o.bin().ptr.reset(v.ptr, detail::null_deleter());
+	o.bin().size = v.size;
 }
-
-inline void operator<< (object::with_zone& o, const type::raw_ref& v)
-	{ static_cast<object&>(o) << v; }
-
 
 }  // namespace msgpack
 

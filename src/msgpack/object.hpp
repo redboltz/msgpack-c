@@ -20,33 +20,45 @@
 
 #include "object.h"
 #include "pack.hpp"
-#include "zone.hpp"
 #include <string.h>
 #include <stdexcept>
 #include <typeinfo>
 #include <limits>
 #include <ostream>
+#include <memory>
+#include "cpp_config.hpp"
+
+#include <boost/shared_ptr.hpp>
+#include <boost/move/move.hpp>
+#include <boost/utility/enable_if.hpp>
+#include <boost/type_traits.hpp>
 
 namespace msgpack {
 
-
 class type_error : public std::bad_cast { };
+
+struct free_deleter {
+	template <typename T>
+	void operator()(T* p) const {
+		::free(p);
+	}
+};
 
 
 namespace type {
-	enum object_type {
-		NIL				= MSGPACK_OBJECT_NIL,
-		BOOLEAN			= MSGPACK_OBJECT_BOOLEAN,
-		POSITIVE_INTEGER	= MSGPACK_OBJECT_POSITIVE_INTEGER,
-		NEGATIVE_INTEGER	= MSGPACK_OBJECT_NEGATIVE_INTEGER,
-		DOUBLE				= MSGPACK_OBJECT_DOUBLE,
-		STR				= MSGPACK_OBJECT_STR,
-		BIN				= MSGPACK_OBJECT_BIN,
-		ARRAY				= MSGPACK_OBJECT_ARRAY,
-		MAP				= MSGPACK_OBJECT_MAP
-	};
-}
 
+	enum object_type {
+		NIL                     = MSGPACK_OBJECT_NIL,
+		BOOLEAN                 = MSGPACK_OBJECT_BOOLEAN,
+		POSITIVE_INTEGER        = MSGPACK_OBJECT_POSITIVE_INTEGER,
+		NEGATIVE_INTEGER        = MSGPACK_OBJECT_NEGATIVE_INTEGER,
+		DOUBLE                  = MSGPACK_OBJECT_DOUBLE,
+		STR                     = MSGPACK_OBJECT_STR,
+		BIN                     = MSGPACK_OBJECT_BIN,
+		ARRAY                   = MSGPACK_OBJECT_ARRAY,
+		MAP                     = MSGPACK_OBJECT_MAP
+	};
+} // type
 
 struct object;
 struct object_kv;
@@ -63,15 +75,25 @@ struct object_map {
 
 struct object_str {
 	uint32_t size;
-	const char* ptr;
+	boost::shared_ptr<const char> ptr;
 };
+
+inline bool operator==(object_str const& lhs, object_str const& rhs) {
+	return lhs.size == rhs.size && memcmp(lhs.ptr.get(), rhs.ptr.get(), lhs.size) == 0;
+}
 
 struct object_bin {
 	uint32_t size;
-	const char* ptr;
+	boost::shared_ptr<const char> ptr;
 };
 
+inline bool operator==(object_bin const& lhs, object_bin const& rhs) {
+	return lhs.size == rhs.size && memcmp(lhs.ptr.get(), rhs.ptr.get(), lhs.size) == 0;
+}
+
 struct object {
+	BOOST_COPYABLE_AND_MOVABLE(object);
+public:
 	union union_type {
 		bool boolean;
 		uint64_t u64;
@@ -79,12 +101,25 @@ struct object {
 		double   dec;
 		object_array array;
 		object_map map;
-		object_str str;
-		object_bin bin;
+		int strbuf[sizeof(object_str) / sizeof(int)];
+		int binbuf[sizeof(object_bin) / sizeof(int)];
+		union_type() {}
+		~union_type() {}
 	};
-
 	type::object_type type;
 	union_type via;
+	object_str& str() {
+		return *reinterpret_cast<object_str*>(via.strbuf);
+	}
+	object_str const& str() const {
+		return *reinterpret_cast<object_str const*>(via.strbuf);
+	}
+	object_bin& bin() {
+		return *reinterpret_cast<object_bin*>(via.binbuf);
+	}
+	object_bin const& bin() const {
+		return *reinterpret_cast<object_bin const*>(via.binbuf);
+	}
 
 	bool is_nil() const { return type == type::NIL; }
 
@@ -103,15 +138,128 @@ struct object {
 	template <typename T>
 	explicit object(const T& v);
 
-	template <typename T>
-	object(const T& v, zone* z);
+
+	object(object const&);
+	//object(BOOST_RV_REF(object) other) throw();
+	object(BOOST_RV_REF(object) other) throw() :type(other.type) {
+		switch(type) {
+		case type::NIL:
+			break;
+
+		case type::BOOLEAN:
+			via.boolean = other.via.boolean;
+			break;
+
+		case type::POSITIVE_INTEGER:
+			via.u64 = other.via.u64;
+			break;
+
+		case type::NEGATIVE_INTEGER:
+			via.i64 = other.via.i64;
+			break;
+
+		case type::DOUBLE:
+			via.dec = other.via.dec;
+			break;
+
+		case type::STR: {
+			object_str* str = new(via.strbuf) object_str();
+			str->size = other.str().size;
+			str->ptr.swap(other.str().ptr);
+		} break;
+
+		case type::BIN: {
+			object_bin* bin = new(via.binbuf) object_bin();
+			bin->size = other.bin().size;
+			bin->ptr.swap(other.bin().ptr);
+		} break;
+
+		case type::ARRAY:
+			via.array.size = other.via.array.size;
+			via.array.ptr = other.via.array.ptr;
+			other.via.array.size = 0;
+			other.via.array.ptr = nullptr;
+			break;
+
+		case type::MAP:
+			via.map.size = other.via.map.size;
+			via.map.ptr = other.via.map.ptr;
+			other.via.array.size = 0;
+			other.via.map.ptr = nullptr;
+			break;
+
+		default:
+			break;
+		}
+	}
+
+	~object();
 
 	template <typename T>
-	object& operator=(const T& v);
+	typename boost::disable_if<boost::is_same<T, object>, object>::type& operator=(const T& v);
+#if 0
+	object& operator=(BOOST_COPY_ASSIGN_REF(object));
+	object& operator=(BOOST_RV_REF(object)) throw();
+#endif
+	object& operator=(BOOST_COPY_ASSIGN_REF(object) other) {
+		std::cout << "Copy Assign  called" << std::endl;
+	}
+
+	object& operator=(BOOST_RV_REF(object) other) throw() {
+		type = other.type;
+		switch(type) {
+		case type::NIL:
+			break;
+
+		case type::BOOLEAN:
+			via.boolean = other.via.boolean;
+			break;
+
+		case type::POSITIVE_INTEGER:
+			via.u64 = other.via.u64;
+			break;
+
+		case type::NEGATIVE_INTEGER:
+			via.i64 = other.via.i64;
+			break;
+
+		case type::DOUBLE:
+			via.dec = other.via.dec;
+			break;
+
+		case type::STR: {
+			object_str* str = new(via.strbuf) object_str();
+			str->size = other.str().size;
+			str->ptr.swap(other.str().ptr);
+		} break;
+
+		case type::BIN: {
+			object_bin* bin = new(via.binbuf) object_bin();
+			bin->size = other.bin().size;
+			bin->ptr.swap(other.bin().ptr);
+		} break;
+
+		case type::ARRAY:
+			via.array.size = other.via.array.size;
+			via.array.ptr = other.via.array.ptr;
+			other.via.array.size = 0;
+			other.via.array.ptr = nullptr;
+			break;
+
+		case type::MAP:
+			via.map.size = other.via.map.size;
+			via.map.ptr = other.via.map.ptr;
+			other.via.map.size = 0;
+			other.via.map.ptr = nullptr;
+			break;
+
+		default:
+			break;
+		}
+		return *this;
+	}
 
 	operator msgpack_object() const;
-
-	struct with_zone;
 
 private:
 	struct implicit_type;
@@ -120,17 +268,32 @@ public:
 	implicit_type convert() const;
 };
 
+bool operator==(const object& x, const object& y);
+
 struct object_kv {
+	BOOST_COPYABLE_AND_MOVABLE(object_kv);
+public:
+	object_kv() {}
+	object_kv(BOOST_RV_REF(object) k, BOOST_RV_REF(object) v):key(boost::move(k)), val(boost::move(v)) {}
+	object_kv(object_kv const&) {
+		std::cout << "kv Copy ctor is called" << std::endl;
+	}
+	object_kv(BOOST_RV_REF(object_kv) other):key(boost::move(other.key)), val(boost::move(other.val)) {}
+	~object_kv() {}
+	object_kv& operator=(BOOST_COPY_ASSIGN_REF(object_kv)) {
+		std::cout << "kv Copy assign is called" << std::endl;
+	}
+	object_kv& operator=(BOOST_RV_REF(object_kv) other) {
+		key = boost::move(other.key);
+		val = boost::move(other.val);
+	}
 	object key;
 	object val;
 };
 
-struct object::with_zone : object {
-	with_zone(msgpack::zone* zone) : zone(zone) { }
-	msgpack::zone* zone;
-private:
-	with_zone();
-};
+inline bool operator==(object_kv const& lhs, object_kv const& rhs) {
+	return lhs.key == rhs.key && lhs.val == rhs.val;
+}
 
 struct object::implicit_type {
 	implicit_type(object const& o) : obj(o) { }
@@ -143,76 +306,12 @@ private:
 	object const& obj;
 };
 
-
-// obsolete
-template <typename Type>
-class define : public Type {
-public:
-	typedef Type msgpack_type;
-	typedef define<Type> define_type;
-
-	define() {}
-	define(const msgpack_type& v) : msgpack_type(v) {}
-
-	template <typename Packer>
-	void msgpack_pack(Packer& o) const
-	{
-		o << static_cast<const msgpack_type&>(*this);
-	}
-
-	void msgpack_unpack(object const& o)
-	{
-		o >> static_cast<msgpack_type&>(*this);
-	}
-};
-
-
-template <typename Stream>
-template <typename T>
-inline packer<Stream>& packer<Stream>::pack(const T& v)
-{
-	*this << v;
-	return *this;
-}
-
-inline object& operator>> (object const& o, object& v)
-{
-	v = o;
-	return v;
-}
-
-// convert operator
-template <typename T>
-inline T& operator>> (object const& o, T& v)
-{
-	v.msgpack_unpack(o.convert());
-	return v;
-}
-
-namespace detail {
-template <typename Stream, typename T>
-struct packer_serializer {
-	static packer<Stream>& pack(packer<Stream>& o, const T& v) {
-		v.msgpack_pack(o);
-		return o;
-	}
-};
-}
-
-// serialize operator
-template <typename Stream, typename T>
-inline packer<Stream>& operator<< (packer<Stream>& o, const T& v)
-{
-	return detail::packer_serializer<Stream, T>::pack(o, v);
-}
-
 // deconvert operator
 template <typename T>
-inline void operator<< (object::with_zone& o, const T& v)
+inline void operator<< (object& o, const T& v)
 {
-	v.msgpack_object(static_cast<object*>(&o), o.zone);
+	v.msgpack_object(&o);
 }
-
 
 inline bool operator==(const object& x, const object& y)
 {
@@ -235,12 +334,12 @@ inline bool operator==(const object& x, const object& y)
 		return x.via.dec == y.via.dec;
 
 	case type::STR:
-		return x.via.str.size == y.via.str.size &&
-			memcmp(x.via.str.ptr, y.via.str.ptr, x.via.str.size) == 0;
+		return x.str().size == y.str().size &&
+			memcmp(x.str().ptr.get(), y.str().ptr.get(), x.str().size) == 0;
 
 	case type::BIN:
-		return x.via.bin.size == y.via.bin.size &&
-			memcmp(x.via.bin.ptr, y.via.bin.ptr, x.via.bin.size) == 0;
+		return x.bin().size == y.bin().size &&
+			memcmp(x.bin().ptr.get(), y.bin().ptr.get(), x.bin().size) == 0;
 
 	case type::ARRAY:
 		if(x.via.array.size != y.via.array.size) {
@@ -285,12 +384,70 @@ inline bool operator==(const object& x, const object& y)
 	}
 }
 
+
+// obsolete
+template <typename Type>
+class define : public Type {
+public:
+	typedef Type msgpack_type;
+	typedef define<Type> define_type;
+
+	define() {}
+	define(const msgpack_type& v) : msgpack_type(v) {}
+
+	template <typename Packer>
+	void msgpack_pack(Packer& o) const
+	{
+		o << static_cast<const msgpack_type&>(*this);
+	}
+
+	void msgpack_unpack(object const& o)
+	{
+		o >> static_cast<msgpack_type&>(*this);
+	}
+};
+
+
+inline object& operator>> (object const& o, object& v)
+{
+	v = o;
+	return v;
+}
+
+// convert operator
+template <typename T>
+inline T& operator>> (object const& o, T& v)
+{
+	v.msgpack_unpack(o.convert());
+	return v;
+}
+
+namespace detail {
+template <typename Stream, typename T>
+struct packer_serializer {
+	static packer<Stream>& pack(packer<Stream>& o, const T& v) {
+		v.msgpack_pack(o);
+		return o;
+	}
+};
+} // detail
+
+// serialize operator
+template <typename Stream, typename T>
+inline packer<Stream>& operator<< (packer<Stream>& o, const T& v)
+{
+	return detail::packer_serializer<Stream, T>::pack(o, v);
+}
+
+
 template <typename T>
 inline bool operator==(const object& x, const T& y)
-try {
-	return x == object(y);
-} catch (msgpack::type_error&) {
-	return false;
+{
+	try {
+		return x == object(y);
+	} catch (msgpack::type_error&) {
+		return false;
+	}
 }
 
 inline bool operator!=(const object& x, const object& y)
@@ -334,11 +491,53 @@ inline T object::as() const
 	return v;
 }
 
-
 inline object::object()
 {
 	type = type::NIL;
 }
+
+inline
+object::object(object const& other) {
+	std::cout << "Copy Ctor called" << std::endl;
+}
+
+inline
+object::~object() {
+	if (type == type::NIL) return;
+	switch(type) {
+	case type::STR:
+		str().ptr.~shared_ptr<const char>();
+		break;
+
+	case type::BIN:
+		bin().ptr.~shared_ptr<const char>();
+		break;
+
+	case type::ARRAY:
+		for (size_t idx = 0; idx < via.array.size; ++idx) {
+			(via.array.ptr + idx)->~object();
+		}
+		::free(via.array.ptr);
+		break;
+
+	case type::MAP:
+		for (size_t idx = 0; idx < via.map.size; ++idx) {
+			(via.map.ptr + idx)->~object_kv();
+		}
+		::free(via.map.ptr);
+		break;
+
+	default:
+		break;
+	}
+}
+
+#if 0
+inline
+object& object::operator=(BOOST_COPY_ASSIGN_REF(object) other) {
+	std::cout << "Copy Assign  called" << std::endl;
+}
+#endif
 
 template <typename T>
 inline object::object(const T& v)
@@ -347,19 +546,11 @@ inline object::object(const T& v)
 }
 
 template <typename T>
-inline object& object::operator=(const T& v)
+inline
+typename boost::disable_if<boost::is_same<T, object>, object>::type& object::operator=(const T& v)
 {
 	*this = object(v);
 	return *this;
-}
-
-template <typename T>
-object::object(const T& v, zone* z)
-{
-	with_zone oz(z);
-	oz << v;
-	type = oz.type;
-	via = oz.via;
 }
 
 
@@ -368,6 +559,7 @@ inline object::object(msgpack_object o)
 	// FIXME beter way?
 	::memcpy(this, &o, sizeof(o));
 }
+
 
 inline void operator<< (object& o, msgpack_object v)
 {
@@ -405,7 +597,6 @@ inline void pack_copy(packer<Stream>& o, T v)
 	pack(o, v);
 }
 
-
 template <typename Stream>
 packer<Stream>& operator<< (packer<Stream>& o, const object& v)
 {
@@ -435,20 +626,20 @@ packer<Stream>& operator<< (packer<Stream>& o, const object& v)
 		return o;
 
 	case type::STR:
-		o.pack_str(v.via.str.size);
-		o.pack_str_body(v.via.str.ptr, v.via.str.size);
+		o.pack_str(v.str().size);
+		o.pack_str_body(v.str().ptr.get(), v.str().size);
 		return o;
 
 	case type::BIN:
-		o.pack_bin(v.via.bin.size);
-		o.pack_bin_body(v.via.bin.ptr, v.via.bin.size);
+		o.pack_bin(v.bin().size);
+		o.pack_bin_body(v.bin().ptr.get(), v.bin().size);
 		return o;
 
 	case type::ARRAY:
 		o.pack_array(v.via.array.size);
 		for(object* p(v.via.array.ptr),
 				* const pend(v.via.array.ptr + v.via.array.size);
-				p < pend; ++p) {
+			p < pend; ++p) {
 			o << *p;
 		}
 		return o;
@@ -457,7 +648,7 @@ packer<Stream>& operator<< (packer<Stream>& o, const object& v)
 		o.pack_map(v.via.map.size);
 		for(object_kv* p(v.via.map.ptr),
 				* const pend(v.via.map.ptr + v.via.map.size);
-				p < pend; ++p) {
+			p < pend; ++p) {
 			o << p->key;
 			o << p->val;
 		}
@@ -492,13 +683,12 @@ std::ostream& operator<< (std::ostream& s, const object& o)
 		break;
 
 	case type::STR:
-		(s << '"').write(o.via.str.ptr, o.via.str.size) << '"';
+		(s << '"').write(o.str().ptr.get(), o.str().size) << '"';
 		break;
 
 	case type::BIN:
-		(s << '"').write(o.via.bin.ptr, o.via.bin.size) << '"';
+		(s << '"').write(o.bin().ptr.get(), o.bin().size) << '"';
 		break;
-
 
 	case type::ARRAY:
 		s << "[";
@@ -507,7 +697,7 @@ std::ostream& operator<< (std::ostream& s, const object& o)
 			s << *p;
 			++p;
 			for(object* const pend(o.via.array.ptr + o.via.array.size);
-					p < pend; ++p) {
+				p < pend; ++p) {
 				s << ", " << *p;
 			}
 		}
@@ -521,7 +711,7 @@ std::ostream& operator<< (std::ostream& s, const object& o)
 			s << p->key << "=>" << p->val;
 			++p;
 			for(object_kv* const pend(o.via.map.ptr + o.via.map.size);
-					p < pend; ++p) {
+				p < pend; ++p) {
 				s << ", " << p->key << "=>" << p->val;
 			}
 		}
@@ -532,7 +722,6 @@ std::ostream& operator<< (std::ostream& s, const object& o)
 		// FIXME
 		s << "#<UNKNOWN " << (uint16_t)o.type << ">";
 	}
-	return s;
 }
 
 }  // namespace msgpack

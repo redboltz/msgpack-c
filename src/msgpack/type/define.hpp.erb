@@ -29,9 +29,9 @@
 		msgpack::type::make_define(__VA_ARGS__).msgpack_unpack(o); \
 	}\
 	template <typename MSGPACK_OBJECT> \
-	void msgpack_object(MSGPACK_OBJECT* o, msgpack::zone* z) const \
+	void msgpack_object(MSGPACK_OBJECT* o) const \
 	{ \
-		msgpack::type::make_define(__VA_ARGS__).msgpack_object(o, z); \
+		msgpack::type::make_define(__VA_ARGS__).msgpack_object(o); \
 	}
 
 // MSGPACK_ADD_ENUM must be used in the global namespace.
@@ -46,7 +46,7 @@
       return v; \
     } \
     template <> \
-    void operator<< (object::with_zone& o, const enum& v) \
+    void operator<< (object& o, const enum& v) \
     { \
       o << static_cast<int>(v); \
     } \
@@ -82,7 +82,7 @@ struct define<> {
 	{
 		if(o.type != type::ARRAY) { throw type_error(); }
 	}
-	void msgpack_object(msgpack::object* o, msgpack::zone* z) const
+	void msgpack_object(msgpack::object* o) const
 	{
 		o->type = type::ARRAY;
 		o->via.array.ptr = nullptr;
@@ -115,13 +115,15 @@ struct define<A0<%1.upto(i) {|j|%>, A<%=j%><%}%>> {
 			}
 		}
 	}
-	void msgpack_object(msgpack::object* o, msgpack::zone* z) const
+	void msgpack_object(msgpack::object* o) const
 	{
 		o->type = type::ARRAY;
-		o->via.array.ptr = static_cast<object*>(z->allocate_align(sizeof(object)*<%=i+1%>));
+		object* p = static_cast<object*>(::malloc(sizeof(object)*<%=i+1%>));
+		if (!p) throw std::bad_alloc();
+		o->via.array.ptr = p;
 		o->via.array.size = <%=i+1%>;
 		<%0.upto(i) {|j|%>
-		o->via.array.ptr[<%=j%>] = object(a<%=j%>, z);<%}%>
+		o->via.array.ptr[<%=j%>] = object(a<%=j%>);<%}%>
 	}
 	<%0.upto(i) {|j|%>
 	A<%=j%>& a<%=j%>;<%}%>

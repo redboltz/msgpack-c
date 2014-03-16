@@ -44,14 +44,15 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::pair<T1, T2>& v
 }
 
 template <typename T1, typename T2>
-inline void operator<< (object::with_zone& o, const std::pair<T1, T2>& v)
+inline void operator<< (object& o, const std::pair<T1, T2>& v)
 {
 	o.type = type::ARRAY;
-	object* p = static_cast<object*>(o.zone->allocate_align(sizeof(object)*2));
+	object* p = static_cast<object*>(::malloc(sizeof(object)*2));
+	if (!p) throw std::bad_alloc();
 	o.via.array.ptr = p;
 	o.via.array.size = 2;
-	p[0] = object(v.first, o.zone);
-	p[1] = object(v.second, o.zone);
+	p[0] = object(v.first);
+	p[1] = object(v.second);
 }
 
 

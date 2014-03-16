@@ -45,9 +45,6 @@ inline void operator<< (object& o, bool v)
 	o.via.boolean = v;
 }
 
-inline void operator<< (object::with_zone& o, bool v)
-	{ static_cast<object&>(o) << v; }
-
 
 }  // namespace msgpack
 

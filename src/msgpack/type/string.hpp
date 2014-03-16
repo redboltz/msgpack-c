@@ -19,19 +19,19 @@
 #define MSGPACK_TYPE_STRING_HPP
 
 #include "msgpack/object.hpp"
+
 #include <string>
 
 namespace msgpack {
-
 
 inline std::string& operator>> (object const& o, std::string& v)
 {
 	switch (o.type) {
 	case type::BIN:
-		v.assign(o.via.bin.ptr, o.via.bin.size);
+		v.assign(o.bin().ptr.get(), o.bin().size);
 		break;
 	case type::STR:
-		v.assign(o.via.str.ptr, o.via.str.size);
+		v.assign(o.str().ptr.get(), o.str().size);
 		break;
 	default:
 		throw type_error();
@@ -48,21 +48,18 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::string& v)
 	return o;
 }
 
-inline void operator<< (object::with_zone& o, const std::string& v)
-{
-	o.type = type::BIN;
-	char* ptr = (char*)o.zone->allocate_align(v.size());
-	o.via.bin.ptr = ptr;
-	o.via.bin.size = (uint32_t)v.size();
-	memcpy(ptr, v.data(), v.size());
-}
-
 inline void operator<< (object& o, const std::string& v)
 {
 	o.type = type::BIN;
-	o.via.bin.ptr = v.data();
-	o.via.bin.size = (uint32_t)v.size();
+	char* ptr = static_cast<char*>(::malloc(v.size()));
+	if (!ptr) throw std::bad_alloc();
+	o.bin().ptr.reset(ptr, free_deleter());
+	o.bin().size = (uint32_t)v.size();
+	memcpy(ptr, v.data(), v.size());
+
 }
+
+// Are reference version and move version required?
 
 
 }  // namespace msgpack

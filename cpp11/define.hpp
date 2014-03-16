@@ -29,26 +29,26 @@
 		msgpack::type::make_define(__VA_ARGS__).msgpack_unpack(o); \
 	}\
 	template <typename MSGPACK_OBJECT> \
-	void msgpack_object(MSGPACK_OBJECT* o, msgpack::zone* z) const \
+	void msgpack_object(MSGPACK_OBJECT* o) const \
 	{ \
-		msgpack::type::make_define(__VA_ARGS__).msgpack_object(o, z); \
+		msgpack::type::make_define(__VA_ARGS__).msgpack_object(o); \
 	}
 
 // MSGPACK_ADD_ENUM must be used in the global namespace.
-#define MSGPACK_ADD_ENUM(enum) \
+#define MSGPACK_ADD_ENUM(enum_type) \
   namespace msgpack { \
 	template <> \
-	inline enum& operator>> (object const& o, enum& v) \
+	inline enum_type& operator>> (object const& o, enum_type& v) \
 	{ \
 	  int tmp; \
 	  o >> tmp; \
-	  v = static_cast<enum>(tmp); \
+	  v = static_cast<enum_type>(tmp); \
 	  return v; \
 	} \
 	template <> \
-	void operator<< (object::with_zone& o, const enum& v) \
+	inline void operator<< (object& o, const enum_type& v) \
 	{ \
-	  int tmp = static_cast<enum>(v); \
+	  int tmp = static_cast<enum_type>(v); \
 	  o << tmp; \
 	} \
   }
@@ -66,12 +66,12 @@ struct define_imp {
 	static void unpack(msgpack::object const& o, Tuple& t) {
 		define_imp<Tuple, N-1>::unpack(o, t);
 		const size_t size = o.via.array.size;
-		if(size <= N-1) { return; }
+		if(size <= 0) { return; }
 		o.via.array.ptr[N-1].convert(std::get<N-1>(t));
 	}
-	static void object(msgpack::object* o, msgpack::zone* z, Tuple const& t) {
-		define_imp<Tuple, N-1>::object(o, z, t);
-		o->via.array.ptr[N-1] = msgpack::object(std::get<N-1>(t), z);
+	static void object(msgpack::object* o, Tuple const& t) {
+		define_imp<Tuple, N-1>::object(o, t);
+		o->via.array.ptr[N-1] = msgpack::object(std::get<N-1>(t));
 	}
 };
 
@@ -83,11 +83,10 @@ struct define_imp<Tuple, 1> {
 	}
 	static void unpack(msgpack::object const& o, Tuple& t) {
 		const size_t size = o.via.array.size;
-		if(size <= 0) { return; }
 		o.via.array.ptr[0].convert(std::get<0>(t));
 	}
-	static void object(msgpack::object* o, msgpack::zone* z, Tuple const& t) {
-		o->via.array.ptr[0] = msgpack::object(std::get<0>(t), z);
+	static void object(msgpack::object* o, Tuple const& t) {
+		o->via.array.ptr[0] = msgpack::object(std::get<0>(t));
 	}
 };
 
@@ -107,16 +106,16 @@ struct define {
 	void msgpack_unpack(msgpack::object const& o)
 	{
 		if(o.type != type::ARRAY) { throw type_error(); }
-
 		define_imp<tuple<Args&...>, sizeof...(Args)>::unpack(o, a);
 	}
-	void msgpack_object(msgpack::object* o, msgpack::zone* z) const
+	void msgpack_object(msgpack::object* o) const
 	{
 		o->type = type::ARRAY;
-		o->via.array.ptr = static_cast<object*>(z->allocate_align(sizeof(object)*sizeof...(Args)));
+		object* p = static_cast<object*>(::malloc(sizeof(object)*sizeof...(Args)));
+		if (!p) throw std::bad_alloc();
+		o->via.array.ptr = p;
 		o->via.array.size = sizeof...(Args);
-
-		define_imp<tuple<Args&...>, sizeof...(Args)>::object(o, z, a);
+		define_imp<tuple<Args&...>, sizeof...(Args)>::object(o, a);
 	}
 
 	tuple<Args&...> a;
@@ -135,10 +134,10 @@ struct define<> {
 	{
 		if(o.type != type::ARRAY) { throw type_error(); }
 	}
-	void msgpack_object(msgpack::object* o, msgpack::zone* z) const
+	void msgpack_object(msgpack::object* o) const
 	{
 		o->type = type::ARRAY;
-		o->via.array.ptr = NULL;
+		o->via.array.ptr = nullptr;
 		o->via.array.size = 0;
 	}
 };

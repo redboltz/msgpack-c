@@ -28,7 +28,6 @@ struct nil { };
 
 }  // namespace type
 
-
 inline type::nil& operator>> (object const& o, type::nil& v)
 {
 	if(o.type != type::NIL) { throw type_error(); }
@@ -46,10 +45,6 @@ inline void operator<< (object& o, type::nil v)
 {
 	o.type = type::NIL;
 }
-
-inline void operator<< (object::with_zone& o, type::nil v)
-	{ static_cast<object&>(o) << v; }
-
 
 template <>
 inline void object::as<void>() const

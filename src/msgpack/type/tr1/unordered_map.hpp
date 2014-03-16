@@ -52,7 +52,14 @@ inline MSGPACK_STD_TR1::unordered_map<K, V> operator>> (object o, MSGPACK_STD_TR
 	for(; p != pend; ++p) {
 		K key;
 		p->key.convert(key);
-		p->val.convert(v[key]);
+		typename MSGPACK_STD_TR1::unordered_map<K,V>::iterator it(v.lower_bound(key));
+		if(it != v.end() && !(key < it->first)) {
+			p->val.convert(it->second);
+		} else {
+			V val;
+			p->val.convert(val);
+			v.insert(it, std::pair<K,V>(key, val));
+		}
 	}
 	return v;
 }
@@ -62,7 +69,7 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const MSGPACK_STD_TR1::uno
 {
 	o.pack_map(v.size());
 	for(typename MSGPACK_STD_TR1::unordered_map<K,V>::const_iterator it(v.begin()), it_end(v.end());
-			it != it_end; ++it) {
+		it != it_end; ++it) {
 		o.pack(it->first);
 		o.pack(it->second);
 	}
@@ -70,21 +77,22 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const MSGPACK_STD_TR1::uno
 }
 
 template <typename K, typename V>
-inline void operator<< (object::with_zone& o, const MSGPACK_STD_TR1::unordered_map<K,V>& v)
+inline void operator<< (object& o, const MSGPACK_STD_TR1::unordered_map<K,V>& v)
 {
 	o.type = type::MAP;
 	if(v.empty()) {
 		o.via.map.ptr  = nullptr;
 		o.via.map.size = 0;
 	} else {
-		object_kv* p = static_cast<object_kv*>(o.zone->allocate_align(sizeof(object_kv)*v.size()));
-		object_kv* const pend = p + v.size();
-		o.via.map.ptr  = p;
+		object_kv* p = static_cast<object_kv*>(::malloc(sizeof(object_kv)*v.size()));
+		if (!p) throw std::bad_alloc();
+		o.via.map.ptr = p;
 		o.via.map.size = v.size();
+		object_kv* const pend = p + v.size();
 		typename MSGPACK_STD_TR1::unordered_map<K,V>::const_iterator it(v.begin());
 		do {
-			p->key = object(it->first, o.zone);
-			p->val = object(it->second, o.zone);
+			p->key = object(it->first);
+			p->val = object(it->second);
 			++p;
 			++it;
 		} while(p < pend);
@@ -99,20 +107,25 @@ inline MSGPACK_STD_TR1::unordered_multimap<K, V> operator>> (object o, MSGPACK_S
 	object_kv* p(o.via.map.ptr);
 	object_kv* const pend(o.via.map.ptr + o.via.map.size);
 	for(; p != pend; ++p) {
-		std::pair<K, V> value;
-		p->key.convert(value.first);
-		p->val.convert(value.second);
-		v.insert(value);
+		K key;
+		p->key.convert(key);
+		typename MSGPACK_STD_TR1::unordered_multimap<K,V>::iterator it(v.lower_bound(key));
+		if(it != v.end() && !(key < it->first)) {
+			p->val.convert(it->second);
+		} else {
+			V val;
+			p->val.convert(val);
+			v.insert(it, std::pair<K,V>(key, val));
+		}
 	}
-	return v;
-}
+	return v;}
 
 template <typename Stream, typename K, typename V>
 inline packer<Stream>& operator<< (packer<Stream>& o, const MSGPACK_STD_TR1::unordered_multimap<K,V>& v)
 {
 	o.pack_map(v.size());
 	for(typename MSGPACK_STD_TR1::unordered_multimap<K,V>::const_iterator it(v.begin()), it_end(v.end());
-			it != it_end; ++it) {
+		it != it_end; ++it) {
 		o.pack(it->first);
 		o.pack(it->second);
 	}
@@ -120,26 +133,26 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const MSGPACK_STD_TR1::uno
 }
 
 template <typename K, typename V>
-inline void operator<< (object::with_zone& o, const MSGPACK_STD_TR1::unordered_multimap<K,V>& v)
+inline void operator<< (object& o, const MSGPACK_STD_TR1::unordered_multimap<K,V>& v)
 {
 	o.type = type::MAP;
 	if(v.empty()) {
 		o.via.map.ptr  = nullptr;
 		o.via.map.size = 0;
 	} else {
-		object_kv* p = static_cast<object_kv*>(o.zone->allocate_align(sizeof(object_kv)*v.size()));
-		object_kv* const pend = p + v.size();
-		o.via.map.ptr  = p;
+		object_kv* p = static_cast<object_kv*>(::malloc(sizeof(object_kv)*v.size()));
+		if (!p) throw std::bad_alloc();
+		o.via.map.ptr = p;
 		o.via.map.size = v.size();
+		object_kv* const pend = p + v.size();
 		typename MSGPACK_STD_TR1::unordered_multimap<K,V>::const_iterator it(v.begin());
 		do {
-			p->key = object(it->first, o.zone);
-			p->val = object(it->second, o.zone);
+			p->key = object(it->first);
+			p->val = object(it->second);
 			++p;
 			++it;
 		} while(p < pend);
-	}
-}
+	}}
 
 
 }  // namespace msgpack

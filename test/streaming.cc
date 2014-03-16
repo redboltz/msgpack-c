@@ -69,7 +69,7 @@ public:
 
 			msgpack::unpacked result;
 			while(pac.next(&result)) {
-				on_message(result.get(), msgpack::move(result.zone()));
+				on_message(result.get());
 			}
 
 			if(pac.message_size() > 10*1024*1024) {
@@ -78,7 +78,7 @@ public:
 		}
 	}
 
-	void on_message(msgpack::object obj, msgpack::unique_ptr<msgpack::zone> z)
+	void on_message(msgpack::object obj)
 	{
 		EXPECT_EQ(expect, obj.as<int>());
 	}
@@ -133,7 +133,6 @@ TEST(streaming, basic_compat)
 		pac.buffer_consumed(len);
 
 		while(pac.execute()) {
-			msgpack::unique_ptr<msgpack::zone> z(pac.release_zone());
 			msgpack::object obj = pac.data();
 			pac.reset();
 
@@ -174,10 +173,9 @@ public:
 			pac.buffer_consumed(len);
 
 			while(pac.execute()) {
-				msgpack::unique_ptr<msgpack::zone> z(pac.release_zone());
 				msgpack::object obj = pac.data();
 				pac.reset();
-				on_message(obj, msgpack::move(z));
+				on_message(obj);
 			}
 
 			if(pac.message_size() > 10*1024*1024) {
@@ -186,7 +184,7 @@ public:
 		}
 	}
 
-	void on_message(msgpack::object obj, msgpack::unique_ptr<msgpack::zone> z)
+	void on_message(msgpack::object obj)
 	{
 		EXPECT_EQ(expect, obj.as<int>());
 	}

@@ -49,20 +49,21 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::set<T>& v)
 }
 
 template <typename T>
-inline void operator<< (object::with_zone& o, const std::set<T>& v)
+inline void operator<< (object& o, const std::set<T>& v)
 {
 	o.type = type::ARRAY;
 	if(v.empty()) {
 		o.via.array.ptr = nullptr;
 		o.via.array.size = 0;
 	} else {
-		object* p = static_cast<object*>(o.zone->allocate_align(sizeof(object)*v.size()));
-		object* const pend = p + v.size();
+		object* p = static_cast<object*>(::malloc(sizeof(object)*v.size()));
+		if (!p) throw std::bad_alloc();
 		o.via.array.ptr = p;
 		o.via.array.size = v.size();
+		object* const pend = p + v.size();
 		typename std::set<T>::const_iterator it(v.begin());
 		do {
-			*p = object(*it, o.zone);
+			*p = object(*it);
 			++p;
 			++it;
 		} while(p < pend);
@@ -95,20 +96,21 @@ inline packer<Stream>& operator<< (packer<Stream>& o, const std::multiset<T>& v)
 }
 
 template <typename T>
-inline void operator<< (object::with_zone& o, const std::multiset<T>& v)
+inline void operator<< (object& o, const std::multiset<T>& v)
 {
 	o.type = type::ARRAY;
 	if(v.empty()) {
 		o.via.array.ptr = nullptr;
 		o.via.array.size = 0;
 	} else {
-		object* p = static_cast<object*>(o.zone->allocate_align(sizeof(object)*v.size()));
-		object* const pend = p + v.size();
+		object* p = static_cast<object*>(::malloc(sizeof(object)*v.size()));
+		if (!p) throw std::bad_alloc();
 		o.via.array.ptr = p;
 		o.via.array.size = v.size();
+		object* const pend = p + v.size();
 		typename std::multiset<T>::const_iterator it(v.begin());
 		do {
-			*p = object(*it, o.zone);
+			*p = object(*it);
 			++p;
 			++it;
 		} while(p < pend);

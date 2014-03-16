@@ -1,4 +1,6 @@
 #include <msgpack.hpp>
+#include <msgpack/zone.hpp>
+
 #include <gtest/gtest.h>
 
 TEST(zone, allocate_align)

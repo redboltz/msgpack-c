@@ -26,7 +26,6 @@ namespace msgpack {
 
 // FIXME check overflow, underflow
 
-
 inline float& operator>> (object const& o, float& v)
 {
 	if(o.type == type::DOUBLE) {
@@ -66,6 +65,7 @@ inline double& operator>> (object const& o, double& v)
 	else {
 		throw type_error();
 	}
+
 	return v;
 }
 
@@ -88,13 +88,6 @@ inline void operator<< (object& o, double v)
 	o.type = type::DOUBLE;
 	o.via.dec = v;
 }
-
-inline void operator<< (object::with_zone& o, float v)
-	{ static_cast<object&>(o) << v; }
-
-inline void operator<< (object::with_zone& o, double v)
-	{ static_cast<object&>(o) << v; }
-
 
 }  // namespace msgpack
 
