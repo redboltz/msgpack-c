@@ -27,6 +27,8 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include "msgpack/zone.hpp"
+extern msgpack::zone* global_z;
 
 #define COUNTER_SIZE (sizeof(_msgpack_atomic_counter_t))
 
@@ -96,7 +98,7 @@ struct unpack_array {
 	bool operator()(unsigned int n, object& o) const {
 		o.type = type::ARRAY;
 		o.via.array.size = 0;
-		o.via.array.ptr = static_cast<object*>(::malloc(n*sizeof(object)));
+		o.via.array.ptr = static_cast<object*>(global_z->allocate_align((n*sizeof(object))));
 		if(o.via.array.ptr == nullptr) { return false; }
 		return true;
 	}
@@ -109,7 +111,7 @@ struct unpack_map {
 	bool operator()(unsigned int n, object& o) const {
 		o.type = type::MAP;
 		o.via.map.size = 0;
-		o.via.map.ptr = static_cast<object_kv*>(::malloc(n*sizeof(object_kv)));
+		o.via.map.ptr = static_cast<object_kv*>(global_z->allocate_align(n*sizeof(object_kv)));
 		if(o.via.map.ptr == nullptr) { return false; }
 		return true;
 	}

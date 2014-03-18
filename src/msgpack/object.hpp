@@ -516,14 +516,14 @@ object::~object() {
 		for (size_t idx = 0; idx < via.array.size; ++idx) {
 			(via.array.ptr + idx)->~object();
 		}
-		::free(via.array.ptr);
+		//::free(via.array.ptr);
 		break;
 
 	case type::MAP:
 		for (size_t idx = 0; idx < via.map.size; ++idx) {
 			(via.map.ptr + idx)->~object_kv();
 		}
-		::free(via.map.ptr);
+		//::free(via.map.ptr);
 		break;
 
 	default:
