@@ -18,6 +18,33 @@
 #ifndef MSGPACK_CPP_CONFIG_HPP
 #define MSGPACK_CPP_CONFIG_HPP
 
+#if defined(_MSC_VER)
+// VC++
+
+#define MSGPACK_FORCE_INLINE 
+
+#elif defined(__clang__)
+// clang++
+
+#if __has_attribute(always_inline)
+#define MSGPACK_FORCE_INLINE  __attribute__((always_inline))
+#else
+#define MSGPACK_FORCE_INLINE
+#endif
+
+#elif defined(__GNUC__)
+// g++
+
+#define MSGPACK_FORCE_INLINE  __attribute__((always_inline))
+
+#else
+// others
+
+#define MSGPACK_FORCE_INLINE
+
+#endif
+
+
 #if defined __cplusplus
 #if __cplusplus < 201103
 

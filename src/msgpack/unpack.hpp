@@ -604,11 +604,11 @@ private:
 		return current - origin;
 	}
 
-	void header_again(const char*& current) __attribute__((always_inline)) {
+	void header_again(const char*& current) {
 		cs_ = CS_HEADER;
 		++current;
 	}
-	int push_item(unpack_stack*& c, object& obj) __attribute__((always_inline)) {
+	int push_item(unpack_stack*& c, object& obj) MSGPACK_FORCE_INLINE {
 		bool finish = false;
 		while (!finish) {
 			if(top_ == 0) {
@@ -657,7 +657,7 @@ private:
 		const char*& current,
 		const char* origin,
 		size_t& off,
-		unsigned int trail) __attribute__((always_inline)) {
+		unsigned int trail) MSGPACK_FORCE_INLINE {
 		int ret = push_item(c, obj);
 		if (ret > 0) {
 			stack_[0].set_obj(boost::move(obj));
