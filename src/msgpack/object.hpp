@@ -503,7 +503,6 @@ object::object(object const& other) {
 
 inline
 object::~object() {
-	if (type == type::NIL) return;
 	switch(type) {
 	case type::STR:
 		str().ptr.~shared_ptr<const char>();
