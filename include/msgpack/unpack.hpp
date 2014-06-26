@@ -402,8 +402,11 @@ public:
 					off = current_ - start_;
 					return 0;
 				}
-				n = current_;
-				current_ += trail_ - 1;
+				if (trail_ > 0) {
+					n = current_;
+					current_ += trail_ - 1;
+				}
+
 				switch(cs_) {
 				//case CS_
 				//case CS_
