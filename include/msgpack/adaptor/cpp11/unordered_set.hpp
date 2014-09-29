@@ -31,13 +31,11 @@ inline object const& operator>> (object const& o, std::unordered_set<T>& v)
     if(o.type != type::ARRAY) { throw type_error(); }
     object* p = o.via.array.ptr + o.via.array.size;
     object* const pbegin = o.via.array.ptr;
-    std::unordered_set<T> tmp;
-    tmp.reserve(o.via.array.size);
+    v.clear();
     while(p > pbegin) {
         --p;
-        tmp.insert(p->as<T>());
+        v.insert(p->as<T>());
     }
-    tmp.swap(v);
     return o;
 }
 
@@ -80,13 +78,11 @@ inline object const& operator>> (object const& o, std::unordered_multiset<T>& v)
     if(o.type != type::ARRAY) { throw type_error(); }
     object* p = o.via.array.ptr + o.via.array.size;
     object* const pbegin = o.via.array.ptr;
-    std::unordered_multiset<T> tmp;
-    tmp.reserve(o.via.array.size);
+    v.clear();
     while(p > pbegin) {
         --p;
-        tmp.insert(p->as<T>());
+        v.insert(p->as<T>());
     }
-    tmp.swap(v);
     return o;
 }
 

@@ -32,14 +32,12 @@ inline object const& operator>> (object const& o, std::unordered_map<K, V>& v)
     if(o.type != type::MAP) { throw type_error(); }
     object_kv* p(o.via.map.ptr);
     object_kv* const pend(o.via.map.ptr + o.via.map.size);
-    std::unordered_map<K, V> tmp;
-    tmp.reserve(o.via.map.size);
+    v.clear();
     for(; p != pend; ++p) {
         K key;
         p->key.convert(key);
-        p->val.convert(tmp[key]);
+        p->val.convert(v[key]);
     }
-    tmp.swap(v);
     return o;
 }
 
@@ -84,15 +82,13 @@ inline object const& operator>> (object const& o, std::unordered_multimap<K, V>&
     if(o.type != type::MAP) { throw type_error(); }
     object_kv* p(o.via.map.ptr);
     object_kv* const pend(o.via.map.ptr + o.via.map.size);
-    std::unordered_multimap<K, V> tmp;
-    tmp.reserve(o.via.map.size);
+    v.clear();
     for(; p != pend; ++p) {
         std::pair<K, V> value;
         p->key.convert(value.first);
         p->val.convert(value.second);
-        tmp.insert(value);
+        v.insert(value);
     }
-    tmp.swap(v);
     return o;
 }
 
