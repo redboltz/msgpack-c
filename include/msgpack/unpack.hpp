@@ -47,7 +47,7 @@
 
 namespace msgpack {
 
-typedef bool (*unpack_reference_func)(type::object_type, uint64_t, void*);
+typedef bool (*unpack_reference_func)(type::object_type, std::size_t, void*);
 
 namespace detail {
 
@@ -947,7 +947,7 @@ private:
     void expand_buffer(std::size_t size);
     int execute_imp();
     bool flush_zone();
-    static bool default_reference_func(type::object_type type, uint64_t len, void*);
+    static bool default_reference_func(type::object_type type, std::size_t len, void*);
 
 private:
     char* m_buffer;
@@ -1451,7 +1451,7 @@ inline void unpack(unpacked* result,
         else unpack(*result, data, len, f, user_data);
 }
 
-inline bool unpacker::default_reference_func(type::object_type /*type*/, uint64_t /*len*/, void*)
+inline bool unpacker::default_reference_func(type::object_type /*type*/, std::size_t /*len*/, void*)
 {
     return true;
 }
