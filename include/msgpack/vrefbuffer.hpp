@@ -48,6 +48,16 @@ namespace detail {
     std::size_t const packer_max_buffer_size = 9;
 } // detail
 
+} // MSGPACK_API_VERSION_NAMESPACE(v1)
+
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+namespace detail {
+using v1::detail::packer_max_buffer_size;
+} // namespace detail
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+
+MSGPACK_API_VERSION_NAMESPACE(v1) {
+
 class vrefbuffer {
 private:
     struct chunk {
@@ -279,6 +289,10 @@ private:
 };
 
 }  // MSGPACK_API_VERSION_NAMESPACE(v1)
+
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+using v1::vrefbuffer;
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
 
 }  // namespace msgpack
 

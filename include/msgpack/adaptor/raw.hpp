@@ -63,6 +63,15 @@ struct raw_ref {
 
 }  // namespace type
 
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+namespace type {
+using v1::type::raw_ref;
+}  // namespace type
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+
+MSGPACK_API_VERSION_NAMESPACE(v1) {
 
 inline object const& operator>> (object const& o, type::raw_ref& v)
 {

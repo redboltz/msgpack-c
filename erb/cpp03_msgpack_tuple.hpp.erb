@@ -136,6 +136,17 @@ inline tuple<A0<%1.upto(i) {|j|%>, A<%=j%><%}%>> make_tuple(typename tuple_type<
 
 }  // namespace type
 
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+namespace type {
+using v1::type::tuple;
+using v1::type::get;
+} // namespace type
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+
+MSGPACK_API_VERSION_NAMESPACE(v1) {
+
 inline object const& operator>> (
         object const& o,
         type::tuple<>&) {

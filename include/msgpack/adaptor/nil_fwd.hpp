@@ -46,6 +46,12 @@ inline void object::as<void>() const;
 
 }  // MSGPACK_API_VERSION_NAMESPACE(v1)
 
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+namespace type {
+using v1::type::nil;
+}  // namespace type
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+
 }  // namespace msgpack
 
 #endif // MSGPACK_TYPE_NIL_FWD_HPP

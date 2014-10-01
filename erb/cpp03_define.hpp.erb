@@ -148,6 +148,14 @@ define<A0<%1.upto(i) {|j|%>, A<%=j%><%}%>> make_define(A0& a0<%1.upto(i) {|j|%>,
 
 }  // namespace type
 }  // MSGPACK_API_VERSION_NAMESPACE(v1)
+
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+namespace type {
+using v1::type::define;
+using v1::type::make_define;
+}  // namespace type
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+
 }  // namespace msgpack
 
 

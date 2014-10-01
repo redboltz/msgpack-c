@@ -31,7 +31,6 @@ struct nil { };
 
 }  // namespace type
 
-
 inline object const& operator>> (object const& o, type::nil&)
 {
     if(o.type != type::NIL) { throw type_error(); }

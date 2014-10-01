@@ -26,4 +26,12 @@
 #include "detail/cpp11_zone.hpp"
 #endif // MSGPACK_USE_CPP03
 
+namespace msgpack {
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+
+using v1::zone;
+
+} // MSGPACK_API_VERSION_NAMESPACE(v2)
+} // namespace msgpack
+
 #endif // MSGPACK_ZONE_HPP

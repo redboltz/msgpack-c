@@ -118,6 +118,13 @@ private:
     packer();
 };
 
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+using v1::packer;
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+
+MSGPACK_API_VERSION_NAMESPACE(v1) {
 
 template <typename Stream, typename T>
 inline void pack(Stream* s, const T& v)
@@ -1022,6 +1029,15 @@ inline void packer<Stream>::pack_imp_int64(T d)
 }
 
 }  // MSGPACK_API_VERSION_NAMESPACE(v1)
+
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+using v1::packer;
+using v1::pack;
+using v1::take8_8;
+using v1::take8_16;
+using v1::take8_32;
+using v1::take8_64;
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
 
 }  // namespace msgpack
 

@@ -176,6 +176,14 @@ define<Args...> make_define(Args&... args)
 
 }  // namespace type
 }  // MSGPACK_API_VERSION_NAMESPACE(v1)
+
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+namespace type {
+    using v1::type::define;
+    using v1::type::make_define;
+}  // namespace type
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+
 }  // namespace msgpack
 
 #endif // MSGPACK_CPP11_DEFINE_HPP

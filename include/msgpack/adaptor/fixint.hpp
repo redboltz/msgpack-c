@@ -56,6 +56,24 @@ typedef fix_int<int64_t> fix_int64;
 
 }  // namespace type
 
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+namespace type {
+using v1::type::fix_int;
+using v1::type::fix_uint8;
+using v1::type::fix_uint16;
+using v1::type::fix_uint32;
+using v1::type::fix_uint64;
+using v1::type::fix_int8;
+using v1::type::fix_int16;
+using v1::type::fix_int32;
+using v1::type::fix_int64;
+}  // namespace type
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+
+
+MSGPACK_API_VERSION_NAMESPACE(v1) {
 
 inline object const& operator>> (object const& o, type::fix_int8& v)
     { v = type::detail::convert_integer<int8_t>(o); return o; }

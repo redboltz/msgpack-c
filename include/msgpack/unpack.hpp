@@ -846,6 +846,49 @@ private:
     msgpack::unique_ptr<msgpack::zone> m_zone;
 };
 
+} // MSGPACK_API_VERSION_NAMESPACE(v1)
+
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+
+using v1::unpack_reference_func;
+namespace detail {
+using v1::detail::unpack_user;
+using v1::detail::unpack_uint8;
+using v1::detail::unpack_uint16;
+using v1::detail::unpack_uint32;
+using v1::detail::unpack_uint64;
+using v1::detail::unpack_int8;
+using v1::detail::unpack_int16;
+using v1::detail::unpack_int32;
+using v1::detail::unpack_int64;
+using v1::detail::unpack_float;
+using v1::detail::unpack_double;
+using v1::detail::unpack_nil;
+using v1::detail::unpack_true;
+using v1::detail::unpack_false;
+using v1::detail::unpack_array;
+using v1::detail::unpack_array_item;
+using v1::detail::unpack_map;
+using v1::detail::unpack_map_item;
+using v1::detail::unpack_str;
+using v1::detail::unpack_bin;
+using v1::detail::unpack_ext;
+using v1::detail::unpack_stack;
+using v1::detail::init_count;
+using v1::detail::incr_count;
+using v1::detail::decl_count;
+using v1::detail::fix_tag;
+using v1::detail::value;
+using v1::detail::load;
+using v1::detail::context;
+} // namespace detail
+
+using v1::unpack_error;
+using v1::unpacked;
+
+} // MSGPACK_API_VERSION_NAMESPACE(v2)
+
+MSGPACK_API_VERSION_NAMESPACE(v1) {
 
 class unpacker {
 public:
@@ -1461,6 +1504,15 @@ inline bool unpacker::default_reference_func(type::object_type /*type*/, uint64_
 }
 
 }  // MSGPACK_API_VERSION_NAMESPACE(v1)
+
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+using v1::unpacker;
+using v1::unpack;
+using v1::unpack_return;
+namespace detail {
+using v1::detail::unpack_imp;
+} // namespace detail
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
 
 }  // namespace msgpack
 

@@ -165,6 +165,40 @@ void operator<< (object::with_zone& o, const T& v);
 
 } // MSGPACK_API_VERSION_NAMESPACE(v1)
 
+
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+
+namespace type {
+using v1::type::object_type;
+using v1::type::NIL;
+using v1::type::BOOLEAN;
+using v1::type::POSITIVE_INTEGER;
+using v1::type::NEGATIVE_INTEGER;
+using v1::type::DOUBLE;
+using v1::type::STR;
+using v1::type::BIN;
+using v1::type::ARRAY;
+using v1::type::MAP;
+using v1::type::EXT;
+} // namespace type
+
+using v1::object;
+using v1::object_kv;
+using v1::object_array;
+using v1::object_str;
+using v1::object_bin;
+using v1::object_ext;
+using v1::type_error;
+using v1::object_kv;
+
+namespace detail {
+using v1::detail::packer_serializer;
+} // namespace detail
+
+using v1::operator>>;
+using v1::operator<<;
+} // MSGPACK_API_VERSION_NAMESPACE(v2)
+
 } // namespace msgpack
 
 #endif // MSGPACK_OBJECT_FWD_HPP

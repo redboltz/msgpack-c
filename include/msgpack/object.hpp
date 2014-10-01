@@ -49,6 +49,13 @@
 #include "adaptor/cpp11/tuple_fwd.hpp"
 #endif // !defined(MSGPACK_USE_CPP03)
 
+namespace msgpack {
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+    using v1::operator<<;
+    using v1::operator>>;
+}
+}
+
 #include <string.h>
 #include <stdexcept>
 #include <typeinfo>
@@ -486,6 +493,19 @@ inline std::ostream& operator<< (std::ostream& s, const object& o)
 }
 
 }  // MSGPACK_API_VERSION_NAMESPACE(v1)
+
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+
+using v1::define;
+using v1::detail::packer_serializer;
+using v1::operator==;
+using v1::operator!=;
+using v1::convert;
+using v1::pack;
+using v1::pack_copy;
+
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+
 
 }  // namespace msgpack
 

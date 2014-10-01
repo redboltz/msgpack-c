@@ -10583,6 +10583,17 @@ inline tuple<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A1
 
 }  // namespace type
 
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+namespace type {
+using v1::type::tuple;
+using v1::type::get;
+} // namespace type
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+
+MSGPACK_API_VERSION_NAMESPACE(v1) {
+
 inline object const& operator>> (
         object const& o,
         type::tuple<>&) {

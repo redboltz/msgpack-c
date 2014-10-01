@@ -54,6 +54,10 @@ private:
 
 }  // MSGPACK_API_VERSION_NAMESPACE(v1)
 
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+using v1::fbuffer;
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+
 }  // namespace msgpack
 
 #endif /* msgpack/fbuffer.hpp */

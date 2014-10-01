@@ -97,10 +97,21 @@ MSGPACK_API_VERSION_NAMESPACE(v1) {
     using std::enable_if;
 
 }  // MSGPACK_API_VERSION_NAMESPACE(v1)
+
 }  // namespace msgpack
 
 
 #endif // __cplusplus < 201103
+
+namespace msgpack {
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+
+using v1::unique_ptr;
+using v1::move;
+using v1::enable_if;
+
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+}  // namespace msgpack
 
 #endif // __cplusplus
 
