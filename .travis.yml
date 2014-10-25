@@ -34,4 +34,4 @@ env:
   - ACTION="ci/build_cmake.sh"     VERSION="cpp03" ARCH="32"
 
 script:
-  - git clean -xdf && LD_LIBRARY_PATH=/usr/local/lib32 ${ACTION} ${VERSION} ${ARCH}
+  - git clean -xdf && CMAKE_LIBRARY_PATH=/usr/local/lib32 ${ACTION} ${VERSION} ${ARCH}
