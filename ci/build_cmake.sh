@@ -18,7 +18,12 @@ fi
 
 if [ $1 = "cpp11" ]
 then
-  cmake -DMSGPACK_CXX11=ON ..
+    if [ $2 = "32" ]
+    then
+        cmake -DMSGPACK_CXX11=ON -DMSGPACK_32BIT=ON ..
+    else
+        cmake -DMSGPACK_CXX11=ON ..
+    fi
 else
   cmake  ..
 fi
@@ -53,20 +58,22 @@ then
     exit $ret
 fi
 
-ctest -T memcheck | tee memcheck.log
-
-ret=${PIPESTATUS[0]}
-if [ $ret -ne 0 ]
+if [ $2 != "32" ]
 then
-    exit $ret
+    ctest -T memcheck | tee memcheck.log
+
+    ret=${PIPESTATUS[0]}
+    if [ $ret -ne 0 ]
+    then
+        exit $ret
+    fi
+    cat memcheck.log | grep "Memory Leak" > /dev/null
+    ret=$?
+    if [ $ret -eq 0 ]
+    then
+        exit 1
+    fi
 fi
 
-cat memcheck.log | grep "Memory Leak" > /dev/null
-
-ret=$?
-if [ $ret -eq 0 ]
-then
-    exit 1
-fi
 
 exit 0
