@@ -25,7 +25,12 @@ then
         cmake -DMSGPACK_CXX11=ON ..
     fi
 else
-  cmake  ..
+    if [ $2 = "32" ]
+    then
+        cmake -DMSGPACK_32BIT=ON ..
+    else
+        cmake ..
+    fi
 fi
 
 ret=$?
