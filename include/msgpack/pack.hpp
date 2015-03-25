@@ -894,7 +894,7 @@ inline void packer<Stream>::pack_imp_int32(int32_t d)
 template <typename Stream>
 inline void packer<Stream>::pack_imp_int64(int64_t d)
 {
-    if ((-1LL<<31) <= d && d < (1LL<<31)) {
+    if (-(1LL<<31) <= d && d < (1LL<<31)) {
         pack_imp_int32(static_cast<int32_t>(d));
     } else {
         /* signed 64 */

@@ -392,7 +392,8 @@ TEST(int_head, int64)
     }
     {
         std::stringstream ss;
-        int64_t v = -2147483648;
+        // MSVC requires LL suffix
+        int64_t v = -2147483648LL;
         msgpack::pack(ss, v);
         EXPECT_EQ(ss.str()[0], static_cast<char>(0xd2u));
     }
