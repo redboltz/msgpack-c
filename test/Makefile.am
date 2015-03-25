@@ -15,6 +15,8 @@ check_PROGRAMS = \
 		cases \
 		fixint \
 		fixint_c \
+		int_head \
+		int_head_c \
 		version \
 		msgpack_tuple \
 		msgpack_c \
