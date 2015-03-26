@@ -123,6 +123,7 @@ nobase_include_HEADERS += \
 		../include/msgpack/pack.hpp \
 		../include/msgpack/sbuffer.hpp \
 		../include/msgpack/type.hpp \
+		../include/msgpack/type_fwd.hpp \
 		../include/msgpack/unpack.hpp \
 		../include/msgpack/version.hpp \
 		../include/msgpack/versioning.hpp \

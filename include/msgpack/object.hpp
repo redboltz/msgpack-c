@@ -22,40 +22,7 @@
 #include "msgpack/object_fwd.hpp"
 #include "msgpack/pack.hpp"
 #include "msgpack/zone.hpp"
-#include "msgpack/adaptor/int_fwd.hpp"
-#include "msgpack/adaptor/bool_fwd.hpp"
-#include "msgpack/adaptor/char_ptr_fwd.hpp"
-#include "msgpack/adaptor/deque_fwd.hpp"
-#include "msgpack/adaptor/fixint_fwd.hpp"
-#include "msgpack/adaptor/float_fwd.hpp"
-#include "msgpack/adaptor/int_fwd.hpp"
-#include "msgpack/adaptor/list_fwd.hpp"
-#include "msgpack/adaptor/map_fwd.hpp"
-#include "msgpack/adaptor/msgpack_tuple_fwd.hpp"
-#include "msgpack/adaptor/nil_fwd.hpp"
-#include "msgpack/adaptor/pair_fwd.hpp"
-#include "msgpack/adaptor/raw_fwd.hpp"
-#include "msgpack/adaptor/set_fwd.hpp"
-#include "msgpack/adaptor/string_fwd.hpp"
-#include "msgpack/adaptor/vector_fwd.hpp"
-#include "msgpack/adaptor/vector_bool_fwd.hpp"
-#include "msgpack/adaptor/vector_char_fwd.hpp"
-
-#if defined(MSGPACK_USE_CPP03)
-
-#include "msgpack/adaptor/tr1/unordered_map_fwd.hpp"
-#include "msgpack/adaptor/tr1/unordered_set_fwd.hpp"
-
-#else  // defined(MSGPACK_USE_CPP03)
-
-#include "adaptor/cpp11/array_fwd.hpp"
-#include "adaptor/cpp11/array_char_fwd.hpp"
-#include "adaptor/cpp11/forward_list_fwd.hpp"
-#include "adaptor/cpp11/tuple_fwd.hpp"
-#include "adaptor/cpp11/unordered_map_fwd.hpp"
-#include "adaptor/cpp11/unordered_set_fwd.hpp"
-
-#endif // defined(MSGPACK_USE_CPP03)
+#include "msgpack/type_fwd.hpp"
 
 #include <string.h>
 #include <stdexcept>
@@ -194,6 +161,13 @@ struct packer_serializer {
         return o;
     }
 };
+}
+
+// serialize operator
+template <typename Stream, typename T>
+inline msgpack::packer<Stream>& operator<< (msgpack::packer<Stream>& o, const T& v)
+{
+    return detail::packer_serializer<Stream, T>::pack(o, v);
 }
 
 inline void operator<< (msgpack::object::with_zone& o, const msgpack::object& v)
