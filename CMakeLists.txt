@@ -168,6 +168,7 @@ INCLUDE_DIRECTORIES (
     ./
     include/
     ${CMAKE_CURRENT_BINARY_DIR}/include/
+    ${MSGPACK_BOOST_DIR}
 )
 
 ADD_LIBRARY (msgpack SHARED

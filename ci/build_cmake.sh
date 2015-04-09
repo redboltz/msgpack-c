@@ -33,12 +33,18 @@ fi
 if [ $3 = "boost" ]
 then
     boost="-DMSGPACK_BOOST=ON"
-    ln -s /usr/local/boost inlcude
 else
     boost=""
 fi
 
-cmake $cpp11 $bit32 $boost ..
+if [ "$4" != "" ]
+then
+    boost_dir="-DMSGPACK_BOOST_DIR=$4"
+else
+    boost_dir=""
+fi
+
+cmake $cpp11 $bit32 $boost $boost_dir ..
 
 ret=$?
 if [ $ret -ne 0 ]
