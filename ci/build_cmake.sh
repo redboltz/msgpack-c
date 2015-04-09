@@ -33,6 +33,7 @@ fi
 if [ $3 = "boost" ]
 then
     boost="-DMSGPACK_BOOST=ON"
+    ln -s /usr/local/boost inlcude
 else
     boost=""
 fi

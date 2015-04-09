@@ -40,4 +40,4 @@ env:
   - ACTION="ci/build_cmake.sh"     VERSION="cpp03" ARCH="32" LIBPATH="/usr/local/lib32" BOOST=""
 
 script:
-  - git clean -xdf && CMAKE_LIBRARY_PATH=${LIBPATH} CMAKE_INCLUDE_PATH=${BOOST_INC} ${ACTION} ${VERSION} ${ARCH} ${BOOST} -I${BOOST_INC}
+  - git clean -xdf && CMAKE_LIBRARY_PATH=${LIBPATH} ${ACTION} ${VERSION} ${ARCH} ${BOOST} ${BOOST_INC}
