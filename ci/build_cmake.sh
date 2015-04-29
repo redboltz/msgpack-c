@@ -78,7 +78,7 @@ fi
 
 if [ "$2" != "32" ]
 then
-    ctest -T memcheck | tee memcheck.log
+    ctest -T memcheck -V | tee memcheck.log
 
     ret=${PIPESTATUS[0]}
     if [ $ret -ne 0 ]
