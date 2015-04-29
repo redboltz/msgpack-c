@@ -187,7 +187,7 @@ SET_TARGET_PROPERTIES (msgpack PROPERTIES SOVERSION 3 VERSION 4.0.0)
 
 IF (MSGPACK_BUILD_TESTS)
     ENABLE_TESTING ()
-    SET (MEMORYCHECK_COMMAND_OPTIONS "--leak-check=full --show-leak-kinds=definite --error-exitcode=1")
+    SET (MEMORYCHECK_COMMAND_OPTIONS "--leak-check=full --show-leak-kinds=definite,possible --error-exitcode=1")
     FIND_PROGRAM(CTEST_MEMORYCHECK_COMMAND NAMES valgrind)
     INCLUDE(Dart)
     ADD_SUBDIRECTORY (test)
