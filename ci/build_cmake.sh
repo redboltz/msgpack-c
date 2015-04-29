@@ -78,6 +78,7 @@ fi
 
 if [ "$2" != "32" ]
 then
+    export PATH=/usr/local/bin:$PATH
     ctest -T memcheck | tee memcheck.log
 
     ret=${PIPESTATUS[0]}
