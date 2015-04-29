@@ -10,10 +10,10 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get update
 install:
-  - sudo apt-get install -qq gcc-4.9-multilib g++-4.9-multilib
-  - sudo apt-get install --allow-unauthenticated -qq clang-3.6
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 90
-  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 90
+  - sudo apt-get install -qq gcc-4.8-multilib g++-4.8-multilib
+  - sudo apt-get install --allow-unauthenticated -qq clang-3.4
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
   - sudo apt-get install -y lib32gcc1
   - sudo apt-get install -y libc6-i386
   - sudo apt-get install -y lib32z1-dev
