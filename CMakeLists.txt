@@ -189,7 +189,7 @@ IF (MSGPACK_BUILD_TESTS)
     ENABLE_TESTING ()
     SET(CTEST_MEMORYCHECK_COMMAND "valgrind")
     INCLUDE(Dart)
-    SET(MEMORYCHECK_COMMAND_OPTIONS "--leak-check=full --error-exitcode=1")
+    SET(MEMORYCHECK_COMMAND_OPTIONS "--leak-check=full --show-leak-kinds=definite --error-exitcode=1")
     ADD_SUBDIRECTORY (test)
 ENDIF ()
 
