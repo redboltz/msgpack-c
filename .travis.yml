@@ -19,6 +19,7 @@ install:
   - sudo apt-get install -y lib32z1-dev
   - sudo apt-get install -y lib32stdc++6
   - sudo apt-get install -y bzip2
+  - sudo apt-get install -y libc6-dbg
   - wget https://googletest.googlecode.com/files/gtest-1.7.0.zip
   - wget http://sourceforge.net/projects/boost/files/boost/1.57.0/
   - wget http://valgrind.org/downloads/valgrind-3.10.1.tar.bz2 && tar xjf valgrind-3.10.1.tar.bz2 && cd valgrind-3.10.1 && ./configure && make && sudo make install && cd .. && valgrind --version
