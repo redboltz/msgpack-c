@@ -43,5 +43,12 @@ TEST(MSGPACK_BOOST, object_with_zone_string_ref)
     EXPECT_TRUE(val1 == val2);
 }
 
+#else  // (BOOST_VERSION / 100000) >= 1 && ((BOOST_VERSION / 100) % 1000) >= 53
+
+TEST(MSGPACK_BOOST, dummy)
+{
+}
+
 #endif // (BOOST_VERSION / 100000) >= 1 && ((BOOST_VERSION / 100) % 1000) >= 53
+
 #endif // defined(MSGPACK_USE_BOOST)
