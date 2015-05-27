@@ -33,6 +33,39 @@ namespace msgpack {
 /// @cond
 MSGPACK_API_VERSION_NAMESPACE(v1) {
 /// @endcond
+template <typename Stream>
+class packer;
+template <typename Stream, typename T>
+void pack(Stream& s, const T& v);
+template <typename T>
+char take8_8(T d);
+template <typename T>
+char take8_16(T d);
+template <typename T>
+char take8_32(T d);
+template <typename T>
+char take8_64(T d);
+
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+/// @endcond
+using v1::packer;
+using v1::pack;
+using v1::take8_8;
+using v1::take8_16;
+using v1::take8_32;
+using v1::take8_64;
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v1) {
+/// @endcond
 
 template <typename Stream>
 class packer {

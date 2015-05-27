@@ -17,6 +17,9 @@ constexpr unsigned int MAP_SIZE    = 100;
 
 TEST(iterator, vector)
 {
+    using msgpack::begin;
+    using msgpack::end;
+
     using vec_type = vector<unsigned int>;
     vec_type vec;
     vec.reserve(VECTOR_SIZE);

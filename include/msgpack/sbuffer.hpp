@@ -31,6 +31,22 @@ namespace msgpack {
 /// @cond
 MSGPACK_API_VERSION_NAMESPACE(v1) {
 /// @endcond
+class sbuffer;
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+/// @endcond
+using v1::sbuffer;
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v1) {
+/// @endcond
 
 class sbuffer {
 public:

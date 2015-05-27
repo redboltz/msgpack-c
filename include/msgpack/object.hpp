@@ -35,6 +35,35 @@ namespace msgpack {
 /// @cond
 MSGPACK_API_VERSION_NAMESPACE(v1) {
 /// @endcond
+namespace detail {
+template <typename Stream, typename T>
+struct packer_serializer;
+} // namespace detail
+
+// obsolete
+template <typename Type>
+class define;
+
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+/// @endcond
+namespace detail {
+using v1::detail::packer_serializer;
+} // namespace detail
+
+using v1::define;
+
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v1) {
+/// @endcond
 
 struct object::implicit_type {
     implicit_type(object const& o) : obj(o) { }

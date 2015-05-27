@@ -28,6 +28,52 @@ MSGPACK_API_VERSION_NAMESPACE(v1) {
 
 template <typename Stream>
 class packer;
+namespace adaptor {
+template <typename T>
+struct convert;
+template <typename T>
+struct pack;
+template <typename T>
+struct object;
+template <typename T>
+struct object_with_zone;
+} // namespace adaptor
+template <typename T>
+ msgpack::object const& operator>> (msgpack::object const& o, T& v);
+template <typename Stream, typename T>
+msgpack::packer<Stream>& operator<< (msgpack::packer<Stream>& o, T const& v);
+template <typename T>
+void operator<< (msgpack::object& o, T const& v);
+template <typename T>
+void operator<< (msgpack::object::with_zone& o, T const& v);
+
+/// @cond
+} // MSGPACK_API_VERSION_NAMESPACE(v1)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+/// @endcond
+
+using v1::packer;
+namespace adaptor {
+using v1::adaptor::convert;
+using v1::adaptor::pack;
+using v1::adaptor::object;
+using v1::adaptor::object_with_zone;
+} // namespace adaptor
+using v1::operator<<;
+using v1::operator>>;
+/// @cond
+} // MSGPACK_API_VERSION_NAMESPACE(v2)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v1) {
+/// @endcond
+
+template <typename Stream>
+class packer;
 
 namespace adaptor {
 

@@ -44,11 +44,33 @@ namespace msgpack {
 /// @cond
 MSGPACK_API_VERSION_NAMESPACE(v1) {
 /// @endcond
+class vrefbuffer;
 
 namespace detail {
     // int64, uint64, double
     std::size_t const packer_max_buffer_size = 9;
 } // detail
+
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+/// @endcond
+using v1::vrefbuffer;
+
+namespace detail {
+using v1::detail::packer_max_buffer_size;
+} // namespace detail
+
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v1) {
+/// @endcond
 
 class vrefbuffer {
 private:
@@ -63,7 +85,7 @@ private:
 public:
     vrefbuffer(size_t ref_size = MSGPACK_VREFBUFFER_REF_SIZE,
                size_t chunk_size = MSGPACK_VREFBUFFER_CHUNK_SIZE)
-        :m_ref_size(std::max(ref_size, detail::packer_max_buffer_size + 1)),
+        :m_ref_size(std::max(ref_size, msgpack::detail::packer_max_buffer_size + 1)),
          m_chunk_size(chunk_size)
     {
         size_t nfirst = (sizeof(iovec) < 72/2) ?

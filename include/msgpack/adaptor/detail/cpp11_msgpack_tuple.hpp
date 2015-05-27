@@ -30,6 +30,57 @@ MSGPACK_API_VERSION_NAMESPACE(v1) {
 /// @endcond
 
 namespace type {
+    template< class... Types >
+    class tuple;
+    template< class... Tuples >
+    auto tuple_cat(Tuples&&... args) ->
+        decltype(
+            std::tuple_cat(std::forward<typename std::remove_reference<Tuples>::type::base>(args)...));
+} // namespace type
+
+// --- Pack from tuple to packer stream ---
+template <typename Stream, typename Tuple, std::size_t N>
+struct MsgpackTuplePacker;
+// --- Convert from tuple to object ---
+template <typename Tuple, std::size_t N>
+struct MsgpackTupleConverter;
+// --- Convert from tuple to object with zone ---
+template <typename Tuple, std::size_t N>
+struct MsgpackTupleToObjectWithZone;
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+///@endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+/// @endcond
+namespace type {
+    // tuple
+    using std::get;
+    using std::tuple_size;
+    using std::tuple_element;
+    using std::uses_allocator;
+    using std::ignore;
+    using std::make_tuple;
+    using std::tie;
+    using std::forward_as_tuple;
+    using std::swap;
+    using v1::type::tuple;
+    using v1::type::tuple_cat;
+} // namespace type
+
+using v1::MsgpackTuplePacker;
+using v1::MsgpackTupleConverter;
+using v1::MsgpackTupleConverter;
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v1) {
+/// @endcond
+
+namespace type {
     // tuple
     using std::get;
     using std::tuple_size;

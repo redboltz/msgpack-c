@@ -31,7 +31,6 @@ namespace msgpack {
 MSGPACK_API_VERSION_NAMESPACE(v1) {
 /// @endcond
 
-
 namespace type {
     enum object_type {
         NIL                 = MSGPACK_OBJECT_NIL,
@@ -48,11 +47,61 @@ namespace type {
         MAP                 = MSGPACK_OBJECT_MAP,
         EXT                 = MSGPACK_OBJECT_EXT
     };
-}
-
+} // namespace type
 
 struct object;
 struct object_kv;
+
+struct object_array;
+struct object_map;
+
+struct object_str;
+struct object_bin;
+struct object_ext;
+class type_error;
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+/// @endcond
+namespace type {
+using v1::type::object_type;
+using v1::type::NIL;
+using v1::type::BOOLEAN;
+using v1::type::POSITIVE_INTEGER;
+using v1::type::NEGATIVE_INTEGER;
+using v1::type::FLOAT;
+#if defined(MSGPACK_USE_LEGACY_NAME_AS_FLOAT)
+using v1::type::DOUBLE;
+#endif // MSGPACK_USE_LEGACY_NAME_AS_FLOAT
+using v1::type::STR;
+using v1::type::BIN;
+using v1::type::ARRAY;
+using v1::type::MAP;
+using v1::type::EXT;
+} // namespace type
+
+using v1::object;
+using v1::object_kv;
+
+using v1::object_array;
+using v1::object_map;
+
+using v1::object_str;
+using v1::object_bin;
+using v1::object_ext;
+
+using v1::type_error;
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+/// @endcond
+
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v1) {
+/// @endcond
 
 struct object_array {
     uint32_t size;
@@ -145,7 +194,7 @@ struct object_kv {
     msgpack::object val;
 };
 
-struct object::with_zone : object {
+struct object::with_zone : msgpack::object {
     with_zone(msgpack::zone& zone) : zone(zone) { }
     msgpack::zone& zone;
 private:

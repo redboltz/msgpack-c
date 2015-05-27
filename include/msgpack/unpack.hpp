@@ -67,8 +67,255 @@ namespace msgpack {
 /// @cond
 MSGPACK_API_VERSION_NAMESPACE(v1) {
 /// @endcond
-
 typedef bool (*unpack_reference_func)(msgpack::type::object_type, std::size_t, void*);
+struct unpack_error;
+struct parse_error;
+struct insufficient_bytes;
+struct size_overflow;
+struct array_size_overflow;
+struct map_size_overflow;
+struct str_size_overflow;
+struct bin_size_overflow;
+struct ext_size_overflow;
+struct depth_size_overflow;
+
+class unpack_limit {
+public:
+    unpack_limit(
+        std::size_t array = 0xffffffff,
+        std::size_t map = 0xffffffff,
+        std::size_t str = 0xffffffff,
+        std::size_t bin = 0xffffffff,
+        std::size_t ext = 0xffffffff,
+        std::size_t depth = 0xffffffff)
+        :array_(array),
+         map_(map),
+         str_(str),
+         bin_(bin),
+         ext_(ext),
+         depth_(depth) {}
+    std::size_t array() const { return array_; }
+    std::size_t map() const { return map_; }
+    std::size_t str() const { return str_; }
+    std::size_t bin() const { return bin_; }
+    std::size_t ext() const { return ext_; }
+    std::size_t depth() const { return depth_; }
+
+private:
+    std::size_t array_;
+    std::size_t map_;
+    std::size_t str_;
+    std::size_t bin_;
+    std::size_t ext_;
+    std::size_t depth_;
+};
+
+namespace detail {
+class unpack_user;
+void unpack_uint8(uint8_t d, msgpack::object& o);
+void unpack_uint16(uint16_t d, msgpack::object& o);
+void unpack_uint32(uint32_t d, msgpack::object& o);
+void unpack_uint64(uint64_t d, msgpack::object& o);
+void unpack_int8(int8_t d, msgpack::object& o);
+void unpack_int16(int16_t d, msgpack::object& o);
+void unpack_int32(int32_t d, msgpack::object& o);
+void unpack_int64(int64_t d, msgpack::object& o);
+void unpack_float(float d, msgpack::object& o);
+void unpack_double(double d, msgpack::object& o);
+void unpack_nil(msgpack::object& o);
+void unpack_true(msgpack::object& o);
+void unpack_false(msgpack::object& o);
+struct unpack_array;
+void unpack_array_item(msgpack::object& c, msgpack::object const& o);
+struct unpack_map;
+void unpack_map_item(msgpack::object& c, msgpack::object const& k, msgpack::object const& v);
+void unpack_str(unpack_user& u, const char* p, uint32_t l, msgpack::object& o);
+void unpack_bin(unpack_user& u, const char* p, uint32_t l, msgpack::object& o);
+void unpack_ext(unpack_user& u, const char* p, std::size_t l, msgpack::object& o);
+class unpack_stack;
+void init_count(void* buffer);
+void decr_count(void* buffer);
+void incr_count(void* buffer);
+
+#if defined(MSGPACK_USE_CPP03)
+_msgpack_atomic_counter_t get_count(void* buffer);
+#else  // defined(MSGPACK_USE_CPP03)
+std::atomic<unsigned int> const& get_count(void* buffer);
+#endif // defined(MSGPACK_USE_CPP03)
+
+struct fix_tag {
+    char f1[65]; // FIXME unique size is required. or use is_same meta function.
+};
+
+template <typename T>
+struct value;
+template <typename T>
+void load(uint32_t& dst, const char* n, typename msgpack::enable_if<sizeof(T) == sizeof(fix_tag)>::type* = nullptr);
+template <typename T>
+void load(T& dst, const char* n, typename msgpack::enable_if<sizeof(T) == 1>::type* = nullptr);
+template <typename T>
+void load(T& dst, const char* n, typename msgpack::enable_if<sizeof(T) == 2>::type* = nullptr);
+template <typename T>
+void load(T& dst, const char* n, typename msgpack::enable_if<sizeof(T) == 4>::type* = nullptr);
+template <typename T>
+void load(T& dst, const char* n, typename msgpack::enable_if<sizeof(T) == 8>::type* = nullptr);
+class context;
+} // namespace detail
+class unpacked;
+class unpacker;
+#if !defined(MSGPACK_USE_CPP03)
+
+unpacked unpack(
+    const char* data, std::size_t len, std::size_t& off, bool& referenced,
+    unpack_reference_func f = nullptr, void* user_data = nullptr,
+    unpack_limit const& limit = unpack_limit());
+unpacked unpack(
+    const char* data, std::size_t len, std::size_t& off,
+    unpack_reference_func f = nullptr, void* user_data = nullptr,
+    unpack_limit const& limit = unpack_limit());
+unpacked unpack(
+    const char* data, std::size_t len, bool& referenced,
+    unpack_reference_func f = nullptr, void* user_data = nullptr,
+    unpack_limit const& limit = unpack_limit());
+unpacked unpack(
+    const char* data, std::size_t len,
+    unpack_reference_func f = nullptr, void* user_data = nullptr,
+    unpack_limit const& limit = unpack_limit());
+
+#endif // !defined(MSGPACK_USE_CPP03)
+
+
+void unpack(unpacked& result,
+            const char* data, std::size_t len, std::size_t& off, bool& referenced,
+            unpack_reference_func f = nullptr, void* user_data = nullptr,
+            unpack_limit const& limit = unpack_limit());
+void unpack(unpacked& result,
+            const char* data, std::size_t len, std::size_t& off,
+            unpack_reference_func f = nullptr, void* user_data = nullptr,
+            unpack_limit const& limit = unpack_limit());
+void unpack(unpacked& result,
+            const char* data, std::size_t len, bool& referenced,
+            unpack_reference_func f = nullptr, void* user_data = nullptr,
+            unpack_limit const& limit = unpack_limit());
+
+void unpack(unpacked& result,
+            const char* data, std::size_t len,
+            unpack_reference_func f = nullptr, void* user_data = nullptr,
+            unpack_limit const& limit = unpack_limit());
+
+msgpack::object unpack(
+    msgpack::zone& z,
+    const char* data, std::size_t len, std::size_t& off, bool& referenced,
+    unpack_reference_func f = nullptr, void* user_data = nullptr,
+    unpack_limit const& limit = unpack_limit());
+msgpack::object unpack(
+    msgpack::zone& z,
+    const char* data, std::size_t len, std::size_t& off,
+    unpack_reference_func f = nullptr, void* user_data = nullptr,
+    unpack_limit const& limit = unpack_limit());
+msgpack::object unpack(
+    msgpack::zone& z,
+    const char* data, std::size_t len, bool& referenced,
+    unpack_reference_func f = nullptr, void* user_data = nullptr,
+    unpack_limit const& limit = unpack_limit());
+msgpack::object unpack(
+    msgpack::zone& z,
+    const char* data, std::size_t len,
+    unpack_reference_func f = nullptr, void* user_data = nullptr,
+    unpack_limit const& limit = unpack_limit());
+
+
+// obsolete
+void unpack(unpacked* result,
+            const char* data, std::size_t len, std::size_t* off = nullptr, bool* referenced = nullptr,
+            unpack_reference_func f = nullptr, void* user_data = nullptr,
+            unpack_limit const& limit = unpack_limit());
+
+// for internal use
+typedef enum {
+    UNPACK_SUCCESS              =  2,
+    UNPACK_EXTRA_BYTES          =  1,
+    UNPACK_CONTINUE             =  0,
+    UNPACK_PARSE_ERROR          = -1
+} unpack_return;
+
+namespace detail {
+unpack_return
+unpack_imp(const char* data, std::size_t len, std::size_t& off,
+           msgpack::zone& result_zone, msgpack::object& result, bool& referenced,
+           unpack_reference_func f = nullptr, void* user_data = nullptr,
+           unpack_limit const& limit = unpack_limit());
+} // namespace detail
+
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+/// @endcond
+
+using v1::unpack_reference_func;
+using v1::unpack_error;
+using v1::parse_error;
+using v1::insufficient_bytes;
+using v1::size_overflow;
+using v1::array_size_overflow;
+using v1::map_size_overflow;
+using v1::str_size_overflow;
+using v1::bin_size_overflow;
+using v1::ext_size_overflow;
+using v1::depth_size_overflow;
+using v1::unpack_limit;
+namespace detail {
+using v1::detail::unpack_user;
+using v1::detail::unpack_uint8;
+using v1::detail::unpack_uint16;
+using v1::detail::unpack_uint32;
+using v1::detail::unpack_uint64;
+using v1::detail::unpack_int8;
+using v1::detail::unpack_int16;
+using v1::detail::unpack_int32;
+using v1::detail::unpack_int64;
+using v1::detail::unpack_float;
+using v1::detail::unpack_double;
+using v1::detail::unpack_nil;
+using v1::detail::unpack_true;
+using v1::detail::unpack_false;
+using v1::detail::unpack_array;
+using v1::detail::unpack_array_item;
+using v1::detail::unpack_map;
+using v1::detail::unpack_map_item;
+using v1::detail::unpack_str;
+using v1::detail::unpack_bin;
+using v1::detail::unpack_ext;
+using v1::detail::unpack_stack;
+using v1::detail::init_count;
+using v1::detail::decr_count;
+using v1::detail::incr_count;
+using v1::detail::get_count;
+using v1::detail::fix_tag;
+using v1::detail::value;
+using v1::detail::load;
+using v1::detail::context;
+using v1::detail::unpack_imp;
+} // namespace detail
+using v1::unpacked;
+using v1::unpacker;
+using v1::unpack;
+using v1::unpack_return;
+using v1::UNPACK_SUCCESS;
+using v1::UNPACK_EXTRA_BYTES;
+using v1::UNPACK_CONTINUE;
+using v1::UNPACK_PARSE_ERROR;
+
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v1) {
+/// @endcond
 
 struct unpack_error : public std::runtime_error {
     explicit unpack_error(const std::string& msg)
@@ -158,37 +405,6 @@ struct depth_size_overflow : public size_overflow {
     depth_size_overflow(const char* msg)
         :size_overflow(msg) {}
 #endif
-};
-
-class unpack_limit {
-public:
-    unpack_limit(
-        std::size_t array = 0xffffffff,
-        std::size_t map = 0xffffffff,
-        std::size_t str = 0xffffffff,
-        std::size_t bin = 0xffffffff,
-        std::size_t ext = 0xffffffff,
-        std::size_t depth = 0xffffffff)
-        :array_(array),
-         map_(map),
-         str_(str),
-         bin_(bin),
-         ext_(ext),
-         depth_(depth) {}
-    std::size_t array() const { return array_; }
-    std::size_t map() const { return map_; }
-    std::size_t str() const { return str_; }
-    std::size_t bin() const { return bin_; }
-    std::size_t ext() const { return ext_; }
-    std::size_t depth() const { return depth_; }
-
-private:
-    std::size_t array_;
-    std::size_t map_;
-    std::size_t str_;
-    std::size_t bin_;
-    std::size_t ext_;
-    std::size_t depth_;
 };
 
 namespace detail {
@@ -410,10 +626,6 @@ inline std::atomic<unsigned int> const& get_count(void* buffer)
 }
 #endif // defined(MSGPACK_USE_CPP03)
 
-struct fix_tag {
-    char f1[65]; // FIXME unique size is required. or use is_same meta function.
-};
-
 template <typename T>
 struct value {
     typedef T type;
@@ -424,27 +636,27 @@ struct value<fix_tag> {
 };
 
 template <typename T>
-inline void load(uint32_t& dst, const char* n, typename msgpack::enable_if<sizeof(T) == sizeof(fix_tag)>::type* = nullptr) {
+inline void load(uint32_t& dst, const char* n, typename msgpack::enable_if<sizeof(T) == sizeof(fix_tag)>::type*) {
     dst = static_cast<uint32_t>(*reinterpret_cast<const uint8_t*>(n)) & 0x0f;
 }
 
 template <typename T>
-inline void load(T& dst, const char* n, typename msgpack::enable_if<sizeof(T) == 1>::type* = nullptr) {
+inline void load(T& dst, const char* n, typename msgpack::enable_if<sizeof(T) == 1>::type*) {
     dst = static_cast<T>(*reinterpret_cast<const uint8_t*>(n));
 }
 
 template <typename T>
-inline void load(T& dst, const char* n, typename msgpack::enable_if<sizeof(T) == 2>::type* = nullptr) {
+inline void load(T& dst, const char* n, typename msgpack::enable_if<sizeof(T) == 2>::type*) {
     _msgpack_load16(T, n, &dst);
 }
 
 template <typename T>
-inline void load(T& dst, const char* n, typename msgpack::enable_if<sizeof(T) == 4>::type* = nullptr) {
+inline void load(T& dst, const char* n, typename msgpack::enable_if<sizeof(T) == 4>::type*) {
     _msgpack_load32(T, n, &dst);
 }
 
 template <typename T>
-inline void load(T& dst, const char* n, typename msgpack::enable_if<sizeof(T) == 8>::type* = nullptr) {
+inline void load(T& dst, const char* n, typename msgpack::enable_if<sizeof(T) == 8>::type*) {
     _msgpack_load64(T, n, &dst);
 }
 
@@ -1143,83 +1355,6 @@ private:
 #endif // defined(MSGPACK_USE_CPP03)
 };
 
-#if !defined(MSGPACK_USE_CPP03)
-
-unpacked unpack(
-    const char* data, std::size_t len, std::size_t& off, bool& referenced,
-    unpack_reference_func f = nullptr, void* user_data = nullptr,
-    unpack_limit const& limit = unpack_limit());
-unpacked unpack(
-    const char* data, std::size_t len, std::size_t& off,
-    unpack_reference_func f = nullptr, void* user_data = nullptr,
-    unpack_limit const& limit = unpack_limit());
-unpacked unpack(
-    const char* data, std::size_t len, bool& referenced,
-    unpack_reference_func f = nullptr, void* user_data = nullptr,
-    unpack_limit const& limit = unpack_limit());
-unpacked unpack(
-    const char* data, std::size_t len,
-    unpack_reference_func f = nullptr, void* user_data = nullptr,
-    unpack_limit const& limit = unpack_limit());
-
-#endif // !defined(MSGPACK_USE_CPP03)
-
-
-void unpack(unpacked& result,
-            const char* data, std::size_t len, std::size_t& off, bool& referenced,
-            unpack_reference_func f = nullptr, void* user_data = nullptr,
-            unpack_limit const& limit = unpack_limit());
-void unpack(unpacked& result,
-            const char* data, std::size_t len, std::size_t& off,
-            unpack_reference_func f = nullptr, void* user_data = nullptr,
-            unpack_limit const& limit = unpack_limit());
-void unpack(unpacked& result,
-            const char* data, std::size_t len, bool& referenced,
-            unpack_reference_func f = nullptr, void* user_data = nullptr,
-            unpack_limit const& limit = unpack_limit());
-
-void unpack(unpacked& result,
-            const char* data, std::size_t len,
-            unpack_reference_func f = nullptr, void* user_data = nullptr,
-            unpack_limit const& limit = unpack_limit());
-
-msgpack::object unpack(
-    msgpack::zone& z,
-    const char* data, std::size_t len, std::size_t& off, bool& referenced,
-    unpack_reference_func f = nullptr, void* user_data = nullptr,
-    unpack_limit const& limit = unpack_limit());
-msgpack::object unpack(
-    msgpack::zone& z,
-    const char* data, std::size_t len, std::size_t& off,
-    unpack_reference_func f = nullptr, void* user_data = nullptr,
-    unpack_limit const& limit = unpack_limit());
-msgpack::object unpack(
-    msgpack::zone& z,
-    const char* data, std::size_t len, bool& referenced,
-    unpack_reference_func f = nullptr, void* user_data = nullptr,
-    unpack_limit const& limit = unpack_limit());
-msgpack::object unpack(
-    msgpack::zone& z,
-    const char* data, std::size_t len,
-    unpack_reference_func f = nullptr, void* user_data = nullptr,
-    unpack_limit const& limit = unpack_limit());
-
-
-// obsolete
-void unpack(unpacked* result,
-            const char* data, std::size_t len, std::size_t* off = nullptr, bool* referenced = nullptr,
-            unpack_reference_func f = nullptr, void* user_data = nullptr,
-            unpack_limit const& limit = unpack_limit());
-
-
-// for internal use
-typedef enum {
-    UNPACK_SUCCESS              =  2,
-    UNPACK_EXTRA_BYTES          =  1,
-    UNPACK_CONTINUE             =  0,
-    UNPACK_PARSE_ERROR          = -1
-} unpack_return;
-
 inline unpacker::unpacker(unpack_reference_func f,
                           void* user_data,
                           std::size_t initial_buffer_size,
@@ -1509,11 +1644,11 @@ inline void unpacker::remove_nonparsed_buffer()
 
 namespace detail {
 
-inline unpack_return
+inline msgpack::unpack_return
 unpack_imp(const char* data, std::size_t len, std::size_t& off,
            msgpack::zone& result_zone, msgpack::object& result, bool& referenced,
-           unpack_reference_func f = nullptr, void* user_data = nullptr,
-           unpack_limit const& limit = unpack_limit())
+           unpack_reference_func f, void* user_data,
+           unpack_limit const& limit)
 {
     std::size_t noff = off;
 

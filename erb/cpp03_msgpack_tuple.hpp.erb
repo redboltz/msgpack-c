@@ -30,8 +30,6 @@ MSGPACK_API_VERSION_NAMESPACE(v1) {
 
 namespace type {
 
-// FIXME operator==
-// FIXME operator!=
 <% GENERATION_LIMIT = 31 %>
 
 /// @cond
@@ -71,6 +69,56 @@ struct tuple_type<const T&> {
     typedef const T& const_reference;
     typedef const T& transparent_reference;
 };
+
+/// @cond
+<%0.upto(GENERATION_LIMIT) {|i|%>
+template <int N, typename A0<%1.upto(i) {|j|%>, typename A<%=j%><%}%>>
+typename type::tuple_element<type::tuple<A0<%1.upto(i) {|j|%>, A<%=j%><%}%>>, N>::reference get(type::tuple<A0<%1.upto(i) {|j|%>, A<%=j%><%}%>>& t);
+template <int N, typename A0<%1.upto(i) {|j|%>, typename A<%=j%><%}%>>
+typename type::const_tuple_element<type::tuple<A0<%1.upto(i) {|j|%>, A<%=j%><%}%>>, N>::const_reference get(type::tuple<A0<%1.upto(i) {|j|%>, A<%=j%><%}%>> const& t);
+<%}%>
+/// @endcond
+
+tuple<> make_tuple();
+
+/// @cond
+<%0.upto(GENERATION_LIMIT) {|i|%>
+template <typename A0<%1.upto(i) {|j|%>, typename A<%=j%><%}%>>
+inline tuple<A0<%1.upto(i) {|j|%>, A<%=j%><%}%>> make_tuple(typename tuple_type<A0>::transparent_reference a0<%1.upto(i) {|j|%>, typename tuple_type<A<%=j%>>::transparent_reference a<%=j%><%}%>);
+<%}%>
+/// @endcond
+
+} // namespace type
+
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+/// @endcond
+
+namespace type {
+
+using v1::type::tuple;
+using v1::type::tuple_element;
+using v1::type::const_tuple_element;
+using v1::type::tuple_type;
+using v1::type::get;
+using v1::type::make_tuple;
+
+} // namespace type
+
+
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v1) {
+/// @endcond
+
+namespace type {
 
 /// @cond
 <%0.upto(GENERATION_LIMIT) {|i|%>

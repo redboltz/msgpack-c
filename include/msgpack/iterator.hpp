@@ -22,24 +22,35 @@
 
 #include <msgpack/object_fwd.hpp>
 
-namespace msgpack
-{
-    /// @cond
-    MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
-    {
-    /// @endcond
-        inline object_kv* begin(object_map &map) { return map.ptr; }
-        inline const object_kv* begin(const object_map &map) { return map.ptr; }
-        inline object_kv* end(object_map &map) { return map.ptr + map.size; }
-        inline const object_kv* end(const object_map &map) { return map.ptr + map.size; }
+namespace msgpack {
 
-        inline object* begin(object_array &array) { return array.ptr; }
-        inline const object* begin(const object_array &array) { return array.ptr; }
-        inline object* end(object_array &array) { return array.ptr + array.size; }
-        inline const object* end(const object_array &array) { return array.ptr + array.size; }
-    /// @cond
-    }
-    /// @endcond
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v1) {
+/// @endcond
+
+    inline object_kv* begin(object_map &map) { return map.ptr; }
+    inline const object_kv* begin(const object_map &map) { return map.ptr; }
+    inline object_kv* end(object_map &map) { return map.ptr + map.size; }
+    inline const object_kv* end(const object_map &map) { return map.ptr + map.size; }
+
+    inline object* begin(object_array &array) { return array.ptr; }
+    inline const object* begin(const object_array &array) { return array.ptr; }
+    inline object* end(object_array &array) { return array.ptr + array.size; }
+    inline const object* end(const object_array &array) { return array.ptr + array.size; }
+
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+/// @endcond
+using v1::begin;
+using v1::end;
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+/// @endcond
+
 }
 
 #endif // !defined(MSGPACK_USE_CPP03)

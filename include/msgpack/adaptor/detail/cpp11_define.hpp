@@ -89,6 +89,41 @@
   }
 
 namespace msgpack {
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v1) {
+/// @endcond
+namespace type {
+
+template <typename Tuple, std::size_t N>
+struct define_imp;
+
+template <typename... Args>
+struct define;
+
+define<> make_define();
+template <typename... Args>
+define<Args...> make_define(Args&... args);
+
+}  // namespace type
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+/// @endcond
+namespace type {
+
+using v1::type::define_imp;
+using v1::type::define;
+using v1::type::make_define;
+
+}  // namespace type
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+/// @endcond
+
 /// @cond
 MSGPACK_API_VERSION_NAMESPACE(v1) {
 /// @endcond

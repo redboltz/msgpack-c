@@ -47,6 +47,40 @@ namespace msgpack {
 /// @cond
 MSGPACK_API_VERSION_NAMESPACE(v1) {
 /// @endcond
+template <typename T>
+struct unique_ptr;
+
+template <typename T>
+T& move(T& t);
+
+template <typename T>
+T const& move(T const& t);
+
+template <bool P, typename T = void>
+struct enable_if;
+
+template <typename T>
+struct enable_if<false, T>;
+
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+/// @endcond
+
+    using v1::unique_ptr;
+    using v1::move;
+    using v1::enable_if;
+
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v1) {
+/// @endcond
 
 template <typename T>
 struct unique_ptr : std::auto_ptr<T> {
@@ -68,7 +102,7 @@ T const& move(T const& t)
     return t;
 }
 
-template <bool P, typename T = void>
+template <bool P, typename T>
 struct enable_if {
     typedef T type;
 };
@@ -90,6 +124,23 @@ struct enable_if<false, T> {
 #include <tuple>
 
 namespace msgpack {
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+/// @endcond
+
+    // unique_ptr
+    using std::unique_ptr;
+    // using std::make_unique; // since C++14
+    using std::hash;
+
+    // utility
+    using std::move;
+    using std::swap;
+    using std::enable_if;
+
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+/// @endcond
 /// @cond
 MSGPACK_API_VERSION_NAMESPACE(v1) {
 /// @endcond

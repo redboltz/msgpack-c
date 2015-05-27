@@ -15,8 +15,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-#ifndef MSGPACK_FBUFFER_HPP__
-#define MSGPACK_FBUFFER_HPP__
+#ifndef MSGPACK_FBUFFER_HPP
+#define MSGPACK_FBUFFER_HPP
 
 #include "msgpack/versioning.hpp"
 
@@ -24,6 +24,22 @@
 #include <stdexcept>
 
 namespace msgpack {
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v1) {
+/// @endcond
+class fbuffer;
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+/// @endcond
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+/// @endcond
+using v1::fbuffer;
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+/// @endcond
 
 /// @cond
 MSGPACK_API_VERSION_NAMESPACE(v1) {
