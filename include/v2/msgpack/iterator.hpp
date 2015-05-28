@@ -1,7 +1,7 @@
 //
-// MessagePack for C++ simple buffer implementation
+// MessagePack for C++ static resolution routine
 //
-// Copyright (C) 2008-2013 FURUHASHI Sadayuki and KONDO Takatoshi
+// Copyright (C) 2015 MIZUKI Hirata
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -15,13 +15,25 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-#ifndef MSGPACK_SBUFFER_HPP
-#define MSGPACK_SBUFFER_HPP
 
-#include "msgpack/versioning.hpp"
+#ifndef MSGPACK_V2_ITERATOR_HPP
+#define MSGPACK_V2_ITERATOR_HPP
 
-#include <v1/msgpack/sbuffer_decl.hpp>
-#include <v2/msgpack/sbuffer.hpp>
-#include <v1/msgpack/sbuffer.hpp>
+#if !defined(MSGPACK_USE_CPP03)
 
-#endif // MSGPACK_SBUFFER_HPP
+namespace msgpack {
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+/// @endcond
+using v1::begin;
+using v1::end;
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+/// @endcond
+
+} // namespace msgpack
+
+#endif // !defined(MSGPACK_USE_CPP03)
+
+#endif // MSGPACK_V2_ITERATOR_HPP

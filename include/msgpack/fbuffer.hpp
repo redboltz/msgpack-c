@@ -20,65 +20,8 @@
 
 #include "msgpack/versioning.hpp"
 
-#include <cstdio>
-#include <stdexcept>
-
-namespace msgpack {
-
-/// @cond
-MSGPACK_API_VERSION_NAMESPACE(v1) {
-/// @endcond
-class fbuffer;
-/// @cond
-}  // MSGPACK_API_VERSION_NAMESPACE(v1)
-/// @endcond
-
-/// @cond
-MSGPACK_API_VERSION_NAMESPACE(v2) {
-/// @endcond
-using v1::fbuffer;
-/// @cond
-}  // MSGPACK_API_VERSION_NAMESPACE(v2)
-/// @endcond
-
-/// @cond
-MSGPACK_API_VERSION_NAMESPACE(v1) {
-/// @endcond
-
-class fbuffer {
-public:
-    explicit fbuffer(FILE* file) : m_file(file) { }
-
-public:
-    void write(const char* buf, unsigned int len)
-    {
-        if (1 != fwrite(buf, len, 1, m_file)) {
-            throw std::runtime_error("fwrite() failed");
-        }
-    }
-
-    FILE* file() const
-    {
-        return m_file;
-    }
-
-#if defined(MSGPACK_USE_CPP03)
-private:
-    fbuffer(const fbuffer&);
-    fbuffer& operator=(const fbuffer&);
-#else  // defined(MSGPACK_USE_CPP03)
-    fbuffer(const fbuffer&) = delete;
-    fbuffer& operator=(const fbuffer&) = delete;
-#endif // defined(MSGPACK_USE_CPP03)
-
-private:
-    FILE* m_file;
-};
-
-/// @cond
-}  // MSGPACK_API_VERSION_NAMESPACE(v1)
-/// @endcond
-
-}  // namespace msgpack
+#include <v1/msgpack/fbuffer_decl.hpp>
+#include <v2/msgpack/fbuffer.hpp>
+#include <v1/msgpack/fbuffer.hpp>
 
 #endif /* msgpack/fbuffer.hpp */

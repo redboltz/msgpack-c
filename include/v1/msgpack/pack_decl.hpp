@@ -1,5 +1,5 @@
 //
-// MessagePack for C++ simple buffer implementation
+// MessagePack for C++ serializing routine
 //
 // Copyright (C) 2008-2013 FURUHASHI Sadayuki and KONDO Takatoshi
 //
@@ -15,13 +15,33 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-#ifndef MSGPACK_SBUFFER_HPP
-#define MSGPACK_SBUFFER_HPP
+#ifndef MSGPACK_V1_PACK_DECL_HPP
+#define MSGPACK_V1_PACK_DECL_HPP
 
 #include "msgpack/versioning.hpp"
 
-#include <v1/msgpack/sbuffer_decl.hpp>
-#include <v2/msgpack/sbuffer.hpp>
-#include <v1/msgpack/sbuffer.hpp>
+namespace msgpack {
 
-#endif // MSGPACK_SBUFFER_HPP
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v1) {
+/// @endcond
+template <typename Stream>
+class packer;
+template <typename Stream, typename T>
+void pack(Stream& s, const T& v);
+template <typename T>
+char take8_8(T d);
+template <typename T>
+char take8_16(T d);
+template <typename T>
+char take8_32(T d);
+template <typename T>
+char take8_64(T d);
+
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+/// @endcond
+
+}  // namespace msgpack
+
+#endif // MSGPACK_V1_PACK_DECL_HPP

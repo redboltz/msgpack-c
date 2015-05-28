@@ -152,6 +152,30 @@ IF (MSGPACK_ENABLE_CXX)
         include/msgpack/vrefbuffer.hpp
         include/msgpack/zbuffer.hpp
         include/msgpack/zone.hpp
+        include/v1/msgpack/cpp_config.hpp
+        include/v1/msgpack/cpp_config_decl.hpp
+        include/v1/msgpack/detail/cpp11_zone.hpp
+        include/v1/msgpack/detail/cpp11_zone_decl.hpp
+        include/v1/msgpack/fbuffer.hpp
+        include/v1/msgpack/fbuffer_decl.hpp
+        include/v1/msgpack/iterator.hpp
+        include/v1/msgpack/iterator_decl.hpp
+        include/v1/msgpack/object.hpp
+        include/v1/msgpack/object_decl.hpp
+        include/v1/msgpack/object_fwd.hpp
+        include/v1/msgpack/object_fwd_decl.hpp
+        include/v1/msgpack/pack.hpp
+        include/v1/msgpack/pack_decl.hpp
+        include/v1/msgpack/sbuffer.hpp
+        include/v1/msgpack/sbuffer_decl.hpp
+        include/v2/msgpack/cpp_config.hpp
+        include/v2/msgpack/detail/cpp11_zone.hpp
+        include/v2/msgpack/fbuffer.hpp
+        include/v2/msgpack/iterator.hpp
+        include/v2/msgpack/object.hpp
+        include/v2/msgpack/object_fwd.hpp
+        include/v2/msgpack/pack.hpp
+        include/v2/msgpack/sbuffer.hpp
     )
 ENDIF ()
 

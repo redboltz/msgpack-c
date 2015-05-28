@@ -15,14 +15,36 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-
-#ifndef MSGPACK_OBJECT_FWD_HPP
-#define MSGPACK_OBJECT_FWD_HPP
+#ifndef MSGPACK_V2_OBJECT_HPP
+#define MSGPACK_V2_OBJECT_HPP
 
 #include "msgpack/versioning.hpp"
+#include "msgpack/pack.hpp"
+#include "msgpack/zone.hpp"
+#include "msgpack/adaptor/adaptor_base.hpp"
 
-#include <v1/msgpack/object_fwd_decl.hpp>
-#include <v2/msgpack/object_fwd.hpp>
-#include <v1/msgpack/object_fwd.hpp>
+#include <cstring>
+#include <stdexcept>
+#include <typeinfo>
+#include <limits>
+#include <ostream>
+#include <typeinfo>
 
-#endif // MSGPACK_OBJECT_FWD_HPP
+namespace msgpack {
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+/// @endcond
+namespace detail {
+using v1::detail::packer_serializer;
+} // namespace detail
+
+using v1::define;
+
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+/// @endcond
+
+} // namespace msgpack
+
+#endif // MSGPACK_V2_OBJECT_HPP

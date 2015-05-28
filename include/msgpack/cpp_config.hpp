@@ -1,7 +1,7 @@
 //
 // MessagePack for C++ C++03/C++11 Adaptation
 //
-// Copyright (C) 2013 KONDO Takatoshi
+// Copyright (C) 2015 KONDO Takatoshi
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -29,9 +29,6 @@
 # endif
 #endif // MSGPACK_USE_CPP03
 
-
-
-#if defined __cplusplus
 #if __cplusplus < 201103L
 
 #if !defined(nullptr)
@@ -40,129 +37,11 @@
 #  endif
 #endif
 
-#include <memory>
-
-namespace msgpack {
-
-/// @cond
-MSGPACK_API_VERSION_NAMESPACE(v1) {
-/// @endcond
-template <typename T>
-struct unique_ptr;
-
-template <typename T>
-T& move(T& t);
-
-template <typename T>
-T const& move(T const& t);
-
-template <bool P, typename T = void>
-struct enable_if;
-
-template <typename T>
-struct enable_if<false, T>;
-
-/// @cond
-}  // MSGPACK_API_VERSION_NAMESPACE(v1)
-/// @endcond
-
-/// @cond
-MSGPACK_API_VERSION_NAMESPACE(v2) {
-/// @endcond
-
-    using v1::unique_ptr;
-    using v1::move;
-    using v1::enable_if;
-
-/// @cond
-}  // MSGPACK_API_VERSION_NAMESPACE(v2)
-/// @endcond
-
-/// @cond
-MSGPACK_API_VERSION_NAMESPACE(v1) {
-/// @endcond
-
-template <typename T>
-struct unique_ptr : std::auto_ptr<T> {
-    explicit unique_ptr(T* p = 0) throw() : std::auto_ptr<T>(p) {}
-    unique_ptr(unique_ptr& a) throw() : std::auto_ptr<T>(a) {}
-    template<class Y>
-    unique_ptr (unique_ptr<Y>& a) throw() : std::auto_ptr<T>(a) {}
-};
-
-template <typename T>
-T& move(T& t)
-{
-    return t;
-}
-
-template <typename T>
-T const& move(T const& t)
-{
-    return t;
-}
-
-template <bool P, typename T>
-struct enable_if {
-    typedef T type;
-};
-
-template <typename T>
-struct enable_if<false, T> {
-};
-
-/// @cond
-}  // MSGPACK_API_VERSION_NAMESPACE(v1)
-/// @endcond
-
-}  // namespace msgpack
-
-
-#else  // __cplusplus < 201103L
-
-#include <memory>
-#include <tuple>
-
-namespace msgpack {
-/// @cond
-MSGPACK_API_VERSION_NAMESPACE(v2) {
-/// @endcond
-
-    // unique_ptr
-    using std::unique_ptr;
-    // using std::make_unique; // since C++14
-    using std::hash;
-
-    // utility
-    using std::move;
-    using std::swap;
-    using std::enable_if;
-
-/// @cond
-}  // MSGPACK_API_VERSION_NAMESPACE(v2)
-/// @endcond
-/// @cond
-MSGPACK_API_VERSION_NAMESPACE(v1) {
-/// @endcond
-
-    // unique_ptr
-    using std::unique_ptr;
-    // using std::make_unique; // since C++14
-    using std::hash;
-
-    // utility
-    using std::move;
-    using std::swap;
-    using std::enable_if;
-
-/// @cond
-}  // MSGPACK_API_VERSION_NAMESPACE(v1)
-/// @endcond
-}  // namespace msgpack
-
-
 #endif // __cplusplus < 201103L
 
-#endif // __cplusplus
+#include <v1/msgpack/cpp_config_decl.hpp>
+#include <v2/msgpack/cpp_config.hpp>
+#include <v1/msgpack/cpp_config.hpp>
 
-#endif /* msgpack/cpp_config.hpp */
+
+#endif // MSGPACK_CPP_CONFIG_HPP

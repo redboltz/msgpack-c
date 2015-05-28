@@ -18,40 +18,9 @@
 
 #ifndef MSGPACK_ITERATOR_HPP
 #define MSGPACK_ITERATOR_HPP
-#if !defined(MSGPACK_USE_CPP03)
 
-#include <msgpack/object_fwd.hpp>
+#include <v1/msgpack/iterator_decl.hpp>
+#include <v2/msgpack/iterator.hpp>
+#include <v1/msgpack/iterator.hpp>
 
-namespace msgpack {
-
-/// @cond
-MSGPACK_API_VERSION_NAMESPACE(v1) {
-/// @endcond
-
-    inline object_kv* begin(object_map &map) { return map.ptr; }
-    inline const object_kv* begin(const object_map &map) { return map.ptr; }
-    inline object_kv* end(object_map &map) { return map.ptr + map.size; }
-    inline const object_kv* end(const object_map &map) { return map.ptr + map.size; }
-
-    inline object* begin(object_array &array) { return array.ptr; }
-    inline const object* begin(const object_array &array) { return array.ptr; }
-    inline object* end(object_array &array) { return array.ptr + array.size; }
-    inline const object* end(const object_array &array) { return array.ptr + array.size; }
-
-/// @cond
-}  // MSGPACK_API_VERSION_NAMESPACE(v1)
-/// @endcond
-
-/// @cond
-MSGPACK_API_VERSION_NAMESPACE(v2) {
-/// @endcond
-using v1::begin;
-using v1::end;
-/// @cond
-}  // MSGPACK_API_VERSION_NAMESPACE(v2)
-/// @endcond
-
-}
-
-#endif // !defined(MSGPACK_USE_CPP03)
 #endif // MSGPACK_ITERATOR_HPP

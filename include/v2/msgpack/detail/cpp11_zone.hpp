@@ -1,5 +1,5 @@
 //
-// MessagePack for C++ simple buffer implementation
+// MessagePack for C++ memory pool
 //
 // Copyright (C) 2008-2013 FURUHASHI Sadayuki and KONDO Takatoshi
 //
@@ -15,13 +15,29 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-#ifndef MSGPACK_SBUFFER_HPP
-#define MSGPACK_SBUFFER_HPP
+#ifndef MSGPACK_V2_CPP11_ZONE_HPP
+#define MSGPACK_V2_CPP11_ZONE_HPP
 
 #include "msgpack/versioning.hpp"
 
-#include <v1/msgpack/sbuffer_decl.hpp>
-#include <v2/msgpack/sbuffer.hpp>
-#include <v1/msgpack/sbuffer.hpp>
+#include <cstdlib>
+#include <memory>
+#include <vector>
 
-#endif // MSGPACK_SBUFFER_HPP
+#include "msgpack/cpp_config.hpp"
+
+namespace msgpack {
+
+/// @cond
+MSGPACK_API_VERSION_NAMESPACE(v2) {
+/// @endcond
+
+using v1::zone;
+
+/// @cond
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+/// @endcond
+
+}  // namespace msgpack
+
+#endif // MSGPACK_V2_CPP11_ZONE_HPP
