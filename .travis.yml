@@ -43,7 +43,7 @@ env:
   - ACTION="ci/build_cmake.sh"     VERSION="cpp03" ARCH="32" LIBPATH="/usr/local/lib32" BOOST="boost" BOOST_INC="/usr/local/boost"
 
 before_script:
- - export PATH=/usr/local/bin:$PATH && rm -rf install1
+ - if [ "$BOOST" == "boost"]; then if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -y libboost-all-dev; fi; if [ "$TRAVIS_OS_NAME" == "osx" ]; then sudo brew boost; fi && export PATH=/usr/local/bin:$PATH && rm -rf install
 
 matrix:
   exclude:

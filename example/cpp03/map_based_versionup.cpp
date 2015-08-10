@@ -15,15 +15,14 @@
 //    limitations under the License.
 //
 
+// You need to define MSGPACK_USE_BOOST macro to use MSGPACK_DEFINE_MAP.
+// e.g.) g++ -DMSGPACK_USE_BOOST
+
 #include <string>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <cassert>
-
-#if !defined(MSGPACK_USE_BOOST)
-#define MSGPACK_USE_BOOST
-#endif // !defined(MSGPACK_USE_BOOST)
 
 #include <msgpack.hpp>
 

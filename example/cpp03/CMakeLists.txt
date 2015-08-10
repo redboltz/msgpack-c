@@ -1,5 +1,6 @@
 INCLUDE_DIRECTORIES (
     ../include
+    ${MSGPACK_BOOST_DIR}
 )
 
 LIST (APPEND exec_PROGRAMS
@@ -8,7 +9,6 @@ LIST (APPEND exec_PROGRAMS
     class_non_intrusive.cpp
     custom.cpp
     enum.cpp
-    map_based_versionup.cpp
     protocol.cpp
     protocol_new.cpp
     reuse_zone.cpp
@@ -21,10 +21,13 @@ IF (NOT MSVC)
     )
 ENDIF ()
 
-LIST (APPEND with_boost_PROGRAMS
-    speed_test.cpp
-    speed_test_nested_array.cpp
-)
+IF (MSGPACK_BOOST)
+    LIST (APPEND with_boost_PROGRAMS
+        speed_test.cpp
+        speed_test_nested_array.cpp
+        map_based_versionup.cpp
+    )
+ENDIF ()
 
 FOREACH (source_file ${exec_PROGRAMS})
     GET_FILENAME_COMPONENT (source_file_we ${source_file} NAME_WE)
@@ -72,8 +75,8 @@ FOREACH (source_file ${with_boost_PROGRAMS})
         ${source_file}
     )
     TARGET_LINK_LIBRARIES (${source_file_we}
-        boost_timer
-        boost_system
+        ${Boost_TIMER_LIBRARY}
+        ${Boost_SYSTEM_LIBRARY}
     )
     IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         SET_PROPERTY (TARGET ${source_file_we} APPEND_STRING PROPERTY COMPILE_FLAGS "-std=c++03 -Wall -Wextra -Werror -Wno-mismatched-tags -g -O3")

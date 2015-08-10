@@ -39,7 +39,7 @@ fi
 
 if [ "$4" != "" ]
 then
-    boost_dir="-DMSGPACK_BOOST_DIR=$4"
+    boost_dir="-DBoost_INCLUDE_DIR=$4"
 else
     boost_dir=""
 fi

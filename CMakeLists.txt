@@ -55,6 +55,7 @@ ENDIF ()
 
 IF (MSGPACK_BOOST)
    SET (CMAKE_CXX_FLAGS "-DMSGPACK_USE_BOOST ${CMAKE_CXX_FLAGS}")
+   FIND_PACKAGE (Boost 1.53.0 COMPONENTS timer system)
 ENDIF ()
 
 FILE (GLOB_RECURSE PREDEF_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/external/boost/predef/include/boost ${CMAKE_CURRENT_SOURCE_DIR}/external/boost/predef/include/boost/*.h)
@@ -207,7 +208,7 @@ INCLUDE_DIRECTORIES (
     ./
     include/
     ${CMAKE_CURRENT_BINARY_DIR}/include/
-    ${MSGPACK_BOOST_DIR}
+    ${Boost_INCLUDE_DIRS}
 )
 
 ADD_LIBRARY (msgpack SHARED
