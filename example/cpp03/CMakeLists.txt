@@ -1,6 +1,6 @@
 INCLUDE_DIRECTORIES (
     ../include
-    ${MSGPACK_BOOST_DIR}
+    ${Boost_INCLUDE_DIRS}
 )
 
 LIST (APPEND exec_PROGRAMS

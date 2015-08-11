@@ -208,7 +208,6 @@ INCLUDE_DIRECTORIES (
     ./
     include/
     ${CMAKE_CURRENT_BINARY_DIR}/include/
-    ${Boost_INCLUDE_DIRS}
 )
 
 ADD_LIBRARY (msgpack SHARED
