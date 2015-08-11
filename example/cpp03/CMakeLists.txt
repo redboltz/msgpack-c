@@ -1,8 +1,3 @@
-INCLUDE_DIRECTORIES (
-    ../include
-    ${Boost_INCLUDE_DIRS}
-)
-
 LIST (APPEND exec_PROGRAMS
     class_intrusive.cpp
     class_intrusive_map.cpp
@@ -22,14 +17,19 @@ IF (NOT MSVC)
 ENDIF ()
 
 IF (MSGPACK_BOOST)
-    LIST (APPEND with_boost_PROGRAMS
+    LIST (APPEND with_boost_lib_PROGRAMS
         speed_test.cpp
         speed_test_nested_array.cpp
+    )
+    LIST (APPEND with_boost_PROGRAMS
         map_based_versionup.cpp
     )
 ENDIF ()
 
 FOREACH (source_file ${exec_PROGRAMS})
+    INCLUDE_DIRECTORIES (
+        ../include
+    )
     GET_FILENAME_COMPONENT (source_file_we ${source_file} NAME_WE)
     ADD_EXECUTABLE (
         ${source_file_we}
@@ -48,6 +48,9 @@ FOREACH (source_file ${exec_PROGRAMS})
 ENDFOREACH ()
 
 FOREACH (source_file ${with_pthread_PROGRAMS})
+    INCLUDE_DIRECTORIES (
+        ../include
+    )
     GET_FILENAME_COMPONENT (source_file_we ${source_file} NAME_WE)
     ADD_EXECUTABLE (
         ${source_file_we}
@@ -69,6 +72,32 @@ FOREACH (source_file ${with_pthread_PROGRAMS})
 ENDFOREACH ()
 
 FOREACH (source_file ${with_boost_PROGRAMS})
+    INCLUDE_DIRECTORIES (
+        ../include
+        ${MSGPACK_BOOST_DIR}
+    )
+    GET_FILENAME_COMPONENT (source_file_we ${source_file} NAME_WE)
+    ADD_EXECUTABLE (
+        ${source_file_we}
+        ${source_file}
+    )
+    IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+        SET_PROPERTY (TARGET ${source_file_we} APPEND_STRING PROPERTY COMPILE_FLAGS "-std=c++03 -Wall -Wextra -Werror -Wno-mismatched-tags -g -O3")
+    ENDIF ()
+    IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+        IF (CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+            STRING(REGEX REPLACE "/W[0-4]" "/W3" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+        ELSE ()
+            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
+        ENDIF ()
+    ENDIF ()
+ENDFOREACH ()
+
+FOREACH (source_file ${with_boost_lib_PROGRAMS})
+    INCLUDE_DIRECTORIES (
+        ../include
+        ${Boost_INCLUDE_DIRS}
+    )
     GET_FILENAME_COMPONENT (source_file_we ${source_file} NAME_WE)
     ADD_EXECUTABLE (
         ${source_file_we}
