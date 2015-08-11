@@ -13,7 +13,7 @@ os:
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo add-apt-repository -y ppa:h-rayflood/llvm; fi
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo add-apt-repository -y ppa:boost-latest/ppa; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo add-apt-repository -y ppa:kzemek/boost; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get update -qq; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get update; fi
 install:
@@ -44,7 +44,7 @@ env:
   - ACTION="ci/build_cmake.sh"     VERSION="cpp03" ARCH="32" LIBPATH="/usr/local/lib32" BOOST="boost" BOOST_INC="/usr/local/boost"
 
 before_script:
- - if [ "$BOOST" == "boost" ]; then if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -y libboost1.55-all-dev:i386 libboost1.55-all-dev:amd64;  fi; else if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew unlink boost; fi; fi && export PATH=/usr/local/bin:$PATH && rm -rf install
+ - if [ "$BOOST" == "boost" ]; then if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -y libboost1.58-all-dev:i386 libboost1.58-all-dev:amd64;  fi; else if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew unlink boost; fi; fi && export PATH=/usr/local/bin:$PATH && rm -rf install
 
 matrix:
   exclude:
