@@ -109,8 +109,8 @@ FOREACH (source_file ${with_boost_lib_PROGRAMS})
     )
     LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
     TARGET_LINK_LIBRARIES (${source_file_we}
-        ${Boost_CHRONO_LIBRARY}
         ${Boost_TIMER_LIBRARY}
+        ${Boost_CHRONO_LIBRARY}
         ${Boost_SYSTEM_LIBRARY}
     )
     IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
