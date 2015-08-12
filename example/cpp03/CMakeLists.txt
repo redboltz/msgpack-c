@@ -113,6 +113,11 @@ FOREACH (source_file ${with_boost_lib_PROGRAMS})
         ${Boost_CHRONO_LIBRARY}
         ${Boost_SYSTEM_LIBRARY}
     )
+    IF (NOT MSVC)
+        TARGET_LINK_LIBRARIES (${source_file_we}
+            rt
+        )
+    ENDIF ()
     IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         SET_PROPERTY (TARGET ${source_file_we} APPEND_STRING PROPERTY COMPILE_FLAGS "-std=c++03 -Wall -Wextra -Werror -Wno-mismatched-tags -g -O3")
     ENDIF ()
