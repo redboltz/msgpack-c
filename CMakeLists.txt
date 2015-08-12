@@ -55,7 +55,17 @@ ENDIF ()
 
 IF (MSGPACK_BOOST)
    SET (CMAKE_CXX_FLAGS "-DMSGPACK_USE_BOOST ${CMAKE_CXX_FLAGS}")
+   set(Boost_USE_STATIC_LIBS        ON) # only find static libs
+   set(Boost_USE_MULTITHREADED      ON)
+   set(Boost_USE_STATIC_RUNTIME    OFF)
+   set(Boost_NO_BOOST_CMAKE ON)
+   FIND_PACKAGE (Boost COMPONENTS chrono timer system)
 ENDIF ()
+
+get_cmake_property(_variableNames VARIABLES)
+foreach (_variableName ${_variableNames})
+    message(STATUS "${_variableName}=${${_variableName}}")
+endforeach()
 
 FILE (GLOB_RECURSE PREDEF_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/external/boost/predef/include/boost ${CMAKE_CURRENT_SOURCE_DIR}/external/boost/predef/include/boost/*.h)
 FOREACH (F ${PREDEF_FILES})
@@ -221,7 +231,6 @@ INCLUDE_DIRECTORIES (
     ./
     include/
     ${CMAKE_CURRENT_BINARY_DIR}/include/
-    ${MSGPACK_BOOST_DIR}
 )
 
 ADD_LIBRARY (msgpack SHARED
@@ -253,9 +262,9 @@ IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" ST
 ENDIF ()
 IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     IF (CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-        STRING(REGEX REPLACE "/W[0-4]" "/W3" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+        STRING(REGEX REPLACE "/W[0-4]" "/W3 /WX" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     ELSE ()
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3 /WX")
     ENDIF ()
 ENDIF ()
 
@@ -266,6 +275,8 @@ ENDIF()
 IF (NOT DEFINED CMAKE_INSTALL_LIBDIR)
     SET(CMAKE_INSTALL_LIBDIR lib)
 ENDIF ()
+
+ADD_SUBDIRECTORY (example)
 
 INSTALL (TARGETS msgpack msgpack-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
 INSTALL (DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
