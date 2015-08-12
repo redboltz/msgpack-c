@@ -113,7 +113,7 @@ FOREACH (source_file ${with_boost_lib_PROGRAMS})
         ${Boost_CHRONO_LIBRARY}
         ${Boost_SYSTEM_LIBRARY}
     )
-    IF (NOT MSVC)
+    IF (NOT MSVC AND NOT APPLE)
         TARGET_LINK_LIBRARIES (${source_file_we}
             rt
         )
