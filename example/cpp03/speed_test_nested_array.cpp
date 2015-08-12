@@ -50,7 +50,7 @@ struct vecvec<T, 0> {
 void test_array_of_array() {
     std::cout << "[TEST][array_of_array]" << std::endl;
     // setup
-    int const depth = 16;
+    int const depth = 4;
     std::cout << "Setting up array data..." << std::endl;
     vecvec<int, depth>::type v1;
     vecvec<int, depth>::fill(v1, 3, 42);
