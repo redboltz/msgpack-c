@@ -11,20 +11,12 @@
 #define MSGPACK_CPP11_ZONE_HPP
 
 #include "msgpack/versioning.hpp"
+#include "msgpack/cpp_config.hpp"
+#include "msgpack/zone_decl.hpp"
 
 #include <cstdlib>
 #include <memory>
 #include <vector>
-
-#include "msgpack/cpp_config.hpp"
-
-#ifndef MSGPACK_ZONE_CHUNK_SIZE
-#define MSGPACK_ZONE_CHUNK_SIZE 8192
-#endif
-
-#ifndef MSGPACK_ZONE_ALIGN
-#define MSGPACK_ZONE_ALIGN sizeof(void*)
-#endif
 
 namespace msgpack {
 
@@ -355,7 +347,7 @@ T* zone::allocate(Args... args)
 
 inline std::size_t aligned_size(
     std::size_t size,
-    std::size_t align = MSGPACK_ZONE_ALIGN) {
+    std::size_t align) {
     return (size + align - 1) / align * align;
 }
 
