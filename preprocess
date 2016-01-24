@@ -15,4 +15,5 @@ preprocess() {
 preprocess erb/cpp03_msgpack_tuple.hpp include/msgpack/adaptor/detail/cpp03_msgpack_tuple.hpp
 preprocess erb/cpp03_define_array.hpp include/msgpack/adaptor/detail/cpp03_define_array.hpp
 preprocess erb/cpp03_define_map.hpp include/msgpack/adaptor/detail/cpp03_define_map.hpp
-preprocess erb/cpp03_zone.hpp include/msgpack/detail/cpp03_zone.hpp
+preprocess erb/v1/cpp03_zone_decl.hpp include/msgpack/v1/detail/cpp03_zone_decl.hpp
+preprocess erb/v1/cpp03_zone.hpp include/msgpack/v1/detail/cpp03_zone.hpp
