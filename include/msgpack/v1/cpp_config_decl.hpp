@@ -1,18 +1,37 @@
 //
 // MessagePack for C++ C++03/C++11 Adaptation
 //
-// Copyright (C) 2013-2016 KONDO Takatoshi
+// Copyright (C) 2016 KONDO Takatoshi
 //
 //    Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_V1_CPP_CONFIG_HPP
-#define MSGPACK_V1_CPP_CONFIG_HPP
+#ifndef MSGPACK_V1_CPP_CONFIG_DECL_HPP
+#define MSGPACK_V1_CPP_CONFIG_DECL_HPP
 
-#include "msgpack/cpp_config_decl.hpp"
+#include "msgpack/versioning.hpp"
+
+#if !defined(MSGPACK_USE_CPP03)
+# if defined(_MSC_VER)
+#  if _MSC_VER < 1900
+#    define MSGPACK_USE_CPP03
+#  endif
+# elif (__cplusplus < 201103L)
+#  define MSGPACK_USE_CPP03
+# endif
+#endif // MSGPACK_USE_CPP03
+
 
 #if defined(MSGPACK_USE_CPP03)
+
+#if !defined(nullptr)
+#  if _MSC_VER < 1600
+#    define nullptr (0)
+#  endif
+#endif
+
+#include <memory>
 
 namespace msgpack {
 
@@ -21,55 +40,32 @@ MSGPACK_API_VERSION_NAMESPACE(v1) {
 /// @endcond
 
 template <typename T>
-struct unique_ptr : std::auto_ptr<T> {
-    explicit unique_ptr(T* p = 0) throw() : std::auto_ptr<T>(p) {}
-    unique_ptr(unique_ptr& a) throw() : std::auto_ptr<T>(a) {}
-    template<class Y>
-    unique_ptr (unique_ptr<Y>& a) throw() : std::auto_ptr<T>(a) {}
-};
+struct unique_ptr;
 
 template <typename T>
-T& move(T& t)
-{
-    return t;
-}
+T& move(T& t);
 
 template <typename T>
-T const& move(T const& t)
-{
-    return t;
-}
+T const& move(T const& t);
 
-template <bool P, typename T>
-struct enable_if {
-    typedef T type;
-};
-
-template <typename T>
-struct enable_if<false, T> {
-};
+template <bool P, typename T = void>
+struct enable_if;
 
 template<typename T, T val>
-struct integral_constant {
-    static T const value = val;
-    typedef T value_type;
-    typedef integral_constant<T, val> type;
-};
+struct integral_constant;
 
 typedef integral_constant<bool, true> true_type;
 typedef integral_constant<bool, false> false_type;
 
 template<class T, class U>
-struct is_same : false_type {};
-
-template<class T>
-struct is_same<T, T> : true_type {};
+struct is_same;
 
 /// @cond
 }  // MSGPACK_API_VERSION_NAMESPACE(v1)
 /// @endcond
 
 }  // namespace msgpack
+
 
 #else  // MSGPACK_USE_CPP03
 
@@ -100,4 +96,4 @@ MSGPACK_API_VERSION_NAMESPACE(v1) {
 
 #endif // MSGPACK_USE_CPP03
 
-#endif // MSGPACK_V1_CPP_CONFIG_HPP
+#endif // MSGPACK_V1_CPP_CONFIG_DECL_HPP
