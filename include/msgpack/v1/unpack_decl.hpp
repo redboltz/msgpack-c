@@ -138,7 +138,7 @@ void incr_count(void* buffer);
 
 #if defined(MSGPACK_USE_CPP03)
 
-msgpack_atomic_counter_t get_count(void* buffer);
+_msgpack_atomic_counter_t get_count(void* buffer);
 
 #else  // defined(MSGPACK_USE_CPP03)
 
@@ -146,25 +146,27 @@ std::atomic<unsigned int> const& get_count(void* buffer);
 
 #endif // defined(MSGPACK_USE_CPP03)
 
-struct fix_tag;
+struct fix_tag {
+    char f1[65]; // FIXME unique size is required. or use is_same meta function.
+};
 
 template <typename T>
 struct value;
 
 template <typename T>
-void load(uint32_t& dst, const char* n, typename msgpack::enable_if<sizeof(T) == sizeof(fix_tag)>::type* = nullptr);
+typename msgpack::enable_if<sizeof(T) == sizeof(fix_tag)>::type load(uint32_t& dst, const char* n);
 
 template <typename T>
-void load(T& dst, const char* n, typename msgpack::enable_if<sizeof(T) == 1>::type* = nullptr);
+typename msgpack::enable_if<sizeof(T) == 1>::type load(T& dst, const char* n);
 
 template <typename T>
-void load(T& dst, const char* n, typename msgpack::enable_if<sizeof(T) == 2>::type* = nullptr);
+typename msgpack::enable_if<sizeof(T) == 2>::type load(T& dst, const char* n);
 
 template <typename T>
-void load(T& dst, const char* n, typename msgpack::enable_if<sizeof(T) == 4>::type* = nullptr);
+typename msgpack::enable_if<sizeof(T) == 4>::type load(T& dst, const char* n);
 
 template <typename T>
-void load(T& dst, const char* n, typename msgpack::enable_if<sizeof(T) == 8>::type* = nullptr);
+typename msgpack::enable_if<sizeof(T) == 8>::type load(T& dst, const char* n);
 
 class context;
 

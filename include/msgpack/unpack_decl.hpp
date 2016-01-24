@@ -1,17 +1,16 @@
 //
 // MessagePack for C++ deserializing routine
 //
-// Copyright (C) 2008-2016 FURUHASHI Sadayuki and KONDO Takatoshi
+// Copyright (C) 2016 KONDO Takatoshi
 //
 //    Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_UNPACK_HPP
-#define MSGPACK_UNPACK_HPP
+#ifndef MSGPACK_UNPACK_DECL_HPP
+#define MSGPACK_UNPACK_DECL_HPP
 
-#include "msgpack/unpack_decl.hpp"
+#include "msgpack/v1/unpack_decl.hpp"
+#include "msgpack/v2/unpack_decl.hpp"
 
-#include "msgpack/v1/unpack.hpp"
-
-#endif // MSGPACK_UNPACK_HPP
+#endif // MSGPACK_UNPACK_DECL_HPP
