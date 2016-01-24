@@ -290,7 +290,7 @@ inline void zone::undo_allocate(size_t size)
 
 inline std::size_t aligned_size(
     std::size_t size,
-    std::size_t align = MSGPACK_ZONE_ALIGN) {
+    std::size_t align) {
     return (size + align - 1) / align * align;
 }
 
