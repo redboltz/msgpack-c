@@ -7,10 +7,10 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_FBUFFER_HPP__
-#define MSGPACK_FBUFFER_HPP__
+#ifndef MSGPACK_V1_FBUFFER_HPP
+#define MSGPACK_V1_FBUFFER_HPP
 
-#include "msgpack/versioning.hpp"
+#include "msgpack/v1/fbuffer_decl.hpp"
 
 #include <cstdio>
 #include <stdexcept>
@@ -57,4 +57,4 @@ private:
 
 }  // namespace msgpack
 
-#endif /* msgpack/fbuffer.hpp */
+#endif // MSGPACK_V1_FBUFFER_HPP
