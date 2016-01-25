@@ -7,10 +7,10 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_VREFBUFFER_HPP
-#define MSGPACK_VREFBUFFER_HPP
+#ifndef MSGPACK_V1_VREFBUFFER_HPP
+#define MSGPACK_V1_VREFBUFFER_HPP
 
-#include "msgpack/versioning.hpp"
+#include "msgpack/v1/vrefbuffer_decl.hpp"
 
 #include <stdexcept>
 #include <algorithm>
@@ -21,14 +21,6 @@
 #define NOMINMAX
 #endif
 #endif // defined(_MSC_VER)
-
-#ifndef MSGPACK_VREFBUFFER_REF_SIZE
-#define MSGPACK_VREFBUFFER_REF_SIZE 32
-#endif
-
-#ifndef MSGPACK_VREFBUFFER_CHUNK_SIZE
-#define MSGPACK_VREFBUFFER_CHUNK_SIZE 8192
-#endif
 
 #ifndef _WIN32
 #include <sys/uio.h>
@@ -297,4 +289,4 @@ private:
 
 }  // namespace msgpack
 
-#endif /* msgpack/vrefbuffer.hpp */
+#endif // MSGPACK_V1_VREFBUFFER_HPP
