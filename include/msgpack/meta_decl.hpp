@@ -8,11 +8,10 @@
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef MSGPACK_META_HPP
-#define MSGPACK_META_HPP
+#ifndef MSGPACK_META_DECL_HPP
+#define MSGPACK_META_DECL_HPP
 
-#include "msgpack/meta_decl.hpp"
+#include "msgpack/v1/meta_decl.hpp"
+#include "msgpack/v2/meta_decl.hpp"
 
-#include "msgpack/v1/meta.hpp"
-
-#endif // MSGPACK_META_HPP
+#endif // MSGPACK_META_DECL_HPP
