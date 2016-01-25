@@ -7,11 +7,10 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_TYPE_ARRAY_REF_HPP
-#define MSGPACK_TYPE_ARRAY_REF_HPP
+#ifndef MSGPACK_TYPE_ARRAY_REF_DECL_HPP
+#define MSGPACK_TYPE_ARRAY_REF_DECL_HPP
 
-#include "msgpack/adaptor/array_ref_decl.hpp"
+#include "msgpack/v1/adaptor/array_ref_decl.hpp"
+#include "msgpack/v2/adaptor/array_ref_decl.hpp"
 
-#include "msgpack/v1/adaptor/array_ref.hpp"
-
-#endif // MSGPACK_TYPE_ARRAY_REFL_HPP
+#endif // MSGPACK_TYPE_ARRAY_REF_DECL_HPP
