@@ -1,27 +1,19 @@
 //
 // MessagePack for C++ deflate buffer implementation
 //
-// Copyright (C) 2010-2013 FURUHASHI Sadayuki and KONDO Takatoshi
+// Copyright (C) 2010-2016 FURUHASHI Sadayuki and KONDO Takatoshi
 //
 //    Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_ZBUFFER_HPP
-#define MSGPACK_ZBUFFER_HPP
+#ifndef MSGPACK_V1_ZBUFFER_HPP
+#define MSGPACK_V1_ZBUFFER_HPP
 
-#include "msgpack/versioning.hpp"
+#include "msgpack/v1/zbuffer_decl.hpp"
 
 #include <stdexcept>
 #include <zlib.h>
-
-#ifndef MSGPACK_ZBUFFER_RESERVE_SIZE
-#define MSGPACK_ZBUFFER_RESERVE_SIZE 512
-#endif
-
-#ifndef MSGPACK_ZBUFFER_INIT_SIZE
-#define MSGPACK_ZBUFFER_INIT_SIZE 8192
-#endif
 
 namespace msgpack {
 
@@ -164,4 +156,4 @@ private:
 
 }  // namespace msgpack
 
-#endif /* msgpack/zbuffer.hpp */
+#endif // MSGPACK_V1_ZBUFFER_HPP
