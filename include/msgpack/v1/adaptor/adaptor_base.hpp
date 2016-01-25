@@ -1,16 +1,16 @@
 //
 // MessagePack for C++ static resolution routine
 //
-// Copyright (C) 2015 KONDO Takatoshi
+// Copyright (C) 2015-2016 KONDO Takatoshi
 //
 //    Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_ADAPTOR_BASE_HPP
-#define MSGPACK_ADAPTOR_BASE_HPP
+#ifndef MSGPACK_V1_ADAPTOR_BASE_HPP
+#define MSGPACK_V1_ADAPTOR_BASE_HPP
 
-#include "msgpack/object_fwd.hpp"
+#include "msgpack/v1/adaptor/adaptor_base_decl.hpp"
 
 namespace msgpack {
 
@@ -18,30 +18,28 @@ namespace msgpack {
 MSGPACK_API_VERSION_NAMESPACE(v1) {
 /// @endcond
 
-template <typename Stream>
-class packer;
 
 namespace adaptor {
 
 // Adaptor functors
 
-template <typename T, typename Enabler = void>
+template <typename T, typename Enabler>
 struct convert {
     msgpack::object const& operator()(msgpack::object const& o, T& v) const;
 };
 
-template <typename T, typename Enabler = void>
+template <typename T, typename Enabler>
 struct pack {
     template <typename Stream>
     msgpack::packer<Stream>& operator()(msgpack::packer<Stream>& o, T const& v) const;
 };
 
-template <typename T, typename Enabler = void>
+template <typename T, typename Enabler>
 struct object {
     void operator()(msgpack::object& o, T const& v) const;
 };
 
-template <typename T, typename Enabler = void>
+template <typename T, typename Enabler>
 struct object_with_zone {
     void operator()(msgpack::object::with_zone& o, T const& v) const;
 };
@@ -81,4 +79,4 @@ void operator<< (msgpack::object::with_zone& o, T const& v) {
 } // namespace msgpack
 
 
-#endif // MSGPACK_ADAPTOR_BASE_HPP
+#endif // MSGPACK_V1_ADAPTOR_BASE_HPP
