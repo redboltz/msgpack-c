@@ -15,7 +15,7 @@
 namespace msgpack {
 
 /// @cond
-MSGPACK_API_VERSION_NAMESPACE(v1) {
+MSGPACK_API_VERSION_NAMESPACE(v2) {
 /// @endcond
 
 using v1::zone;
@@ -23,7 +23,7 @@ using v1::zone;
 using v1::aligned_size;
 
 /// @cond
-}  // MSGPACK_API_VERSION_NAMESPACE(v1)
+}  // MSGPACK_API_VERSION_NAMESPACE(v2)
 /// @endcond
 
 }  // namespace msgpack
