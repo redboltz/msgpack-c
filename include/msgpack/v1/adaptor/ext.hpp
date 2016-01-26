@@ -1,17 +1,17 @@
 //
 // MessagePack for C++ static resolution routine
 //
-// Copyright (C) 2015 KONDO Takatoshi
+// Copyright (C) 2015-2016 KONDO Takatoshi
 //
 //    Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_TYPE_EXT_HPP
-#define MSGPACK_TYPE_EXT_HPP
+#ifndef MSGPACK_V1_TYPE_EXT_HPP
+#define MSGPACK_V1_TYPE_EXT_HPP
 
-#include "msgpack/versioning.hpp"
-#include "msgpack/adaptor/adaptor_base.hpp"
+#include "msgpack/v1/adaptor/ext_decl.hpp"
+#include "msgpack/adaptor/check_container_size.hpp"
 #include <cstring>
 #include <string>
 #include <cassert>
@@ -23,7 +23,6 @@ MSGPACK_API_VERSION_NAMESPACE(v1) {
 /// @endcond
 
 namespace type {
-class ext_ref;
 
 class ext {
 public:
@@ -172,7 +171,7 @@ public:
 private:
     const char* m_ptr;
     uint32_t m_size;
-    friend struct msgpack::adaptor::object<msgpack::type::ext_ref>;
+    friend struct adaptor::object<msgpack::type::ext_ref>;
 };
 
 inline ext::ext(ext_ref const& x) {
@@ -234,4 +233,4 @@ struct object_with_zone<msgpack::type::ext_ref> {
 
 } // namespace msgpack
 
-#endif // MSGPACK_TYPE_EXT_HPP
+#endif // MSGPACK_V1_TYPE_EXT_HPP
