@@ -61,26 +61,6 @@ struct packer_serializer;
 
 } // namespace detail
 
-// Adaptor functor specialization to object
-namespace adaptor {
-
-template <>
-struct convert<msgpack::object>;
-
-template <>
-struct pack<msgpack::object>;
-
-template <>
-struct object_with_zone<msgpack::object>;
-
-// Adaptor functor specialization to object::with_zone
-
-template <>
-struct object_with_zone<msgpack::object::with_zone>;
-
-} // namespace adaptor
-
-
 // obsolete
 template <typename Type>
 class define;

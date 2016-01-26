@@ -24,20 +24,33 @@ namespace adaptor {
 
 // Adaptor functors
 
-using v1::adaptor::convert;
+template <typename T, typename Enabler = void>
+struct convert;
 
-using v1::adaptor::pack;
+template <typename T, typename Enabler = void>
+struct pack;
 
-using v1::adaptor::object;
+template <typename T, typename Enabler = void>
+struct object;
 
-using v1::adaptor::object_with_zone;
+template <typename T, typename Enabler = void>
+struct object_with_zone;
 
 } // namespace adaptor
 
 // operators
 
-using v1::operator>>;
-using v1::operator<<;
+template <typename T>
+ msgpack::object const& operator>> (msgpack::object const& o, T& v);
+
+template <typename Stream, typename T>
+msgpack::packer<Stream>& operator<< (msgpack::packer<Stream>& o, T const& v);
+
+template <typename T>
+void operator<< (msgpack::object& o, T const& v);
+
+template <typename T>
+void operator<< (msgpack::object::with_zone& o, T const& v);
 
 /// @cond
 } // MSGPACK_API_VERSION_NAMESPACE(v2)

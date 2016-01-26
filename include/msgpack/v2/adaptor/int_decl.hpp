@@ -22,13 +22,23 @@ namespace type {
 namespace detail {
 
 
-using v1::type::detail::convert_integer_sign;
+template <typename T, bool Signed>
+struct convert_integer_sign;
 
-using v1::type::detail::is_signed;
+template <typename T>
+struct is_signed;
+
+
+template <bool Signed>
+struct object_char_sign;
+
+//using v1::type::detail::convert_integer_sign;
+
+//using v1::type::detail::is_signed;
 
 using v1::type::detail::convert_integer;
 
-using v1::type::detail::object_char_sign;
+//using v1::type::detail::object_char_sign;
 
 using v1::type::detail::object_char;
 
