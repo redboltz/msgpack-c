@@ -1,17 +1,16 @@
 //
 // MessagePack for C++ static resolution routine
 //
-// Copyright (C) 2008-2015 FURUHASHI Sadayuki and KONDO Takatoshi
+// Copyright (C) 2008-2016 FURUHASHI Sadayuki and KONDO Takatoshi
 //
 //    Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_TYPE_V4RAW_HPP
-#define MSGPACK_TYPE_V4RAW_HPP
+#ifndef MSGPACK_V1_TYPE_V4RAW_HPP
+#define MSGPACK_V1_TYPE_V4RAW_HPP
 
-#include "msgpack/versioning.hpp"
-#include "msgpack/adaptor/adaptor_base.hpp"
+#include "msgpack/v1/adaptor/v4raw_decl.hpp"
 #include <cstring>
 #include <string>
 
@@ -60,8 +59,8 @@ struct v4raw_ref {
 namespace adaptor {
 
 template <>
-struct convert<msgpack::type::v4raw_ref> {
-    msgpack::object const& operator()(msgpack::object const& o, msgpack::type::v4raw_ref& v) const {
+struct convert<type::v4raw_ref> {
+    msgpack::object const& operator()(msgpack::object const& o, type::v4raw_ref& v) const {
         if(o.type != msgpack::type::STR) { throw msgpack::type_error(); }
         v.ptr  = o.via.str.ptr;
         v.size = o.via.str.size;
@@ -70,9 +69,9 @@ struct convert<msgpack::type::v4raw_ref> {
 };
 
 template <>
-struct pack<msgpack::type::v4raw_ref> {
+struct pack<type::v4raw_ref> {
     template <typename Stream>
-    msgpack::packer<Stream>& operator()(msgpack::packer<Stream>& o, const msgpack::type::v4raw_ref& v) const {
+    msgpack::packer<Stream>& operator()(msgpack::packer<Stream>& o, const type::v4raw_ref& v) const {
         o.pack_v4raw(v.size);
         o.pack_v4raw_body(v.ptr, v.size);
         return o;
@@ -80,8 +79,8 @@ struct pack<msgpack::type::v4raw_ref> {
 };
 
 template <>
-struct object<msgpack::type::v4raw_ref> {
-    void operator()(msgpack::object& o, const msgpack::type::v4raw_ref& v) const {
+struct object<type::v4raw_ref> {
+    void operator()(msgpack::object& o, const type::v4raw_ref& v) const {
         o.type = msgpack::type::STR;
         o.via.str.ptr = v.ptr;
         o.via.str.size = v.size;
@@ -89,8 +88,8 @@ struct object<msgpack::type::v4raw_ref> {
 };
 
 template <>
-struct object_with_zone<msgpack::type::v4raw_ref> {
-    void operator()(msgpack::object::with_zone& o, const msgpack::type::v4raw_ref& v) const {
+struct object_with_zone<type::v4raw_ref> {
+    void operator()(msgpack::object::with_zone& o, const type::v4raw_ref& v) const {
         static_cast<msgpack::object&>(o) << v;
     }
 };
@@ -103,4 +102,4 @@ struct object_with_zone<msgpack::type::v4raw_ref> {
 
 } // namespace msgpack
 
-#endif // MSGPACK_TYPE_V4RAW_HPP
+#endif // MSGPACK_V1_TYPE_V4RAW_HPP
