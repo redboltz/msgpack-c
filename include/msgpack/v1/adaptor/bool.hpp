@@ -1,14 +1,14 @@
 //
 // MessagePack for C++ static resolution routine
 //
-// Copyright (C) 2008-2009 FURUHASHI Sadayuki
+// Copyright (C) 2008-2016 FURUHASHI Sadayuki
 //
 //    Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_TYPE_BOOL_HPP
-#define MSGPACK_TYPE_BOOL_HPP
+#ifndef MSGPACK_V1_TYPE_BOOL_HPP
+#define MSGPACK_V1_TYPE_BOOL_HPP
 
 #include "msgpack/versioning.hpp"
 #include "msgpack/adaptor/adaptor_base.hpp"
@@ -63,4 +63,4 @@ struct object_with_zone<bool> {
 
 }  // namespace msgpack
 
-#endif // MSGPACK_TYPE_BOOL_HPP
+#endif // MSGPACK_V1_TYPE_BOOL_HPP

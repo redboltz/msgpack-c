@@ -1,15 +1,16 @@
 //
 // MessagePack for C++ static resolution routine
 //
-// Copyright (C) 2008-2016 FURUHASHI Sadayuki and KONDO Takatoshi
+// Copyright (C) 2016 KONDO Takatoshi
 //
 //    Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_TYPE_BOOL_HPP
-#define MSGPACK_TYPE_BOOL_HPP
+#ifndef MSGPACK_TYPE_RAW_DECL_HPP
+#define MSGPACK_TYPE_RAW_DECL_HPP
 
-#include "msgpack/v1/adaptor/bool.hpp"
+#include "msgpack/v1/adaptor/raw_decl.hpp"
+#include "msgpack/v2/adaptor/raw_decl.hpp"
 
-#endif // MSGPACK_TYPE_BOOL_HPP
+#endif // MSGPACK_TYPE_RAW_DECL_HPP

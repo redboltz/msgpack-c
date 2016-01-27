@@ -1,17 +1,16 @@
 //
 // MessagePack for C++ static resolution routine
 //
-// Copyright (C) 2008-2009 FURUHASHI Sadayuki
+// Copyright (C) 2008-2016 FURUHASHI Sadayuki and KONDO Takatoshi
 //
 //    Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_TYPE_NIL_HPP
-#define MSGPACK_TYPE_NIL_HPP
+#ifndef MSGPACK_V1_TYPE_NIL_HPP
+#define MSGPACK_V1_TYPE_NIL_HPP
 
-#include "msgpack/versioning.hpp"
-#include "msgpack/adaptor/adaptor_base.hpp"
+#include "msgpack/v1/adaptor/nil_decl.hpp"
 
 namespace msgpack {
 
@@ -22,12 +21,6 @@ MSGPACK_API_VERSION_NAMESPACE(v1) {
 namespace type {
 
 struct nil_t { };
-
-#if !defined(MSGPACK_DISABLE_LEGACY_NIL)
-
-typedef nil_t nil;
-
-#endif // !defined(MSGPACK_DISABLE_LEGACY_NIL)
 
 inline bool operator<(nil_t const& lhs, nil_t const& rhs) {
     return &lhs < &rhs;
@@ -87,4 +80,4 @@ inline void msgpack::object::as<void>() const
 
 }  // namespace msgpack
 
-#endif // MSGPACK_TYPE_NIL_HPP
+#endif // MSGPACK_V1_TYPE_NIL_HPP
