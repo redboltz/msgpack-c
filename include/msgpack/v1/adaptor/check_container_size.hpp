@@ -7,10 +7,10 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_CHECK_CONTAINER_SIZE_HPP
-#define MSGPACK_CHECK_CONTAINER_SIZE_HPP
+#ifndef MSGPACK_V1_CHECK_CONTAINER_SIZE_HPP
+#define MSGPACK_V1_CHECK_CONTAINER_SIZE_HPP
 
-#include "msgpack/versioning.hpp"
+#include "msgpack/v1/adaptor/check_container_size_decl.hpp"
 #include <stdexcept>
 
 namespace msgpack {
@@ -64,4 +64,4 @@ inline uint32_t checked_get_container_size(T size) {
 
 }  // namespace msgpack
 
-#endif // MSGPACK_CHECK_CONTAINER_SIZE_HPP
+#endif // MSGPACK_V1_CHECK_CONTAINER_SIZE_HPP

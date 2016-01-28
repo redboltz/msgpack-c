@@ -54,8 +54,8 @@ struct basic_variant :
 #endif // (BOOST_VERSION / 100000) >= 1 && ((BOOST_VERSION / 100) % 1000) >= 53
         std::vector<char>, // BIN
         msgpack::type::raw_ref, // BIN
-        ext,               // EXT
-        ext_ref,           // EXT
+        msgpack::type::ext,               // EXT
+        msgpack::type::ext_ref,           // EXT
         boost::recursive_wrapper<std::vector<basic_variant<STR, BIN, EXT> > >, // ARRAY
         boost::recursive_wrapper<std::map<basic_variant<STR, BIN, EXT>, basic_variant<STR, BIN, EXT> > >, // MAP
         boost::recursive_wrapper<std::multimap<basic_variant<STR, BIN, EXT>, basic_variant<STR, BIN, EXT> > >// MAP
@@ -73,8 +73,8 @@ struct basic_variant :
 #endif // (BOOST_VERSION / 100000) >= 1 && ((BOOST_VERSION / 100) % 1000) >= 53
         std::vector<char>, // BIN
         msgpack::type::raw_ref, // BIN
-        ext,               // EXT
-        ext_ref,           // EXT
+        msgpack::type::ext,               // EXT
+        msgpack::type::ext_ref,           // EXT
         boost::recursive_wrapper<std::vector<basic_variant<STR, BIN, EXT> > >, // ARRAY
         boost::recursive_wrapper<std::map<basic_variant<STR, BIN, EXT>, basic_variant<STR, BIN, EXT> > >, // MAP
         boost::recursive_wrapper<std::multimap<basic_variant<STR, BIN, EXT>, basic_variant<STR, BIN, EXT> > >// MAP
