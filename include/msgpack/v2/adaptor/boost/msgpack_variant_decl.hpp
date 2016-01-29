@@ -22,23 +22,13 @@ MSGPACK_API_VERSION_NAMESPACE(v2) {
 
 namespace type {
 
-template <typename STR, typename BIN, typename EXT>
-struct basic_variant;
+using v1::type::basic_variant;
+using v1::type::variant;
+using v1::type::variant_ref;
 
-typedef basic_variant<std::string, std::vector<char>, ext> variant;
-typedef basic_variant<
-#if (BOOST_VERSION / 100000) >= 1 && ((BOOST_VERSION / 100) % 1000) >= 53
-    boost::string_ref,
-#else  // (BOOST_VERSION / 100000) >= 1 && ((BOOST_VERSION / 100) % 1000) >= 53
-    std::string,
-#endif // (BOOST_VERSION / 100000) >= 1 && ((BOOST_VERSION / 100) % 1000) >= 53
-    raw_ref, ext_ref> variant_ref;
+using v1::type::operator<;
 
-template <typename STR, typename BIN, typename EXT>
-bool operator<(basic_variant<STR, BIN, EXT> const& lhs, basic_variant<STR, BIN, EXT> const& rhs);
-
-template <typename STR, typename BIN, typename EXT>
-bool operator==(basic_variant<STR, BIN, EXT> const& lhs, basic_variant<STR, BIN, EXT> const& rhs);
+using v1::type::operator==;
 
 } // namespace type
 
