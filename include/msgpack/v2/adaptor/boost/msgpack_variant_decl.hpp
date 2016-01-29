@@ -34,6 +34,12 @@ typedef basic_variant<
 #endif // (BOOST_VERSION / 100000) >= 1 && ((BOOST_VERSION / 100) % 1000) >= 53
     raw_ref, ext_ref> variant_ref;
 
+template <typename STR, typename BIN, typename EXT>
+bool operator<(basic_variant<STR, BIN, EXT> const& lhs, basic_variant<STR, BIN, EXT> const& rhs);
+
+template <typename STR, typename BIN, typename EXT>
+bool operator==(basic_variant<STR, BIN, EXT> const& lhs, basic_variant<STR, BIN, EXT> const& rhs);
+
 } // namespace type
 
 /// @cond

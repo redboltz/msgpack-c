@@ -264,8 +264,8 @@ namespace adaptor {
 #if !defined (MSGPACK_USE_CPP03)
 
 template <typename STR, typename BIN, typename EXT>
-struct as<msgpack::type::basic_variant<STR, BIN, EXT> > {
-    msgpack::type::basic_variant<STR, BIN, EXT> operator()(msgpack::object const& o) const {
+struct as<type::basic_variant<STR, BIN, EXT> > {
+    type::basic_variant<STR, BIN, EXT> operator()(msgpack::object const& o) const {
         switch(o.type) {
         case type::NIL:
             return o.as<msgpack::type::nil_t>();
@@ -284,13 +284,13 @@ struct as<msgpack::type::basic_variant<STR, BIN, EXT> > {
         case type::EXT:
             return o.as<EXT>();
         case type::ARRAY:
-            return o.as<std::vector<msgpack::type::basic_variant<STR, BIN, EXT> > >();
+            return o.as<std::vector<type::basic_variant<STR, BIN, EXT> > >();
         case type::MAP:
-            return o.as<std::multimap<msgpack::type::basic_variant<STR, BIN, EXT>, msgpack::type::basic_variant<STR, BIN, EXT> > >();
+            return o.as<std::multimap<type::basic_variant<STR, BIN, EXT>, type::basic_variant<STR, BIN, EXT> > >();
         default:
             break;
         }
-        return msgpack::type::basic_variant<STR, BIN, EXT>();
+        return type::basic_variant<STR, BIN, EXT>();
     }
 };
 
@@ -298,10 +298,10 @@ struct as<msgpack::type::basic_variant<STR, BIN, EXT> > {
 
 
 template <typename STR, typename BIN, typename EXT>
-struct convert<msgpack::type::basic_variant<STR, BIN, EXT> > {
+struct convert<type::basic_variant<STR, BIN, EXT> > {
     msgpack::object const& operator()(
         msgpack::object const& o,
-        msgpack::type::basic_variant<STR, BIN, EXT>& v) const {
+        type::basic_variant<STR, BIN, EXT>& v) const {
         switch(o.type) {
         case type::NIL:
             v = o.as<msgpack::type::nil_t>();
@@ -328,10 +328,10 @@ struct convert<msgpack::type::basic_variant<STR, BIN, EXT> > {
             v = o.as<EXT>();
             break;
         case type::ARRAY:
-            v = o.as<std::vector<msgpack::type::basic_variant<STR, BIN, EXT> > >();
+            v = o.as<std::vector<type::basic_variant<STR, BIN, EXT> > >();
             break;
         case type::MAP:
-            v = o.as<std::multimap<msgpack::type::basic_variant<STR, BIN, EXT>, msgpack::type::basic_variant<STR, BIN, EXT> > >();
+            v = o.as<std::multimap<type::basic_variant<STR, BIN, EXT>, type::basic_variant<STR, BIN, EXT> > >();
             break;
         default:
             break;
@@ -355,9 +355,9 @@ struct pack_imp : boost::static_visitor<void> {
 } // namespace detail
 
 template <typename STR, typename BIN, typename EXT>
-struct pack<msgpack::type::basic_variant<STR, BIN, EXT> > {
+struct pack<type::basic_variant<STR, BIN, EXT> > {
     template <typename Stream>
-    msgpack::packer<Stream>& operator()(msgpack::packer<Stream>& o, const msgpack::type::basic_variant<STR, BIN, EXT>& v) const {
+    msgpack::packer<Stream>& operator()(msgpack::packer<Stream>& o, const type::basic_variant<STR, BIN, EXT>& v) const {
         boost::apply_visitor(detail::pack_imp<Stream>(o), v);
         return o;
     }
@@ -392,8 +392,8 @@ struct object_imp : boost::static_visitor<void> {
 } // namespace detail
 
 template <typename STR, typename BIN, typename EXT>
-struct object<msgpack::type::basic_variant<STR, BIN, EXT> > {
-    void operator()(msgpack::object& o, const msgpack::type::basic_variant<STR, BIN, EXT>& v) const {
+struct object<type::basic_variant<STR, BIN, EXT> > {
+    void operator()(msgpack::object& o, const type::basic_variant<STR, BIN, EXT>& v) const {
         boost::apply_visitor(detail::object_imp(o), v);
     }
 };
@@ -412,8 +412,8 @@ struct object_with_zone_imp : boost::static_visitor<void> {
 } // namespace detail
 
 template <typename STR, typename BIN, typename EXT>
-struct object_with_zone<msgpack::type::basic_variant<STR, BIN, EXT> > {
-    void operator()(msgpack::object::with_zone& o, const msgpack::type::basic_variant<STR, BIN, EXT>& v) const {
+struct object_with_zone<type::basic_variant<STR, BIN, EXT> > {
+    void operator()(msgpack::object::with_zone& o, const type::basic_variant<STR, BIN, EXT>& v) const {
         boost::apply_visitor(detail::object_with_zone_imp(o), v);
     }
 };

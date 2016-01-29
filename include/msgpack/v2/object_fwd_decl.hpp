@@ -52,7 +52,10 @@ using v1::type_error;
 #if !defined(MSGPACK_USE_CPP03)
 
 namespace adaptor {
-using v1::adaptor::as;
+
+template <typename T, typename Enabler = void>
+struct as;
+
 } // namespace adaptor
 
 using v1::has_as;
