@@ -1,74 +1,19 @@
 //
 // MessagePack for C++ static resolution routine
 //
-// Copyright (C) 2008-2013 FURUHASHI Sadayuki and KONDO Takatoshi
+// Copyright (C) 2008-2016 FURUHASHI Sadayuki and KONDO Takatoshi
 //
 //    Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_CPP11_DEFINE_MAP_HPP
-#define MSGPACK_CPP11_DEFINE_MAP_HPP
+#ifndef MSGPACK_V1_CPP11_DEFINE_MAP_HPP
+#define MSGPACK_V1_CPP11_DEFINE_MAP_HPP
 
-// BOOST_PP_VARIADICS is defined in boost/preprocessor/config/config.hpp
-// http://www.boost.org/libs/preprocessor/doc/ref/variadics.html
-// However, supporting compiler detection is not complete. msgpack-c requires
-// variadic macro arguments support. So BOOST_PP_VARIADICS is defined here explicitly.
-#if !defined(MSGPACK_PP_VARIADICS)
-#define MSGPACK_PP_VARIADICS
-#endif
+#include "msgpack/v1/adaptor/detail/cpp11_define_map_decl.hpp"
 
-#include <msgpack/preprocessor.hpp>
-
-#include "msgpack/versioning.hpp"
-#include "msgpack/adaptor/adaptor_base.hpp"
-
-// for MSGPACK_ADD_ENUM
-#include "msgpack/adaptor/int.hpp"
-
-#include <type_traits>
 #include <tuple>
-
-#define MSGPACK_DEFINE_MAP_EACH_PROC(r, data, elem) \
-    MSGPACK_PP_IF( \
-        MSGPACK_PP_IS_BEGIN_PARENS(elem), \
-        elem, \
-        (MSGPACK_PP_STRINGIZE(elem))(elem) \
-    )
-
-#define MSGPACK_DEFINE_MAP_IMPL(...) \
-    MSGPACK_PP_SEQ_TO_TUPLE( \
-        MSGPACK_PP_SEQ_FOR_EACH( \
-            MSGPACK_DEFINE_MAP_EACH_PROC, \
-            0, \
-            MSGPACK_PP_VARIADIC_TO_SEQ(__VA_ARGS__) \
-        ) \
-    )
-
-#define MSGPACK_DEFINE_MAP(...) \
-    template <typename Packer> \
-    void msgpack_pack(Packer& pk) const \
-    { \
-        msgpack::type::make_define_map \
-            MSGPACK_DEFINE_MAP_IMPL(__VA_ARGS__) \
-            .msgpack_pack(pk); \
-    } \
-    void msgpack_unpack(msgpack::object const& o) \
-    { \
-        msgpack::type::make_define_map \
-            MSGPACK_DEFINE_MAP_IMPL(__VA_ARGS__) \
-            .msgpack_unpack(o); \
-    }\
-    template <typename MSGPACK_OBJECT> \
-    void msgpack_object(MSGPACK_OBJECT* o, msgpack::zone& z) const \
-    { \
-        msgpack::type::make_define_map \
-            MSGPACK_DEFINE_MAP_IMPL(__VA_ARGS__) \
-            .msgpack_object(o, z); \
-    }
-
-#define MSGPACK_BASE_MAP(base) \
-    (MSGPACK_PP_STRINGIZE(base))(*const_cast<base *>(static_cast<base const*>(this)))
+#include <map>
 
 namespace msgpack {
 /// @cond
@@ -149,7 +94,7 @@ struct define_map {
 
 
 template <typename... Args>
-define_map<Args...> make_define_map(Args&... args)
+inline define_map<Args...> make_define_map(Args&... args)
 {
     return define_map<Args...>(args...);
 }
@@ -160,4 +105,4 @@ define_map<Args...> make_define_map(Args&... args)
 /// @endcond
 }  // namespace msgpack
 
-#endif // MSGPACK_CPP11_DEFINE_MAP_HPP
+#endif // MSGPACK_V1_CPP11_DEFINE_MAP_HPP

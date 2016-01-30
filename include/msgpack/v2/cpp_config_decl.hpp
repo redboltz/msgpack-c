@@ -30,6 +30,8 @@ using v1::integral_constant;
 
 using v1::is_same;
 
+using v1::underlying_type;
+
 /// @cond
 }  // MSGPACK_API_VERSION_NAMESPACE(v2)
 /// @endcond
@@ -54,6 +56,7 @@ using v1::move;
 using v1::swap;
 using v1::enable_if;
 using v1::is_same;
+using v1::underlying_type;
 
 /// @cond
 }  // MSGPACK_API_VERSION_NAMESPACE(v2)

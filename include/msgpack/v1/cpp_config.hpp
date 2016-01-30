@@ -65,38 +65,16 @@ struct is_same : false_type {};
 template<class T>
 struct is_same<T, T> : true_type {};
 
+template<typename T>
+struct underlying_type {
+    typedef int type;
+};
+
 /// @cond
 }  // MSGPACK_API_VERSION_NAMESPACE(v1)
 /// @endcond
 
 }  // namespace msgpack
-
-#else  // MSGPACK_USE_CPP03
-
-#include <memory>
-#include <tuple>
-
-namespace msgpack {
-/// @cond
-MSGPACK_API_VERSION_NAMESPACE(v1) {
-/// @endcond
-
-    // unique_ptr
-    using std::unique_ptr;
-    // using std::make_unique; // since C++14
-    using std::hash;
-
-    // utility
-    using std::move;
-    using std::swap;
-    using std::enable_if;
-    using std::is_same;
-
-/// @cond
-}  // MSGPACK_API_VERSION_NAMESPACE(v1)
-/// @endcond
-}  // namespace msgpack
-
 
 #endif // MSGPACK_USE_CPP03
 

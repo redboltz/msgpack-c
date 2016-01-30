@@ -60,6 +60,9 @@ typedef integral_constant<bool, false> false_type;
 template<class T, class U>
 struct is_same;
 
+template<typename T>
+struct underlying_type;
+
 /// @cond
 }  // MSGPACK_API_VERSION_NAMESPACE(v1)
 /// @endcond
@@ -87,6 +90,7 @@ MSGPACK_API_VERSION_NAMESPACE(v1) {
     using std::swap;
     using std::enable_if;
     using std::is_same;
+    using std::underlying_type;
 
 /// @cond
 }  // MSGPACK_API_VERSION_NAMESPACE(v1)

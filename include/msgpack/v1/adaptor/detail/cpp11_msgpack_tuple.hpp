@@ -1,20 +1,18 @@
 //
 // MessagePack for C++ static resolution routine
 //
-// Copyright (C) 2008-2015 FURUHASHI Sadayuki and KONDO Takatoshi
+// Copyright (C) 2008-2016 FURUHASHI Sadayuki and KONDO Takatoshi
 //
 //    Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_CPP11_MSGPACK_TUPLE_HPP
-#define MSGPACK_CPP11_MSGPACK_TUPLE_HPP
+#ifndef MSGPACK_V1_CPP11_MSGPACK_TUPLE_HPP
+#define MSGPACK_V1_CPP11_MSGPACK_TUPLE_HPP
 
-#include "msgpack/versioning.hpp"
-#include "msgpack/object_fwd.hpp"
-#include "msgpack/meta.hpp"
-
-#include <tuple>
+#include "msgpack/v1/adaptor/detail/cpp11_msgpack_tuple_decl.hpp"
+#include "msgpack/adaptor/adaptor_base.hpp"
+#include "msgpack/pack.hpp"
 
 namespace msgpack {
 
@@ -142,9 +140,6 @@ struct pack<msgpack::type::tuple<Args...>> {
 } // namespace adaptor
 
 // --- Convert from tuple to object ---
-
-template <typename... Args>
-struct MsgpackTupleAs;
 
 template <typename T, typename... Args>
 struct MsgpackTupleAsImpl {
