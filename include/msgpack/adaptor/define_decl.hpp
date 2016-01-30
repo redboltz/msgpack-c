@@ -95,7 +95,7 @@
     struct convert<enum_name> { \
       msgpack::object const& operator()(msgpack::object const& o, enum_name& v) const { \
         msgpack::underlying_type<enum_name>::type tmp; \
-        o >> tmp; \
+        msgpack::operator>>(o, tmp);                   \
         v = static_cast<enum_name>(tmp);   \
         return o; \
       } \
@@ -104,14 +104,14 @@
     struct object<enum_name> { \
       void operator()(msgpack::object& o, const enum_name& v) const { \
         auto tmp = static_cast<msgpack::underlying_type<enum_name>::type>(v); \
-        o << tmp; \
+        msgpack::operator<<(o, tmp);                                    \
       } \
     }; \
     template<> \
     struct object_with_zone<enum_name> { \
       void operator()(msgpack::object::with_zone& o, const enum_name& v) const {  \
         auto tmp = static_cast<msgpack::underlying_type<enum_name>::type>(v); \
-        o << tmp; \
+        msgpack::operator<<(o, tmp);                                    \
       } \
     }; \
     template <> \
