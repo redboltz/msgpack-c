@@ -58,7 +58,8 @@ struct as;
 
 } // namespace adaptor
 
-using v1::has_as;
+template <typename T>
+struct has_as;
 
 #endif // !defined(MSGPACK_USE_CPP03)
 

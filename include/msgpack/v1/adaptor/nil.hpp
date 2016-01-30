@@ -67,13 +67,6 @@ struct object_with_zone<type::nil_t> {
 
 } // namespace adaptor
 
-template <>
-inline void msgpack::object::as<void>() const
-{
-    msgpack::type::nil_t v;
-    convert(v);
-}
-
 /// @cond
 }  // MSGPACK_API_VERSION_NAMESPACE(v1)
 /// @endcond
@@ -81,3 +74,4 @@ inline void msgpack::object::as<void>() const
 }  // namespace msgpack
 
 #endif // MSGPACK_V1_TYPE_NIL_HPP
+q

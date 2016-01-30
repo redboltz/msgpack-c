@@ -54,9 +54,11 @@ struct has_as {
 private:
     template <typename U>
     static auto check(U*) ->
+        // Check v1 specialization
         typename std::is_same<
-            decltype(msgpack::adaptor::as<U>()(std::declval<msgpack::object>())),
-            T>::type;
+            decltype(adaptor::as<U>()(std::declval<msgpack::object>())),
+            T
+        >::type;
     template <typename>
     static std::false_type check(...);
 public:
@@ -234,6 +236,8 @@ private:
 /// @cond
 } // MSGPACK_API_VERSION_NAMESPACE(v1)
 /// @endcond
+
+
 
 } // namespace msgpack
 
