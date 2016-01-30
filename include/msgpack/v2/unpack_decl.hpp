@@ -30,11 +30,11 @@ using v1::str_size_overflow;
 using v1::bin_size_overflow;
 using v1::ext_size_overflow;
 using v1::depth_size_overflow;
-class unpack_limit;
+using v1::unpack_limit;
 
 namespace detail {
 
-class unpack_user;
+using v1::detail::unpack_user;
 
 using v1::detail::unpack_uint8;
 using v1::detail::unpack_uint16;

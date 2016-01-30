@@ -74,4 +74,3 @@ struct object_with_zone<type::nil_t> {
 }  // namespace msgpack
 
 #endif // MSGPACK_V1_TYPE_NIL_HPP
-q

@@ -237,8 +237,6 @@ private:
 } // MSGPACK_API_VERSION_NAMESPACE(v1)
 /// @endcond
 
-
-
 } // namespace msgpack
 
 #endif // MSGPACK_V1_OBJECT_FWD_HPP
