@@ -7,8 +7,8 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_TYPE_LIST_HPP
-#define MSGPACK_TYPE_LIST_HPP
+#ifndef MSGPACK_V1_TYPE_LIST_HPP
+#define MSGPACK_V1_TYPE_LIST_HPP
 
 #include "msgpack/versioning.hpp"
 #include "msgpack/adaptor/adaptor_base.hpp"
@@ -103,4 +103,4 @@ struct object_with_zone<std::list<T, Alloc> > {
 
 }  // namespace msgpack
 
-#endif // MSGPACK_TYPE_LIST_HPP
+#endif // MSGPACK_V1_TYPE_LIST_HPP

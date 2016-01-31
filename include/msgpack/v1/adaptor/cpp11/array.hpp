@@ -8,8 +8,8 @@
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef MSGPACK_CPP11_ARRAY_HPP
-#define MSGPACK_CPP11_ARRAY_HPP
+#ifndef MSGPACK_V1_TYPE_CPP11_ARRAY_HPP
+#define MSGPACK_V1_TYPE_CPP11_ARRAY_HPP
 
 #include "msgpack/versioning.hpp"
 #include "msgpack/adaptor/adaptor_base.hpp"
@@ -135,4 +135,4 @@ struct object_with_zone<std::array<T, N>> {
 
 } // namespace msgpack
 
-#endif // MSGPACK_CPP11_ARRAY_HPP
+#endif // MSGPACK_V1_TYPE_CPP11_ARRAY_HPP

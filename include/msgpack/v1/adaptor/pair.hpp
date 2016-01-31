@@ -7,8 +7,8 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_TYPE_PAIR_HPP
-#define MSGPACK_TYPE_PAIR_HPP
+#ifndef MSGPACK_V1_TYPE_PAIR_HPP
+#define MSGPACK_V1_TYPE_PAIR_HPP
 
 #include "msgpack/versioning.hpp"
 #include "msgpack/adaptor/adaptor_base.hpp"
@@ -80,4 +80,4 @@ struct object_with_zone<std::pair<T1, T2> > {
 
 }  // namespace msgpack
 
-#endif // MSGPACK_TYPE_PAIR_HPP
+#endif // MSGPACK_V1_TYPE_PAIR_HPP

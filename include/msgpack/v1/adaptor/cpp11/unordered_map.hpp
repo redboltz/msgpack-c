@@ -7,8 +7,8 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_TYPE_UNORDERED_MAP_HPP
-#define MSGPACK_TYPE_UNORDERED_MAP_HPP
+#ifndef MSGPACK_V1_TYPE_CPP11_UNORDERED_MAP_HPP
+#define MSGPACK_V1_TYPE_CPP11_UNORDERED_MAP_HPP
 
 #include "msgpack/versioning.hpp"
 #include "msgpack/adaptor/adaptor_base.hpp"
@@ -179,4 +179,4 @@ struct object_with_zone<std::unordered_multimap<K, V, Hash, Compare, Alloc>> {
 } // namespace msgpack
 
 
-#endif // MSGPACK_TYPE_UNORDERED_MAP_HPP
+#endif // MSGPACK_V1_TYPE_CPP11_UNORDERED_MAP_HPP

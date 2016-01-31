@@ -7,8 +7,8 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_TYPE_BOOST_STRING_REF_HPP
-#define MSGPACK_TYPE_BOOST_STRING_REF_HPP
+#ifndef MSGPACK_V1_TYPE_BOOST_STRING_REF_HPP
+#define MSGPACK_V1_TYPE_BOOST_STRING_REF_HPP
 
 #include <boost/version.hpp>
 #if (BOOST_VERSION / 100000) >= 1 && ((BOOST_VERSION / 100) % 1000) >= 53
@@ -84,4 +84,4 @@ struct object_with_zone<boost::string_ref> {
 
 #endif // (BOOST_VERSION / 100000) >= 1 && ((BOOST_VERSION / 100) % 1000) >= 53
 
-#endif // MSGPACK_TYPE_BOOST_STRING_REF_HPP
+#endif // MSGPACK_V1_TYPE_BOOST_STRING_REF_HPP

@@ -7,14 +7,15 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_TYPE_ARRAY_UNSIGNED_CHAR_HPP
-#define MSGPACK_TYPE_ARRAY_UNSIGNED_CHAR_HPP
+#ifndef MSGPACK_V1_TYPE_CPP11_ARRAY_UNSIGNED_CHAR_HPP
+#define MSGPACK_V1_TYPE_CPP11_ARRAY_UNSIGNED_CHAR_HPP
 
 #include "msgpack/versioning.hpp"
 #include "msgpack/adaptor/adaptor_base.hpp"
 #include "msgpack/adaptor/check_container_size.hpp"
 
 #include <array>
+#include <cstring>
 
 namespace msgpack {
 
@@ -86,4 +87,4 @@ struct object_with_zone<std::array<unsigned char, N>> {
 
 } // namespace msgpack
 
-#endif // MSGPACK_TYPE_ARRAY_UNSIGNED_CHAR_HPP
+#endif // MSGPACK_V1_TYPE_CPP11_ARRAY_UNSIGNED_CHAR_HPP

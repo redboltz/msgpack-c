@@ -7,8 +7,8 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_TYPE_DEQUE_HPP
-#define MSGPACK_TYPE_DEQUE_HPP
+#ifndef MSGPACK_V1_TYPE_DEQUE_HPP
+#define MSGPACK_V1_TYPE_DEQUE_HPP
 
 #include "msgpack/versioning.hpp"
 #include "msgpack/adaptor/adaptor_base.hpp"
@@ -105,4 +105,4 @@ struct object_with_zone<std::deque<T, Alloc> > {
 
 }  // namespace msgpack
 
-#endif /* msgpack/type/deque.hpp */
+#endif // MSGPACK_V1_TYPE_DEQUE_HPP

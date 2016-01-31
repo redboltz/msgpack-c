@@ -7,8 +7,8 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_CPP11_TUPLE_HPP
-#define MSGPACK_CPP11_TUPLE_HPP
+#ifndef MSGPACK_V1_TYPE_CPP11_TUPLE_HPP
+#define MSGPACK_V1_TYPE_CPP11_TUPLE_HPP
 
 #include "msgpack/versioning.hpp"
 #include "msgpack/adaptor/adaptor_base.hpp"
@@ -173,4 +173,4 @@ struct object_with_zone<std::tuple<Args...>> {
 
 } // namespace msgpack
 
-#endif // MSGPACK_CPP11_TUPLE_HPP
+#endif // MSGPACK_V1_TYPE_CPP11_TUPLE_HPP

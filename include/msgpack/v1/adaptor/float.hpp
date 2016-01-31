@@ -7,8 +7,8 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_TYPE_FLOAT_HPP
-#define MSGPACK_TYPE_FLOAT_HPP
+#ifndef MSGPACK_V1_TYPE_FLOAT_HPP
+#define MSGPACK_V1_TYPE_FLOAT_HPP
 
 #include "msgpack/versioning.hpp"
 #include "msgpack/object_fwd.hpp"
@@ -120,4 +120,4 @@ struct object_with_zone<double> {
 
 }  // namespace msgpack
 
-#endif // MSGPACK_TYPE_FLOAT_HPP
+#endif // MSGPACK_V1_TYPE_FLOAT_HPP
