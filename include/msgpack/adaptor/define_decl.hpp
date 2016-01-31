@@ -103,14 +103,14 @@
     template<> \
     struct object<enum_name> { \
       void operator()(msgpack::object& o, const enum_name& v) const { \
-        auto tmp = static_cast<msgpack::underlying_type<enum_name>::type>(v); \
+        msgpack::underlying_type<enum_name>::type tmp = static_cast<msgpack::underlying_type<enum_name>::type>(v); \
         msgpack::operator<<(o, tmp);                                    \
       } \
     }; \
     template<> \
     struct object_with_zone<enum_name> { \
       void operator()(msgpack::object::with_zone& o, const enum_name& v) const {  \
-        auto tmp = static_cast<msgpack::underlying_type<enum_name>::type>(v); \
+        msgpack::underlying_type<enum_name>::type tmp = static_cast<msgpack::underlying_type<enum_name>::type>(v); \
         msgpack::operator<<(o, tmp);                                    \
       } \
     }; \

@@ -1,78 +1,19 @@
 //
 // MessagePack for C++ static resolution routine
 //
-// Copyright (C) 2008-2009 FURUHASHI Sadayuki
+// Copyright (C) 2008-2016 FURUHASHI Sadayuki and KONDO Takatoshi
 //
 //    Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_CPP03_DEFINE_ARRAY_HPP
-#define MSGPACK_CPP03_DEFINE_ARRAY_HPP
+#ifndef MSGPACK_V1_CPP03_DEFINE_ARRAY_HPP
+#define MSGPACK_V1_CPP03_DEFINE_ARRAY_HPP
 
-#include "msgpack/versioning.hpp"
+#include "msgpack/v1/adaptor/detail/cpp03_define_array_decl.hpp"
 #include "msgpack/adaptor/msgpack_tuple.hpp"
 #include "msgpack/adaptor/adaptor_base.hpp"
 #include "msgpack/object_fwd.hpp"
-
-#define MSGPACK_DEFINE_ARRAY(...) \
-    template <typename Packer> \
-    void msgpack_pack(Packer& pk) const \
-    { \
-        msgpack::type::make_define_array(__VA_ARGS__).msgpack_pack(pk); \
-    } \
-    void msgpack_unpack(msgpack::object const& o) \
-    { \
-        msgpack::type::make_define_array(__VA_ARGS__).msgpack_unpack(o); \
-    }\
-    template <typename MSGPACK_OBJECT> \
-    void msgpack_object(MSGPACK_OBJECT* o, msgpack::zone& z) const \
-    { \
-        msgpack::type::make_define_array(__VA_ARGS__).msgpack_object(o, z); \
-    }
-
-#define MSGPACK_BASE_ARRAY(base) (*const_cast<base *>(static_cast<base const*>(this)))
-
-// MSGPACK_ADD_ENUM must be used in the global namespace.
-#define MSGPACK_ADD_ENUM(enum_name) \
-  namespace msgpack { \
-  /** @cond */ \
-  MSGPACK_API_VERSION_NAMESPACE(v1) { \
-  /** @endcond */ \
-  namespace adaptor { \
-    template<> \
-    struct convert<enum_name> { \
-      msgpack::object const& operator()(msgpack::object const& o, enum_name& v) const {\
-        int tmp; \
-        o >> tmp; \
-        v = static_cast<enum_name>(tmp); \
-        return o; \
-      } \
-    }; \
-    template<> \
-    struct object<enum_name> { \
-      void operator()(msgpack::object& o, const enum_name& v) const {\
-        o << static_cast<int>(v); \
-      } \
-    }; \
-    template<> \
-    struct object_with_zone<enum_name> { \
-      void operator()(msgpack::object::with_zone& o, const enum_name& v) const { \
-        o << static_cast<int>(v); \
-      } \
-    }; \
-    template<> \
-    struct pack<enum_name> { \
-      template <typename Stream> \
-      msgpack::packer<Stream>& operator()(msgpack::packer<Stream>& o, const enum_name& v) const { \
-        return o << static_cast<int>(v); \
-      } \
-    }; \
-  } \
-  /** @cond */ \
-  } \
-  /** @endcond */ \
-  }
 
 namespace msgpack {
 /// @cond
@@ -80,11 +21,6 @@ MSGPACK_API_VERSION_NAMESPACE(v1) {
 /// @endcond
 namespace type {
 
-/// @cond
-
-template <typename A0 = void, typename A1 = void, typename A2 = void, typename A3 = void, typename A4 = void, typename A5 = void, typename A6 = void, typename A7 = void, typename A8 = void, typename A9 = void, typename A10 = void, typename A11 = void, typename A12 = void, typename A13 = void, typename A14 = void, typename A15 = void, typename A16 = void, typename A17 = void, typename A18 = void, typename A19 = void, typename A20 = void, typename A21 = void, typename A22 = void, typename A23 = void, typename A24 = void, typename A25 = void, typename A26 = void, typename A27 = void, typename A28 = void, typename A29 = void, typename A30 = void, typename A31 = void, typename A32 = void>
-struct define_array;
-/// @endcond
 
 template <>
 struct define_array<> {
@@ -3486,5 +3422,4 @@ inline define_array<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, 
 /// @endcond
 }  // namespace msgpack
 
-
-#endif // MSGPACK_CPP03_DEFINE_ARRAY_HPP
+#endif // MSGPACK_V1_CPP03_DEFINE_ARRAY_HPP
