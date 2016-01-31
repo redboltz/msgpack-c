@@ -57,7 +57,7 @@ matrix:
     - os: osx
       env: ACTION="ci/build_cmake.sh"     VERSION="cpp11" ARCH="32" LIBPATH="/usr/local/lib32" BOOST=""      BOOST_INC=""                 SHARED="OFF" CHAR_SIGN="unsigned" API_VERSION="2"
     - os: osx
-      env: ACTION="ci/build_autotools.sh" VERSION="cpp11" ARCH="32" LIBPATH="/usr/local/lib32" BOOST="boost" BOOST_INC="/usr/local/boost" CHAR_SIGN="unsigned"              API_VERSION="1"
+      env: ACTION="ci/build_autotools.sh" VERSION="cpp11" ARCH="32" LIBPATH="/usr/local/lib32" BOOST="boost" BOOST_INC="/usr/local/boost" CHAR_SIGN="unsigned"              API_VERSION="2"
     - os: osx
       env: ACTION="ci/build_cmake.sh"     VERSION="cpp03" ARCH="32" LIBPATH="/usr/local/lib32" BOOST="boost" BOOST_INC="/usr/local/boost" SHARED="OFF" CHAR_SIGN="signed"   API_VERSION="2"
 
@@ -85,7 +85,7 @@ matrix:
       env: ACTION="ci/build_cmake.sh"     VERSION="cpp03" ARCH="64" LIBPATH="/usr/local/lib"   BOOST=""      BOOST_INC=""                 CHAR_SIGN="unsigned"              API_VERSION="2"
     - os: linux
       compiler: clang
-      env: ACTION="ci/build_cmake.sh"     VERSION="cpp03" ARCH="32" LIBPATH="/usr/local/lib32" BOOST="boost" BOOST_INC="/usr/local/boost" SHARED="OFF" CHAR_SIGN="signed"   API_VERSION="1"
+      env: ACTION="ci/build_cmake.sh"     VERSION="cpp03" ARCH="32" LIBPATH="/usr/local/lib32" BOOST="boost" BOOST_INC="/usr/local/boost" SHARED="OFF" CHAR_SIGN="signed"   API_VERSION="2"
 
 script:
   - git clean -xdf && CMAKE_LIBRARY_PATH=${LIBPATH} ${ACTION} ${VERSION} ${ARCH} ${BOOST} ${BOOST_INC} ${CHAR_SIGN}
