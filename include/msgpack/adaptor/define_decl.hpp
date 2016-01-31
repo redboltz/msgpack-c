@@ -118,7 +118,7 @@
     struct pack<enum_name> { \
       template <typename Stream> \
       msgpack::packer<Stream>& operator()(msgpack::packer<Stream>& o, const enum_name& v) const { \
-        return o << static_cast<msgpack::underlying_type<enum_name>::type>(v); \
+          return msgpack::operator<<(o, static_cast<msgpack::underlying_type<enum_name>::type>(v)); \
       } \
     }; \
   } \

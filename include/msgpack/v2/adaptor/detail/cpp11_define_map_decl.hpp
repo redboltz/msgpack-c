@@ -19,8 +19,8 @@ MSGPACK_API_VERSION_NAMESPACE(v2) {
 namespace type {
 
 using v1::type::define_map_imp;
-
 using v1::type::define_map;
+using v1::type::make_define_map;
 
 }  // namespace type
 /// @cond

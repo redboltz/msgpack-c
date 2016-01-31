@@ -1,22 +1,20 @@
 //
 // MessagePack for C++ static resolution routine
 //
-// Copyright (C) 2008-2015 FURUHASHI Sadayuki
+// Copyright (C) 2008-2016 FURUHASHI Sadayuki and KONDO Takatoshi
 //
 //    Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_TYPE_MAP_HPP
-#define MSGPACK_TYPE_MAP_HPP
+#ifndef MSGPACK_V1_TYPE_MAP_HPP
+#define MSGPACK_V1_TYPE_MAP_HPP
 
-#include "msgpack/versioning.hpp"
-#include "msgpack/object_fwd.hpp"
-#include "msgpack/adaptor/check_container_size.hpp"
+#include "msgpack/v1/adaptor/map_decl.hpp"
+#include "msgpack/adaptor/adaptor_base.hpp"
 
 #include <map>
 #include <vector>
-#include <algorithm>
 
 namespace msgpack {
 
@@ -26,7 +24,7 @@ MSGPACK_API_VERSION_NAMESPACE(v1) {
 
 namespace type {
 
-template <typename K, typename V, typename Compare = std::less<K>, typename Alloc = std::allocator<std::pair<K, V> > >
+template <typename K, typename V, typename Compare, typename Alloc>
 class assoc_vector : public std::vector< std::pair<K, V>, Alloc > {
 #if !defined(MSGPACK_USE_CPP03)
     using std::vector<std::pair<K, V>, Alloc>::vector;
@@ -303,4 +301,4 @@ struct object_with_zone<std::multimap<K, V, Compare, Alloc> > {
 
 }  // namespace msgpack
 
-#endif // MSGPACK_TYPE_MAP_HPP
+#endif // MSGPACK_V1_TYPE_MAP_HPP

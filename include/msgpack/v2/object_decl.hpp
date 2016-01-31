@@ -38,46 +38,19 @@ using v1::detail::packer_serializer;
 } // namespace detail
 
 // obsolete
-template <typename Type>
-class define;
+using v1::define;
 
-bool operator==(const msgpack::object& x, const msgpack::object& y);
-
-template <typename T>
-bool operator==(const msgpack::object& x, const T& y);
-
-bool operator!=(const msgpack::object& x, const msgpack::object& y);
-
-template <typename T>
-bool operator==(const T& y, const msgpack::object& x);
-
-template <typename T>
-bool operator!=(const msgpack::object& x, const T& y);
-
-template <typename T>
-bool operator!=(const T& y, const msgpack::object& x);
-
-void operator<< (msgpack::object& o, const msgpack_object& v);
+using v1::operator==;
+using v1::operator!=;
 
 // obsolete
-template <typename T>
-void convert(T& v, msgpack::object const& o);
+using v1::convert;
 
 // obsolete
-template <typename Stream, typename T>
-void pack(msgpack::packer<Stream>& o, const T& v);
+using v1::pack;
 
 // obsolete
-template <typename Stream, typename T>
-void pack_copy(msgpack::packer<Stream>& o, T v);
-
-template <typename Stream>
-msgpack::packer<Stream>& operator<< (msgpack::packer<Stream>& o, const msgpack::object& v);
-
-template <typename Stream>
-msgpack::packer<Stream>& operator<< (msgpack::packer<Stream>& o, const msgpack::object::with_zone& v);
-
-std::ostream& operator<< (std::ostream& s, const msgpack::object& o);
+using v1::pack_copy;
 
 /// @cond
 }  // MSGPACK_API_VERSION_NAMESPACE(v2)

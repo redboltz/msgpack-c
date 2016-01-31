@@ -1,18 +1,16 @@
 //
 // MessagePack for C++ static resolution routine
 //
-// Copyright (C) 2008-2013 FURUHASHI Sadayuki and KONDO Takatoshi
+// Copyright (C) 2008-2016 FURUHASHI Sadayuki and KONDO Takatoshi
 //
 //    Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_CPP03_MSGPACK_TUPLE_HPP
-#define MSGPACK_CPP03_MSGPACK_TUPLE_HPP
+#ifndef MSGPACK_V1_CPP03_MSGPACK_TUPLE_HPP
+#define MSGPACK_V1_CPP03_MSGPACK_TUPLE_HPP
 
-#include "msgpack/versioning.hpp"
-#include "msgpack/object.hpp"
-#include "msgpack/adaptor/adaptor_base.hpp"
+#include "msgpack/v1/adaptor/msgpack_tuple_decl.hpp"
 
 namespace msgpack {
 
@@ -25,17 +23,6 @@ namespace type {
 // FIXME operator==
 // FIXME operator!=
 
-
-/// @cond
-template <typename A0 = void, typename A1 = void, typename A2 = void, typename A3 = void, typename A4 = void, typename A5 = void, typename A6 = void, typename A7 = void, typename A8 = void, typename A9 = void, typename A10 = void, typename A11 = void, typename A12 = void, typename A13 = void, typename A14 = void, typename A15 = void, typename A16 = void, typename A17 = void, typename A18 = void, typename A19 = void, typename A20 = void, typename A21 = void, typename A22 = void, typename A23 = void, typename A24 = void, typename A25 = void, typename A26 = void, typename A27 = void, typename A28 = void, typename A29 = void, typename A30 = void, typename A31 = void, typename A32 = void>
-struct tuple;
-/// @endcond
-
-template <typename Tuple, int N>
-struct tuple_element;
-
-template <typename Tuple, int N>
-struct const_tuple_element;
 
 template <typename T>
 struct tuple_type {
@@ -13906,4 +13893,4 @@ struct object_with_zone<type::tuple<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10,
 
 }  // namespace msgpack
 
-#endif // MSGPACK_CPP03_MSGPACK_TUPLE_HPP
+#endif // MSGPACK_V1_CPP03_MSGPACK_TUPLE_HPP
