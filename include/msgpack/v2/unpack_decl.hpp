@@ -76,14 +76,16 @@ using v1::detail::value;
 
 using v1::detail::load;
 
-using v1::detail::context;
-
 } // detail
 
 
 using v1::unpacked;
 
-using v1::unpacker;
+/// Unpacking class for a stream deserialization.
+class unpacker;
+
+template <typename unpack_visitor>
+class basic_unpacker;
 
 using v1::unpack_return;
 
@@ -293,9 +295,17 @@ msgpack::object unpack(
     const char* data, std::size_t len,
     unpack_reference_func f = nullptr, void* user_data = nullptr, unpack_limit const& limit = unpack_limit());
 
+template <typename UnpackVisitor>
+bool unpack(const char* data, size_t len, size_t& off, UnpackVisitor&);
+
+
 namespace detail {
 
-using v1::detail::unpack_imp;
+unpack_return
+unpack_imp(const char* data, std::size_t len, std::size_t& off,
+           msgpack::zone& result_zone, msgpack::object& result, bool& referenced,
+           unpack_reference_func f, void* user_data,
+           unpack_limit const& limit);
 
 } // detail
 
