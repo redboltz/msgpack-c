@@ -84,7 +84,7 @@ using v1::unpacked;
 /// Unpacking class for a stream deserialization.
 class unpacker;
 
-template <typename unpack_visitor>
+template <typename unpack_visitor, typename referenced_buffer_hook>
 class basic_unpacker;
 
 using v1::unpack_return;
