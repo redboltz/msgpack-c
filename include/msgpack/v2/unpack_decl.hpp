@@ -88,7 +88,10 @@ template <typename unpack_visitor, typename referenced_buffer_hook>
 class basic_unpacker;
 
 using v1::unpack_return;
-
+using v1::UNPACK_SUCCESS;
+using v1::UNPACK_EXTRA_BYTES;
+using v1::UNPACK_CONTINUE;
+using v1::UNPACK_PARSE_ERROR;
 
 /// Unpack msgpack::object from a buffer.
 /**
@@ -296,7 +299,7 @@ msgpack::object unpack(
     unpack_reference_func f = nullptr, void* user_data = nullptr, unpack_limit const& limit = unpack_limit());
 
 template <typename UnpackVisitor>
-bool unpack(const char* data, size_t len, size_t& off, UnpackVisitor&);
+void unpack_visit(const char* data, size_t len, size_t& off, UnpackVisitor&);
 
 
 namespace detail {

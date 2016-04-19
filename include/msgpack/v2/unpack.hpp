@@ -1517,7 +1517,7 @@ inline msgpack::object_handle unpack(
     unpack_limit const& limit)
 {
     bool referenced;
-    return unpack(data, len, off, referenced, f, user_data, limit);
+    return msgpack::v2::unpack(data, len, off, referenced, f, user_data, limit);
 }
 
 inline msgpack::object_handle unpack(
@@ -1526,7 +1526,7 @@ inline msgpack::object_handle unpack(
     unpack_limit const& limit)
 {
     std::size_t off = 0;
-    return unpack(data, len, off, referenced, f, user_data, limit);
+    return msgpack::v2::unpack(data, len, off, referenced, f, user_data, limit);
 }
 
 inline msgpack::object_handle unpack(
@@ -1536,7 +1536,7 @@ inline msgpack::object_handle unpack(
 {
     bool referenced;
     std::size_t off = 0;
-    return unpack(data, len, off, referenced, f, user_data, limit);
+    return msgpack::v2::unpack(data, len, off, referenced, f, user_data, limit);
 }
 
 inline void unpack(
@@ -1574,11 +1574,11 @@ inline void unpack(
 inline void unpack(
     msgpack::object_handle& result,
     const char* data, std::size_t len, std::size_t& off,
-    unpack_reference_func f, void* user_data,
+    msgpack::v2::unpack_reference_func f, void* user_data,
             unpack_limit const& limit)
 {
     bool referenced;
-    unpack(result, data, len, off, referenced, f, user_data, limit);
+    msgpack::v2::unpack(result, data, len, off, referenced, f, user_data, limit);
 }
 
 inline void unpack(
@@ -1588,7 +1588,7 @@ inline void unpack(
     unpack_limit const& limit)
 {
     std::size_t off = 0;
-    unpack(result, data, len, off, referenced, f, user_data, limit);
+    msgpack::v2::unpack(result, data, len, off, referenced, f, user_data, limit);
 }
 
 inline void unpack(
@@ -1599,7 +1599,7 @@ inline void unpack(
 {
     bool referenced;
     std::size_t off = 0;
-    unpack(result, data, len, off, referenced, f, user_data, limit);
+    msgpack::v2::unpack(result, data, len, off, referenced, f, user_data, limit);
 }
 
 
@@ -1638,7 +1638,7 @@ inline msgpack::object unpack(
     unpack_limit const& limit)
 {
     bool referenced;
-    return unpack(z, data, len, off, referenced, f, user_data, limit);
+    return msgpack::v2::unpack(z, data, len, off, referenced, f, user_data, limit);
 }
 
 inline msgpack::object unpack(
@@ -1648,7 +1648,7 @@ inline msgpack::object unpack(
     unpack_limit const& limit)
 {
     std::size_t off = 0;
-    return unpack(z, data, len, off, referenced, f, user_data, limit);
+    return msgpack::v2::unpack(z, data, len, off, referenced, f, user_data, limit);
 }
 
 inline msgpack::object unpack(
@@ -1659,14 +1659,57 @@ inline msgpack::object unpack(
 {
     bool referenced;
     std::size_t off = 0;
-    return unpack(z, data, len, off, referenced, f, user_data, limit);
+    return msgpack::v2::unpack(z, data, len, off, referenced, f, user_data, limit);
 }
 
 template <typename UnpackVisitor>
-inline bool unpack(const char* data, size_t len, size_t& off, UnpackVisitor&) {
+inline void unpack_visit(const char* data, size_t len, size_t& off, UnpackVisitor& v) {
+    std::size_t noff = off;
+    unpack_return ret = unpack_visit_imp(data, len, noff, v);
+    switch(ret) {
+    case UNPACK_SUCCESS:
+        off = noff;
+        return;
+    case UNPACK_EXTRA_BYTES:
+        off = noff;
+        return;
+    case UNPACK_CONTINUE:
+        throw msgpack::insufficient_bytes("insufficient bytes");
+    case UNPACK_PARSE_ERROR:
+    default:
+        throw msgpack::parse_error("parse error");
+    }
 }
 
 namespace detail {
+
+template <typename UnpackVisitor>
+inline unpack_return
+unpack_visit_imp(const char* data, size_t len, size_t& off, UnpackVisitor& v) {
+    std::size_t noff = off;
+
+    if(len <= noff) {
+        // FIXME
+        return UNPACK_CONTINUE;
+    }
+    detail::context<UnpackVisitor> ctx(v);
+    unpack_visit(data, len, noff, v);
+    int e = ctx.execute(data, len, noff);
+    if(e < 0) {
+        return UNPACK_PARSE_ERROR;
+    }
+    off = noff;
+
+    if(e == 0) {
+        return UNPACK_CONTINUE;
+    }
+
+    if(noff < len) {
+        return UNPACK_EXTRA_BYTES;
+    }
+
+    return UNPACK_SUCCESS;
+}
 
 inline unpack_return
 unpack_imp(const char* data, std::size_t len, std::size_t& off,
@@ -1680,35 +1723,14 @@ unpack_imp(const char* data, std::size_t len, std::size_t& off,
         // FIXME
         return UNPACK_CONTINUE;
     }
-
     create_object_visitor v(f, user_data, limit);
-    detail::context ctx(f, user_data, limit);
-    ctx.init();
-
-    ctx.user().set_zone(result_zone);
-    ctx.user().set_referenced(false);
+    v.set_zone(result_zone);
     referenced = false;
-
-    unpack(data, len, noff, v);
-    int e = ctx.execute(data, len, noff);
-    if(e < 0) {
-        return UNPACK_PARSE_ERROR;
-    }
-
-    referenced = ctx.user().referenced();
-    off = noff;
-
-    if(e == 0) {
-        return UNPACK_CONTINUE;
-    }
-
-    result = ctx.data();
-
-    if(noff < len) {
-        return UNPACK_EXTRA_BYTES;
-    }
-
-    return UNPACK_SUCCESS;
+    v.set_referenced(referenced);
+    unpack_return ret = unpack_visit_imp(data, len, off, v);
+    referenced = v.referenced();
+    result = v.data();
+    return ret;
 }
 
 } // detail
