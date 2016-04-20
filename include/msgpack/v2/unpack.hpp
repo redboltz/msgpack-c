@@ -949,6 +949,7 @@ public:
      *
      */
     basic_unpacker(unpack_visitor& visitor,
+                   referenced_buffer_hook& hook,
                    std::size_t initial_buffer_size = MSGPACK_UNPACKER_INIT_BUFFER_SIZE);
 
 #if !defined(MSGPACK_USE_CPP03)
@@ -998,28 +999,9 @@ public:
      */
     void buffer_consumed(std::size_t size);
 
-    /// Unpack one msgpack::object. [obsolete]
-    /**
-     *
-     * @param result The object that contains unpacked data.
-     *
-     * @return If one msgpack::object is unpacked, then return true, if msgpack::object is incomplete
-     *         and additional data is required, then return false. If data format is invalid, throw
-     *         msgpack::parse_error.
-     *
-     * See:
-     * https://github.com/msgpack/msgpack-c/wiki/v1_1_cpp_unpacker#msgpack-controls-a-buffer
-     * This function is obsolete. Use the reference inteface version of next() function instead of
-     * the pointer interface version.
-     */
-    bool next(msgpack::object_handle* result);
-
     /// Unpack one msgpack::object.
     /**
      *
-     * @param result The object that contains unpacked data.
-     * @param referenced If the unpacked object contains reference of the buffer,
-     *                   then set as true, otherwise false.
      *
      * @return If one msgpack::object is unpacked, then return true, if msgpack::object is incomplete
      *         and additional data is required, then return false. If data format is invalid, throw
@@ -1028,42 +1010,13 @@ public:
      * See:
      * https://github.com/msgpack/msgpack-c/wiki/v1_1_cpp_unpacker#msgpack-controls-a-buffer
      */
-    bool next(msgpack::object_handle& result, bool& referenced);
-
-    /// Unpack one msgpack::object.
-    /**
-     *
-     * @param result The object that contains unpacked data.
-     *
-     * @return If one msgpack::object is unpacked, then return true, if msgpack::object is incomplete
-     *         and additional data is required, then return false. If data format is invalid, throw
-     *         msgpack::parse_error.
-     *
-     * See:
-     * https://github.com/msgpack/msgpack-c/wiki/v1_1_cpp_unpacker#msgpack-controls-a-buffer
-     */
-    bool next(msgpack::object_handle& result);
+    bool next();
 
     /// Get message size.
     /**
      * @return Returns parsed_size() + nonparsed_size()
      */
     std::size_t message_size() const;
-
-    /*! for backward compatibility */
-    bool execute();
-
-    /*! for backward compatibility */
-    msgpack::object const& data();
-
-    /*! for backward compatibility */
-    msgpack::zone* release_zone();
-
-    /*! for backward compatibility */
-    void reset_zone();
-
-    /*! for backward compatibility */
-    void reset();
 
 public:
     /// Get parsed message size.
@@ -1110,6 +1063,8 @@ public:
      */
     void remove_nonparsed_buffer();
 
+    void reset();
+
 protected:
     char* get_raw_buffer() {
         return m_buffer;
@@ -1126,6 +1081,7 @@ private:
     std::size_t m_parsed;
     std::size_t m_initial_buffer_size;
     detail::context<unpack_visitor> m_ctx;
+    referenced_buffer_hook& m_referenced_buffer_hook;
 
 #if defined(MSGPACK_USE_CPP03)
 private:
@@ -1141,8 +1097,10 @@ public:
 template <typename unpack_visitor, typename referenced_buffer_hook>
 inline basic_unpacker<unpack_visitor, referenced_buffer_hook>::basic_unpacker(
     unpack_visitor& visitor,
+    referenced_buffer_hook& hook,
     std::size_t initial_buffer_size)
-    :m_ctx(visitor)
+    :m_ctx(visitor),
+     m_referenced_buffer_hook(hook)
 {
     if(initial_buffer_size < COUNTER_SIZE) {
         initial_buffer_size = COUNTER_SIZE;
@@ -1176,7 +1134,8 @@ inline basic_unpacker<unpack_visitor, referenced_buffer_hook>::basic_unpacker(th
      m_off(other.m_off),
      m_parsed(other.m_parsed),
      m_initial_buffer_size(other.m_initial_buffer_size),
-     m_ctx(other.m_ctx) {
+     m_ctx(other.m_ctx),
+     m_referenced_buffer_hook(other.m_referenced_buffer_hook) {
     other.m_buffer = nullptr;
 }
 
@@ -1209,7 +1168,7 @@ template <typename unpack_visitor, typename referenced_buffer_hook>
 inline void basic_unpacker<unpack_visitor, referenced_buffer_hook>::expand_buffer(std::size_t size)
 {
     if(m_used == m_off && detail::get_count(m_buffer) == 1
-        && !m_ctx.user().referenced()) {
+       && !m_ctx.visitor().referenced()) {
         // rewind buffer
         m_free += m_used - COUNTER_SIZE;
         m_used = COUNTER_SIZE;
@@ -1258,15 +1217,15 @@ inline void basic_unpacker<unpack_visitor, referenced_buffer_hook>::expand_buffe
 
         std::memcpy(tmp+COUNTER_SIZE, m_buffer + m_off, not_parsed);
 
-        if(m_ctx.user().referenced()) {
+        if(m_ctx.visitor().referenced()) {
             try {
-                referenced_buffer_hook(m_buffer);
+                m_referenced_buffer_hook(m_buffer);
             }
             catch (...) {
                 ::free(tmp);
                 throw;
             }
-            m_ctx.user().set_referenced(false);
+            m_ctx.visitor().set_referenced(false);
         } else {
             detail::decr_count(m_buffer);
         }
@@ -1298,52 +1257,16 @@ inline void basic_unpacker<unpack_visitor, referenced_buffer_hook>::buffer_consu
 }
 
 template <typename unpack_visitor, typename referenced_buffer_hook>
-inline bool basic_unpacker<unpack_visitor, referenced_buffer_hook>::next(
-    msgpack::object_handle& result,
-    bool& referenced)
+    inline bool basic_unpacker<unpack_visitor, referenced_buffer_hook>::next()
 {
-    referenced = false;
     int ret = execute_imp();
     if(ret < 0) {
         throw msgpack::parse_error("parse error");
     }
 
     if(ret == 0) {
-        result.zone().reset();
-        result.set(msgpack::object());
         return false;
 
-    } else {
-        referenced = m_ctx.user().referenced();
-        result.zone().reset( release_zone() );
-        result.set(data());
-        reset();
-        return true;
-    }
-}
-
-template <typename unpack_visitor, typename referenced_buffer_hook>
-inline bool basic_unpacker<unpack_visitor, referenced_buffer_hook>::next(msgpack::object_handle& result)
-{
-    bool referenced;
-    return next(result, referenced);
-}
-
-template <typename unpack_visitor, typename referenced_buffer_hook>
-inline bool basic_unpacker<unpack_visitor, referenced_buffer_hook>::next(msgpack::object_handle* result)
-{
-    return next(*result);
-}
-
-
-template <typename unpack_visitor, typename referenced_buffer_hook>
-inline bool basic_unpacker<unpack_visitor, referenced_buffer_hook>::execute()
-{
-    int ret = execute_imp();
-    if(ret < 0) {
-        throw msgpack::parse_error("parse error");
-    } else if(ret == 0) {
-        return false;
     } else {
         return true;
     }
@@ -1413,21 +1336,49 @@ struct zone_push_finalizer {
     msgpack::zone* m_z;
 };
 
-class unpacker : public  basic_unpacker<detail::create_object_visitor, zone_push_finalizer> {
+class unpacker : public basic_unpacker<detail::create_object_visitor, zone_push_finalizer> {
+    typedef basic_unpacker<detail::create_object_visitor, zone_push_finalizer> base;
 public:
-    template <typename unpack_reference_func>
     unpacker(unpack_reference_func f = &unpacker::default_reference_func,
              void* user_data = nullptr,
              std::size_t initial_buffer_size = MSGPACK_UNPACKER_INIT_BUFFER_SIZE,
              unpack_limit const& limit = unpack_limit())
-        :basic_unpacker<detail::create_object_visitor, zone_push_finalizer>(m_visitor, initial_buffer_size),
+        :base(m_visitor, m_finalizer, initial_buffer_size),
          m_visitor(f, user_data, limit),
          m_z(new msgpack::zone),
-         m_finalizer(*m_z)
-  {
+         m_finalizer(*m_z) {
         m_visitor.set_zone(*m_z);
         m_visitor.set_referenced(false);
     }
+    /// Unpack one msgpack::object.
+    /**
+     *
+     * @param result The object that contains unpacked data.
+     * @param referenced If the unpacked object contains reference of the buffer,
+     *                   then set as true, otherwise false.
+     *
+     * @return If one msgpack::object is unpacked, then return true, if msgpack::object is incomplete
+     *         and additional data is required, then return false. If data format is invalid, throw
+     *         msgpack::parse_error.
+     *
+     * See:
+     * https://github.com/msgpack/msgpack-c/wiki/v1_1_cpp_unpacker#msgpack-controls-a-buffer
+     */
+    bool next(msgpack::object_handle& result, bool& referenced);
+
+    /// Unpack one msgpack::object.
+    /**
+     *
+     * @param result The object that contains unpacked data.
+     *
+     * @return If one msgpack::object is unpacked, then return true, if msgpack::object is incomplete
+     *         and additional data is required, then return false. If data format is invalid, throw
+     *         msgpack::parse_error.
+     *
+     * See:
+     * https://github.com/msgpack/msgpack-c/wiki/v1_1_cpp_unpacker#msgpack-controls-a-buffer
+     */
+    bool next(msgpack::object_handle& result);
     msgpack::object const& data();
     msgpack::zone* release_zone();
     void reset_zone();
@@ -1440,6 +1391,26 @@ private:
     msgpack::unique_ptr<msgpack::zone> m_z;
     zone_push_finalizer m_finalizer;
 };
+
+inline bool unpacker::next(msgpack::object_handle& result, bool& referenced) {
+    bool ret = base::next();
+    if (ret) {
+        referenced = m_visitor.referenced();
+        result.zone().reset( release_zone() );
+        result.set(data());
+        reset();
+    }
+    else {
+        result.zone().reset();
+        result.set(msgpack::object());
+    }
+    return ret;
+}
+
+inline bool unpacker::next(msgpack::object_handle& result) {
+    bool referenced;
+    return next(result, referenced);
+}
 
 inline msgpack::object const& unpacker::data()
 {
