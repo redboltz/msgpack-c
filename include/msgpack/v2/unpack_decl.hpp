@@ -87,11 +87,13 @@ class unpacker;
 template <typename unpack_visitor, typename referenced_buffer_hook>
 class basic_unpacker;
 
-using v1::unpack_return;
-using v1::UNPACK_SUCCESS;
-using v1::UNPACK_EXTRA_BYTES;
-using v1::UNPACK_CONTINUE;
-using v1::UNPACK_PARSE_ERROR;
+typedef enum unpack_return {
+    UNPACK_SUCCESS      = v1::UNPACK_SUCCESS,
+    UNPACK_EXTRA_BYTES  = v1::UNPACK_EXTRA_BYTES,
+    UNPACK_CONTINUE     = v1::UNPACK_CONTINUE,
+    UNPACK_PARSE_ERROR  = v1::UNPACK_PARSE_ERROR,
+    UNPACK_STOP_VISITOR = -2
+} unpack_return;
 
 /// Unpack msgpack::object from a buffer.
 /**

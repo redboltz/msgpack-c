@@ -64,26 +64,17 @@ public:
     // visit functions
     bool visit_nil() {
         m_obj->type = msgpack::type::NIL;
-        if(m_stack.size() == 1) {
-            return true;
-        }
-        return false;
+        return true;
     }
     bool visit_boolean(bool v) {
         m_obj->type = msgpack::type::BOOLEAN;
         m_obj->via.boolean = v;
-        if(m_stack.size() == 1) {
-            return true;
-        }
-        return false;
+        return true;
     }
     bool visit_positive_integer(uint64_t v) {
         m_obj->type = msgpack::type::POSITIVE_INTEGER;
         m_obj->via.u64 = v;
-        if(m_stack.size() == 1) {
-            return true;
-        }
-        return false;
+        return true;
     }
     bool visit_negative_integer(int64_t v) {
         if(v >= 0) {
@@ -94,18 +85,12 @@ public:
             m_obj->type = msgpack::type::NEGATIVE_INTEGER;
             m_obj->via.i64 = v;
         }
-        if(m_stack.size() == 1) {
-            return true;
-        }
-        return false;
+        return true;
     }
     bool visit_float(double v) {
         m_obj->type = msgpack::type::FLOAT;
         m_obj->via.f64 = v;
-        if(m_stack.size() == 1) {
-            return true;
-        }
-        return false;
+        return true;
     }
     bool visit_str(const char* v, uint32_t size) {
         m_obj->type = msgpack::type::STR;
@@ -120,10 +105,7 @@ public:
             m_obj->via.str.ptr = tmp;
         }
         m_obj->via.str.size = size;
-        if(m_stack.size() == 1) {
-            return true;
-        }
-        return false;
+        return true;
     }
     bool visit_bin(const char* v, uint32_t size) {
         m_obj->type = msgpack::type::BIN;
@@ -138,10 +120,7 @@ public:
             m_obj->via.bin.ptr = tmp;
         }
         m_obj->via.bin.size = size;
-        if(m_stack.size() == 1) {
-            return true;
-        }
-        return false;
+        return true;
     }
     bool visit_ext(const char* v, uint32_t size) {
         m_obj->type = msgpack::type::EXT;
@@ -156,23 +135,17 @@ public:
             m_obj->via.ext.ptr = tmp;
         }
         m_obj->via.ext.size = size;
-        if(m_stack.size() == 1) {
-            return true;
-        }
-        return false;
+        return true;
     }
     bool start_array(uint32_t num_elements) {
         if (num_elements > m_limit.array()) throw msgpack::array_size_overflow("array size overflow");
         m_obj->type = msgpack::type::ARRAY;
         m_obj->via.array.size = 0;
+        if (num_elements == 0) {
+            return true;
+        }
         m_obj->via.array.ptr =
             static_cast<msgpack::object*>(m_zone->allocate_align(num_elements*sizeof(msgpack::object)));
-        if (num_elements == 0) {
-            if (m_stack.size() == 1) {
-                return true;
-            }
-            return false;
-        }
         m_stack.back().set_container_type(MSGPACK_CT_ARRAY_ITEM);
         m_stack.back().set_count(num_elements);
         if (m_stack.size() <= m_limit.depth()) {
@@ -182,21 +155,18 @@ public:
             throw msgpack::depth_size_overflow("depth size overflow");
         }
         m_obj = &m_stack.back().obj();
-        return false;
+        return true;
     }
     bool end_array();
     bool start_map(uint32_t num_kv_pairs) {
         if (num_kv_pairs > m_limit.map()) throw msgpack::map_size_overflow("map size overflow");
         m_obj->type = msgpack::type::MAP;
         m_obj->via.map.size = 0;
+        if (num_kv_pairs == 0) {
+            return true;
+        }
         m_obj->via.map.ptr =
             static_cast<msgpack::object_kv*>(m_zone->allocate_align(num_kv_pairs*sizeof(msgpack::object_kv)));
-        if (num_kv_pairs == 0) {
-            if (m_stack.size() == 1) {
-                return true;
-            }
-            return false;
-        }
         m_stack.back().set_container_type(MSGPACK_CT_MAP_KEY);
         m_stack.back().set_count(num_kv_pairs);
         if (m_stack.size() <= m_limit.depth()) {
@@ -206,7 +176,7 @@ public:
             throw msgpack::depth_size_overflow("depth size overflow");
         }
         m_obj = &m_stack.back().obj();
-        return false;
+        return true;
     }
     bool start_map_key();
     bool end_map_key();
@@ -231,12 +201,14 @@ public:
     context(unpack_visitor& v)
         :m_trail(0), m_visitor(v), m_cs(MSGPACK_CS_HEADER)
     {
+        m_stack_index.reserve(MSGPACK_EMBED_STACK_SIZE);
     }
 
     void init()
     {
         m_cs = MSGPACK_CS_HEADER;
         m_trail = 0;
+        m_stack_index.clear();
         m_visitor.init();
     }
 
@@ -250,7 +222,7 @@ public:
         return m_visitor;
     }
 
-    int execute(const char* data, std::size_t len, std::size_t& off);
+    unpack_return execute(const char* data, std::size_t len, std::size_t& off);
 
 private:
     template <typename T>
@@ -258,37 +230,45 @@ private:
     {
         return static_cast<uint32_t>(*p) & 0x1f;
     }
-#if 0
-    template <typename T, typename Func>
-    int push_aggregate(
-        Func const& f,
-        uint32_t container_type,
-        msgpack::object& obj,
-        const char* load_pos,
-        std::size_t& off) {
-        typename value<T>::type tmp;
-        load<T>(tmp, load_pos);
-        f(m_user, tmp, m_stack.back().obj());
-        if(tmp == 0) {
-            obj = m_stack.back().obj();
-            int ret = push_proc(obj, off);
-            if (ret != 0) return ret;
+
+    template <typename T, typename StartVisitor, typename EndVisitor>
+    unpack_return start_aggregate(
+        StartVisitor const& sv,
+        EndVisitor const& ev,
+        const char* load_pos) {
+        typename value<T>::type size;
+        load<T>(size, load_pos);
+        ++m_current;
+        if (size == 0) {
+            {
+                bool ret = sv(size);
+                if (!ret) {
+                    return UNPACK_STOP_VISITOR;
+                }
+            }
+            {
+                bool ret = ev();
+                if (!ret) {
+                    return UNPACK_STOP_VISITOR;
+                }
+            }
+            if (m_stack_index.empty()) {
+                return UNPACK_SUCCESS;
+            }
         }
         else {
-            m_stack.back().set_container_type(container_type);
-            m_stack.back().set_count(tmp);
-            if (m_stack.size() <= m_user.limit().depth()) {
-                m_stack.push_back(unpack_stack());
+            m_num_elements = size;
+            m_stack_index.push_back(0);
+            bool ret = sv(size);
+            if (!ret) {
+                return UNPACK_STOP_VISITOR;
             }
-            else {
-                throw msgpack::depth_size_overflow("depth size overflow");
-            }
-            m_cs = MSGPACK_CS_HEADER;
-            ++m_current;
         }
-        return 0;
+        m_cs = MSGPACK_CS_HEADER;
+        return UNPACK_CONTINUE;
     }
 
+#if 0
     int push_item(msgpack::object& obj) {
         bool finish = false;
         while (!finish) {
@@ -350,6 +330,35 @@ private:
 #endif
 
 private:
+    struct array_sv {
+        array_sv(unpack_visitor& visitor):m_visitor(visitor) {}
+        bool operator()(std::uint32_t size) const {
+            return m_visitor.start_array(size);
+        }
+        unpack_visitor& m_visitor;
+    };
+    struct array_ev {
+        array_ev(unpack_visitor& visitor):m_visitor(visitor) {}
+        bool operator()() const {
+            return m_visitor.end_array();
+        }
+        unpack_visitor& m_visitor;
+    };
+    struct map_sv {
+        map_sv(unpack_visitor& visitor):m_visitor(visitor) {}
+        bool operator()(std::uint32_t size) const {
+            return m_visitor.start_map(size);
+        }
+        unpack_visitor& m_visitor;
+    };
+    struct map_ev {
+        map_ev(unpack_visitor& visitor):m_visitor(visitor) {}
+        bool operator()() const {
+            return m_visitor.end_map();
+        }
+        unpack_visitor& m_visitor;
+    };
+
     char const* m_start;
     char const* m_current;
 
@@ -357,6 +366,7 @@ private:
     unpack_visitor& m_visitor;
     uint32_t m_cs;
     uint32_t m_num_elements;
+    std::vector<std::size_t> m_stack_index;
 };
 
 template <std::size_t N>
@@ -369,7 +379,7 @@ inline void check_ext_size<4>(std::size_t size) {
 }
 
 template <typename unpack_visitor>
-inline int context<unpack_visitor>::execute(const char* data, std::size_t len, std::size_t& off)
+inline unpack_return context<unpack_visitor>::execute(const char* data, std::size_t len, std::size_t& off)
 {
     assert(len >= off);
 
@@ -382,7 +392,7 @@ inline int context<unpack_visitor>::execute(const char* data, std::size_t len, s
 
     if(m_current == pe) {
         off = m_current - m_start;
-        return 0;
+        return UNPACK_CONTINUE;
     }
     bool fixed_trail_again = false;
     do {
@@ -390,19 +400,21 @@ inline int context<unpack_visitor>::execute(const char* data, std::size_t len, s
             fixed_trail_again = false;
             int selector = *reinterpret_cast<const unsigned char*>(m_current);
             if (0x00 <= selector && selector <= 0x7f) { // Positive Fixnum
-                bool ret = m_visitor.visit_positive_integer(*reinterpret_cast<const uint8_t*>(m_current));
+                uint8_t tmp = *reinterpret_cast<const uint8_t*>(m_current);
                 ++m_current;
-                if (ret) {
+                bool ret = m_visitor.visit_positive_integer(tmp);
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;
                 }
                 m_cs = MSGPACK_CS_HEADER;
             } else if(0xe0 <= selector && selector <= 0xff) { // Negative Fixnum
-                bool ret = m_visitor.visit_negative_integer(*reinterpret_cast<const int8_t*>(m_current));
+                int8_t tmp = *reinterpret_cast<const int8_t*>(m_current);
                 ++m_current;
-                if (ret) {
+                bool ret = m_visitor.visit_negative_integer(tmp);
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;
                 }
                 m_cs = MSGPACK_CS_HEADER;
             } else if (0xc4 <= selector && selector <= 0xdf) {
@@ -442,11 +454,11 @@ inline int context<unpack_visitor>::execute(const char* data, std::size_t len, s
             } else if(0xa0 <= selector && selector <= 0xbf) { // FixStr
                 m_trail = static_cast<uint32_t>(*m_current) & 0x1f;
                 if(m_trail == 0) {
-                    bool ret = m_visitor.visit_str(n, static_cast<uint32_t>(m_trail));
                     ++m_current;
-                    if (ret) {
+                    bool ret = m_visitor.visit_str(n, static_cast<uint32_t>(m_trail));
+                    if (!ret) {
                         off = m_current - m_start;
-                        return 1;
+                        return UNPACK_STOP_VISITOR;
                     }
                     m_cs = MSGPACK_CS_HEADER;
                 }
@@ -455,53 +467,44 @@ inline int context<unpack_visitor>::execute(const char* data, std::size_t len, s
                     fixed_trail_again = true;
                 }
             } else if(0x90 <= selector && selector <= 0x9f) { // FixArray
-                uint32_t size;
-                load<fix_tag>(size, m_current);
-                m_num_elements = size;
-                bool ret = m_visitor.start_array(size);
-                if (ret) {
+                unpack_return ret = start_aggregate<fix_tag>(array_sv(m_visitor), array_ev(m_visitor), m_current);
+                if (ret != UNPACK_CONTINUE) {
                     off = m_current - m_start;
-                    return 1;
+                    return ret;
                 }
-                m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } else if(0x80 <= selector && selector <= 0x8f) { // FixMap
-                uint32_t size;
-                load<fix_tag>(size, m_current);
-                bool ret = m_visitor.start_map(size);
-                if (ret) {
+                unpack_return ret = start_aggregate<fix_tag>(map_sv(m_visitor), map_ev(m_visitor), m_current);
+                if (ret != UNPACK_CONTINUE) {
                     off = m_current - m_start;
-                    return 1;
+                    return ret;
                 }
-                m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } else if(selector == 0xc2) { // false
+                ++m_current;
                 bool ret = m_visitor.visit_boolean(false);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } else if(selector == 0xc3) { // true
+                ++m_current;
                 bool ret = m_visitor.visit_boolean(true);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } else if(selector == 0xc0) { // nil
+                ++m_current;
                 bool ret = m_visitor.visit_nil();
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } else {
                 off = m_current - m_start;
-                return -1;
+                return UNPACK_PARSE_ERROR;
             }
             // end MSGPACK_CS_HEADER
         }
@@ -512,7 +515,7 @@ inline int context<unpack_visitor>::execute(const char* data, std::size_t len, s
             }
             if(static_cast<std::size_t>(pe - m_current) < m_trail) {
                 off = m_current - m_start;
-                return 0;
+                return UNPACK_CONTINUE;
             }
             n = m_current;
             m_current += m_trail - 1;
@@ -522,13 +525,13 @@ inline int context<unpack_visitor>::execute(const char* data, std::size_t len, s
             case MSGPACK_CS_FLOAT: {
                 union { uint32_t i; float f; } mem;
                 load<uint32_t>(mem.i, n);
+                ++m_current;
                 bool ret = m_visitor.visit_float(mem.i);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_DOUBLE: {
                 union { uint64_t i; double f; } mem;
@@ -539,159 +542,159 @@ inline int context<unpack_visitor>::execute(const char* data, std::size_t len, s
                 // https://github.com/msgpack/msgpack-perl/pull/1
                 mem.i = (mem.i & 0xFFFFFFFFUL) << 32UL | (mem.i >> 32UL);
 #endif
+                ++m_current;
                 bool ret = m_visitor.visit_float(mem.i);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_UINT_8: {
                 uint8_t tmp;
                 load<uint8_t>(tmp, n);
+                ++m_current;
                 bool ret = m_visitor.visit_positive_integer(tmp);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_UINT_16: {
                 uint16_t tmp;
                 load<uint16_t>(tmp, n);
+                ++m_current;
                 bool ret = m_visitor.visit_positive_integer(tmp);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_UINT_32: {
                 uint32_t tmp;
                 load<uint32_t>(tmp, n);
+                ++m_current;
                 bool ret = m_visitor.visit_positive_integer(tmp);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_UINT_64: {
                 uint64_t tmp;
                 load<uint64_t>(tmp, n);
+                ++m_current;
                 bool ret = m_visitor.visit_positive_integer(tmp);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_INT_8: {
                 int8_t tmp;
                 load<int8_t>(tmp, n);
+                ++m_current;
                 bool ret = m_visitor.visit_negative_integer(tmp);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_INT_16: {
                 int16_t tmp;
                 load<int16_t>(tmp, n);
+                ++m_current;
                 bool ret = m_visitor.visit_negative_integer(tmp);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_INT_32: {
                 int32_t tmp;
                 load<int32_t>(tmp, n);
+                ++m_current;
                 bool ret = m_visitor.visit_negative_integer(tmp);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_INT_64: {
                 int64_t tmp;
                 load<int64_t>(tmp, n);
+                ++m_current;
                 bool ret = m_visitor.visit_negative_integer(tmp);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_FIXEXT_1: {
+                ++m_current;
                 bool ret = m_visitor.visit_ext(n, 1+1);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_FIXEXT_2: {
+                ++m_current;
                 bool ret = m_visitor.visit_ext(n, 2+1);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_FIXEXT_4: {
+                ++m_current;
                 bool ret = m_visitor.visit_ext(n, 4+1);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_FIXEXT_8: {
+                ++m_current;
                 bool ret = m_visitor.visit_ext(n, 8+1);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_FIXEXT_16: {
+                ++m_current;
                 bool ret = m_visitor.visit_ext(n, 16+1);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_STR_8: {
                 uint8_t tmp;
                 load<uint8_t>(tmp, n);
                 m_trail = tmp;
                 if(m_trail == 0) {
+                    ++m_current;
                     bool ret = m_visitor.visit_str(n, static_cast<uint32_t>(m_trail));
-                    if (ret) {
+                    if (!ret) {
                         off = m_current - m_start;
-                        return 1;
+                        return UNPACK_STOP_VISITOR;;
                     }
                     m_cs = MSGPACK_CS_HEADER;
-                    ++m_current;
                 }
                 else {
                     m_cs = MSGPACK_ACS_STR_VALUE;
@@ -703,13 +706,13 @@ inline int context<unpack_visitor>::execute(const char* data, std::size_t len, s
                 load<uint8_t>(tmp, n);
                 m_trail = tmp;
                 if(m_trail == 0) {
+                    ++m_current;
                     bool ret = m_visitor.visit_bin(n, static_cast<uint32_t>(m_trail));
-                    if (ret) {
+                    if (!ret) {
                         off = m_current - m_start;
-                        return 1;
+                        return UNPACK_STOP_VISITOR;;
                     }
                     m_cs = MSGPACK_CS_HEADER;
-                    ++m_current;
                 }
                 else {
                     m_cs = MSGPACK_ACS_BIN_VALUE;
@@ -721,13 +724,13 @@ inline int context<unpack_visitor>::execute(const char* data, std::size_t len, s
                 load<uint8_t>(tmp, n);
                 m_trail = tmp + 1;
                 if(m_trail == 0) {
+                    ++m_current;
                     bool ret = m_visitor.visit_ext(n, m_trail);
-                    if (ret) {
+                    if (!ret) {
                         off = m_current - m_start;
-                        return 1;
+                        return UNPACK_STOP_VISITOR;;
                     }
                     m_cs = MSGPACK_CS_HEADER;
-                    ++m_current;
                 }
                 else {
                     m_cs = MSGPACK_ACS_EXT_VALUE;
@@ -739,13 +742,13 @@ inline int context<unpack_visitor>::execute(const char* data, std::size_t len, s
                 load<uint16_t>(tmp, n);
                 m_trail = tmp;
                 if(m_trail == 0) {
+                    ++m_current;
                     bool ret = m_visitor.visit_str(n, static_cast<uint32_t>(m_trail));
-                    if (ret) {
+                    if (!ret) {
                         off = m_current - m_start;
-                        return 1;
+                        return UNPACK_STOP_VISITOR;;
                     }
                     m_cs = MSGPACK_CS_HEADER;
-                    ++m_current;
                 }
                 else {
                     m_cs = MSGPACK_ACS_STR_VALUE;
@@ -757,13 +760,13 @@ inline int context<unpack_visitor>::execute(const char* data, std::size_t len, s
                 load<uint16_t>(tmp, n);
                 m_trail = tmp;
                 if(m_trail == 0) {
+                    ++m_current;
                     bool ret = m_visitor.visit_bin(n, static_cast<uint32_t>(m_trail));
-                    if (ret) {
+                    if (!ret) {
                         off = m_current - m_start;
-                        return 1;
+                        return UNPACK_STOP_VISITOR;;
                     }
                     m_cs = MSGPACK_CS_HEADER;
-                    ++m_current;
                 }
                 else {
                     m_cs = MSGPACK_ACS_BIN_VALUE;
@@ -775,13 +778,13 @@ inline int context<unpack_visitor>::execute(const char* data, std::size_t len, s
                 load<uint16_t>(tmp, n);
                 m_trail = tmp + 1;
                 if(m_trail == 0) {
+                    ++m_current;
                     bool ret = m_visitor.visit_ext(n, m_trail);
-                    if (ret) {
+                    if (!ret) {
                         off = m_current - m_start;
-                        return 1;
+                        return UNPACK_STOP_VISITOR;;
                     }
                     m_cs = MSGPACK_CS_HEADER;
-                    ++m_current;
                 }
                 else {
                     m_cs = MSGPACK_ACS_EXT_VALUE;
@@ -793,13 +796,13 @@ inline int context<unpack_visitor>::execute(const char* data, std::size_t len, s
                 load<uint32_t>(tmp, n);
                 m_trail = tmp;
                 if(m_trail == 0) {
+                    ++m_current;
                     bool ret = m_visitor.visit_str(n, static_cast<uint32_t>(m_trail));
-                    if (ret) {
+                    if (!ret) {
                         off = m_current - m_start;
-                        return 1;
+                        return UNPACK_STOP_VISITOR;;
                     }
                     m_cs = MSGPACK_CS_HEADER;
-                    ++m_current;
                 }
                 else {
                     m_cs = MSGPACK_ACS_STR_VALUE;
@@ -811,13 +814,13 @@ inline int context<unpack_visitor>::execute(const char* data, std::size_t len, s
                 load<uint32_t>(tmp, n);
                 m_trail = tmp;
                 if(m_trail == 0) {
+                    ++m_current;
                     bool ret = m_visitor.visit_bin(n, static_cast<uint32_t>(m_trail));
-                    if (ret) {
+                    if (!ret) {
                         off = m_current - m_start;
-                        return 1;
+                        return UNPACK_STOP_VISITOR;;
                     }
                     m_cs = MSGPACK_CS_HEADER;
-                    ++m_current;
                 }
                 else {
                     m_cs = MSGPACK_ACS_BIN_VALUE;
@@ -831,13 +834,13 @@ inline int context<unpack_visitor>::execute(const char* data, std::size_t len, s
                 m_trail = tmp;
                 ++m_trail;
                 if(m_trail == 0) {
+                    ++m_current;
                     bool ret = m_visitor.visit_ext(n, m_trail);
-                    if (ret) {
+                    if (!ret) {
                         off = m_current - m_start;
-                        return 1;
+                        return UNPACK_STOP_VISITOR;;
                     }
                     m_cs = MSGPACK_CS_HEADER;
-                    ++m_current;
                 }
                 else {
                     m_cs = MSGPACK_ACS_EXT_VALUE;
@@ -845,89 +848,89 @@ inline int context<unpack_visitor>::execute(const char* data, std::size_t len, s
                 }
             } break;
             case MSGPACK_ACS_STR_VALUE: {
+                ++m_current;
                 bool ret = m_visitor.visit_ext(n, m_trail);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_ACS_BIN_VALUE: {
+                ++m_current;
                 bool ret = m_visitor.visit_bin(n, static_cast<uint32_t>(m_trail));
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_ACS_EXT_VALUE: {
+                ++m_current;
                 bool ret = m_visitor.visit_ext(n, m_trail);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_ARRAY_16: {
                 uint16_t size;
                 load<uint16_t>(size, n);
                 m_num_elements = size;
+                ++m_current;
                 bool ret = m_visitor.start_array(size);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_ARRAY_32: {
                 uint32_t size;
                 load<uint32_t>(size, n);
                 m_num_elements = size;
+                ++m_current;
                 bool ret = m_visitor.start_array(size);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_MAP_16: {
                 uint16_t size;
                 load<uint16_t>(size, n);
                 m_num_elements = size;
+                ++m_current;
                 bool ret = m_visitor.start_map(size);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             case MSGPACK_CS_MAP_32: {
                 uint32_t size;
                 load<uint32_t>(size, n);
                 m_num_elements = size;
+                ++m_current;
                 bool ret = m_visitor.start_map(size);
-                if (ret) {
+                if (!ret) {
                     off = m_current - m_start;
-                    return 1;
+                    return UNPACK_STOP_VISITOR;;
                 }
                 m_cs = MSGPACK_CS_HEADER;
-                ++m_current;
             } break;
             default:
                 off = m_current - m_start;
-                return -1;
+                return UNPACK_PARSE_ERROR;
             }
         }
     } while(m_current != pe);
 
     off = m_current - m_start;
-    return 0;
+    return UNPACK_CONTINUE;
 }
 
 } // detail
@@ -1119,8 +1122,6 @@ inline basic_unpacker<unpack_visitor, referenced_buffer_hook>::basic_unpacker(
     m_initial_buffer_size = initial_buffer_size;
 
     detail::init_count(m_buffer);
-
-    m_ctx.init();
 }
 
 #if !defined(MSGPACK_USE_CPP03)
