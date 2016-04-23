@@ -118,8 +118,11 @@ TEST(streaming, move)
 
     int count = 0;
     while(count < 3) {
+        std::cout  << "count:" << count << std::endl;
         msgpack::unpacker pac_in(std::move(pac));
+        std::cout  << __FILE__ << "(" << __LINE__ << ")" << std::endl;
         pac_in.reserve_buffer(32*1024);
+        std::cout  << __FILE__ << "(" << __LINE__ << ")" << std::endl;
 
         // read buffer into pac_in.buffer() upto
         // pac_in.buffer_capac_inity() bytes.
@@ -145,7 +148,9 @@ TEST(streaming, move)
         }
 
         EXPECT_TRUE(input < eof);
+        std::cout  << __FILE__ << "(" << __LINE__ << ")" << std::endl;
         pac = std::move(pac_in);
+        std::cout  << __FILE__ << "(" << __LINE__ << ")" << std::endl;
     }
 }
 

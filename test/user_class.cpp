@@ -222,6 +222,7 @@ TEST(MSGPACK_INHERIT, define_non_virtual)
     msgpack::pack(sbuf, b);
     msgpack::object_handle oh =
         msgpack::unpack(sbuf.data(), sbuf.size());
+    std::cout << oh.get() << std::endl;
     d_bottom br = oh.get().as<d_bottom>();
     EXPECT_EQ(b.b, br.b);
     EXPECT_EQ(b.m1, br.m1);

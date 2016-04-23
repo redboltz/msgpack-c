@@ -286,7 +286,8 @@ TEST(limit, unpack_depth_no_over)
     catch(msgpack::depth_size_overflow const&) {
         EXPECT_TRUE(false);
     }
-    catch(...) {
+    catch(std::exception const& e) {
+        std::cout << e.what() << std::endl;
         EXPECT_TRUE(false);
     }
 }
