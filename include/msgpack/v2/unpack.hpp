@@ -206,8 +206,12 @@ public:
         m_stack.pop_back();
         return true;
     }
-    void parse_error(size_t parsed_offset, size_t error_offset);
-    void insufficient_bytes(size_t parsed_offset, size_t error_offset);
+    void parse_error(size_t /*parsed_offset*/, size_t /*error_offset*/) {
+        throw msgpack::parse_error("parse error");
+    }
+    void insufficient_bytes(size_t /*parsed_offset*/, size_t /*error_offset*/) {
+        throw msgpack::insufficient_bytes("insufficient bytes");
+    }
 private:
 public:
     unpack_reference_func m_func;
@@ -219,7 +223,7 @@ public:
     bool m_referenced;
 };
 
-template <typename unpack_visitor_holder>
+template <typename UnpackVisitorHolder>
 class context {
 public:
     context()
@@ -244,8 +248,8 @@ private:
         return static_cast<uint32_t>(*p) & 0x1f;
     }
 
-    unpack_visitor_holder& holder() {
-        return static_cast<unpack_visitor_holder&>(*this);
+    UnpackVisitorHolder& holder() {
+        return static_cast<UnpackVisitorHolder&>(*this);
     }
 
     template <typename T, typename StartVisitor, typename EndVisitor>
@@ -300,38 +304,38 @@ private:
     }
 
     struct array_sv {
-        array_sv(unpack_visitor_holder& visitor_holder):m_visitor_holder(visitor_holder) {}
+        array_sv(UnpackVisitorHolder& visitor_holder):m_visitor_holder(visitor_holder) {}
         bool operator()(uint32_t size) const {
             return m_visitor_holder.visitor().start_array(size);
         }
         msgpack_container_type type() const { return MSGPACK_CT_ARRAY_ITEM; }
     private:
-        unpack_visitor_holder& m_visitor_holder;
+        UnpackVisitorHolder& m_visitor_holder;
     };
     struct array_ev {
-        array_ev(unpack_visitor_holder& visitor_holder):m_visitor_holder(visitor_holder) {}
+        array_ev(UnpackVisitorHolder& visitor_holder):m_visitor_holder(visitor_holder) {}
         bool operator()() const {
             return m_visitor_holder.visitor().end_array();
         }
     private:
-        unpack_visitor_holder& m_visitor_holder;
+        UnpackVisitorHolder& m_visitor_holder;
     };
     struct map_sv {
-        map_sv(unpack_visitor_holder& visitor_holder):m_visitor_holder(visitor_holder) {}
+        map_sv(UnpackVisitorHolder& visitor_holder):m_visitor_holder(visitor_holder) {}
         bool operator()(uint32_t size) const {
             return m_visitor_holder.visitor().start_map(size);
         }
         msgpack_container_type type() const { return MSGPACK_CT_MAP_KEY; }
     private:
-        unpack_visitor_holder& m_visitor_holder;
+        UnpackVisitorHolder& m_visitor_holder;
     };
     struct map_ev {
-        map_ev(unpack_visitor_holder& visitor_holder):m_visitor_holder(visitor_holder) {}
+        map_ev(UnpackVisitorHolder& visitor_holder):m_visitor_holder(visitor_holder) {}
         bool operator()() const {
             return m_visitor_holder.visitor().end_map();
         }
     private:
-        unpack_visitor_holder& m_visitor_holder;
+        UnpackVisitorHolder& m_visitor_holder;
     };
 
     struct unpack_stack {
@@ -346,7 +350,7 @@ private:
         void push(msgpack_container_type type, uint32_t rest) {
             m_stack.push_back(stack_elem(type, rest));
         }
-        unpack_return consume(unpack_visitor_holder& visitor_holder) {
+        unpack_return consume(UnpackVisitorHolder& visitor_holder) {
             while (!m_stack.empty()) {
                 stack_elem& e = m_stack.back();
                 switch (e.m_type) {
@@ -406,8 +410,8 @@ inline void check_ext_size<4>(std::size_t size) {
     if (size == 0xffffffff) throw msgpack::ext_size_overflow("ext size overflow");
 }
 
-template <typename unpack_visitor_holder>
-inline unpack_return context<unpack_visitor_holder>::execute(const char* data, std::size_t len, std::size_t& off)
+template <typename UnpackVisitorHolder>
+inline unpack_return context<UnpackVisitorHolder>::execute(const char* data, std::size_t len, std::size_t& off)
 {
     assert(len >= off);
 
@@ -504,6 +508,7 @@ inline unpack_return context<unpack_visitor_holder>::execute(const char* data, s
                 if (upr != UNPACK_CONTINUE) return upr;
             } else {
                 off = m_current - m_start;
+                holder().visitor().parse_error(off, off + 1);
                 return UNPACK_PARSE_ERROR;
             }
             // end MSGPACK_CS_HEADER
@@ -789,6 +794,7 @@ inline unpack_return context<unpack_visitor_holder>::execute(const char* data, s
             } break;
             default:
                 off = m_current - m_start;
+                holder().visitor().parse_error(n - m_start - 1, n - m_start);
                 return UNPACK_PARSE_ERROR;
             }
         }
@@ -803,10 +809,10 @@ inline unpack_return context<unpack_visitor_holder>::execute(const char* data, s
 
 /// Unpacking class for a stream deserialization.
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-class basic_unpacker : public detail::context<unpack_visitor_holder> {
-    typedef basic_unpacker<unpack_visitor_holder, referenced_buffer_hook> this_type;
-    typedef detail::context<unpack_visitor_holder> context_type;
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+class basic_unpacker : public detail::context<UnpackVisitorHolder> {
+    typedef basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook> this_type;
+    typedef detail::context<UnpackVisitorHolder> context_type;
 public:
     /// Constructor
     /**
@@ -817,7 +823,7 @@ public:
      * @param limit The size limit information of msgpack::object.
      *
      */
-    basic_unpacker(referenced_buffer_hook& hook,
+    basic_unpacker(ReferencedBufferHook& hook,
                    std::size_t initial_buffer_size = MSGPACK_UNPACKER_INIT_BUFFER_SIZE);
 
 #if !defined(MSGPACK_USE_CPP03)
@@ -939,7 +945,7 @@ protected:
     }
 private:
     void expand_buffer(std::size_t size);
-    int execute_imp();
+    unpack_return execute_imp();
 
 private:
     char* m_buffer;
@@ -948,7 +954,7 @@ private:
     std::size_t m_off;
     std::size_t m_parsed;
     std::size_t m_initial_buffer_size;
-    referenced_buffer_hook& m_referenced_buffer_hook;
+    ReferencedBufferHook& m_referenced_buffer_hook;
 
 #if defined(MSGPACK_USE_CPP03)
 private:
@@ -961,9 +967,9 @@ public:
 #endif // defined(MSGPACK_USE_CPP03)
 };
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-inline basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::basic_unpacker(
-    referenced_buffer_hook& hook,
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+inline basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::basic_unpacker(
+    ReferencedBufferHook& hook,
     std::size_t initial_buffer_size)
     :m_referenced_buffer_hook(hook)
 {
@@ -989,8 +995,8 @@ inline basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::basic_unpa
 #if !defined(MSGPACK_USE_CPP03)
 // Move constructor and move assignment operator
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-inline basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::basic_unpacker(this_type&& other)
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+inline basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::basic_unpacker(this_type&& other)
     :context_type(std::move(other)),
      m_buffer(other.m_buffer),
      m_used(other.m_used),
@@ -1006,8 +1012,8 @@ inline basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::basic_unpa
     other.m_parsed = 0;
 }
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-inline basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>& basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::operator=(this_type&& other) {
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+inline basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>& basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::operator=(this_type&& other) {
     this->~basic_unpacker();
     new (this) this_type(std::move(other));
     return *this;
@@ -1016,26 +1022,26 @@ inline basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>& basic_unpa
 #endif // !defined(MSGPACK_USE_CPP03)
 
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-inline basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::~basic_unpacker()
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+inline basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::~basic_unpacker()
 {
     // These checks are required for move operations.
     if (m_buffer) detail::decr_count(m_buffer);
 }
 
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-inline void basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::reserve_buffer(std::size_t size)
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+inline void basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::reserve_buffer(std::size_t size)
 {
     if(m_free >= size) return;
     expand_buffer(size);
 }
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-inline void basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::expand_buffer(std::size_t size)
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+inline void basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::expand_buffer(std::size_t size)
 {
     if(m_used == m_off && detail::get_count(m_buffer) == 1
-       && static_cast<unpack_visitor_holder&>(*this).visitor().referenced()) {
+       && static_cast<UnpackVisitorHolder&>(*this).visitor().referenced()) {
         // rewind buffer
         m_free += m_used - COUNTER_SIZE;
         m_used = COUNTER_SIZE;
@@ -1084,7 +1090,7 @@ inline void basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::expan
 
         std::memcpy(tmp+COUNTER_SIZE, m_buffer + m_off, not_parsed);
 
-        if(static_cast<unpack_visitor_holder&>(*this).referenced()) {
+        if(static_cast<UnpackVisitorHolder&>(*this).referenced()) {
             try {
                 m_referenced_buffer_hook(m_buffer);
             }
@@ -1092,7 +1098,7 @@ inline void basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::expan
                 ::free(tmp);
                 throw;
             }
-            static_cast<unpack_visitor_holder&>(*this).set_referenced(false);
+            static_cast<UnpackVisitorHolder&>(*this).set_referenced(false);
         } else {
             detail::decr_count(m_buffer);
         }
@@ -1104,29 +1110,29 @@ inline void basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::expan
     }
 }
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-inline char* basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::buffer()
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+inline char* basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::buffer()
 {
     return m_buffer + m_used;
 }
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-inline std::size_t basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::buffer_capacity() const
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+inline std::size_t basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::buffer_capacity() const
 {
     return m_free;
 }
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-inline void basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::buffer_consumed(std::size_t size)
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+inline void basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::buffer_consumed(std::size_t size)
 {
     m_used += size;
     m_free -= size;
 }
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-    inline bool basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::next()
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+    inline bool basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::next()
 {
-    int ret = execute_imp();
+    unpack_return ret = execute_imp();
     if(ret < 0) {
         throw msgpack::parse_error("parse error");
     }
@@ -1139,57 +1145,63 @@ template <typename unpack_visitor_holder, typename referenced_buffer_hook>
     }
 }
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-inline int basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::execute_imp()
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+inline unpack_return basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::execute_imp()
 {
     std::size_t off = m_off;
-    int ret = context_type::execute(m_buffer, m_used, m_off);
-    if(m_off > off) {
-        m_parsed += m_off - off;
+    unpack_return ret = context_type::execute(m_buffer, m_used, off);
+    switch(ret) {
+    case UNPACK_SUCCESS:
+    case UNPACK_CONTINUE:
+        m_off = off;
+        break;
+    case UNPACK_PARSE_ERROR:
+    default:
+        throw msgpack::parse_error("parse error");
     }
     return ret;
 }
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-inline void basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::reset()
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+inline void basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::reset()
 {
     context_type::init();
     // don't reset referenced flag
     m_parsed = 0;
 }
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-inline std::size_t basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::message_size() const
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+inline std::size_t basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::message_size() const
 {
     return m_parsed - m_off + m_used;
 }
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-inline std::size_t basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::parsed_size() const
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+inline std::size_t basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::parsed_size() const
 {
     return m_parsed;
 }
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-inline char* basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::nonparsed_buffer()
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+inline char* basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::nonparsed_buffer()
 {
     return m_buffer + m_off;
 }
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-inline std::size_t basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::nonparsed_size() const
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+inline std::size_t basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::nonparsed_size() const
 {
     return m_used - m_off;
 }
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-inline void basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::skip_nonparsed_buffer(std::size_t size)
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+inline void basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::skip_nonparsed_buffer(std::size_t size)
 {
     m_off += size;
 }
 
-template <typename unpack_visitor_holder, typename referenced_buffer_hook>
-inline void basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::remove_nonparsed_buffer()
+template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
+inline void basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::remove_nonparsed_buffer()
 {
     m_used = m_off;
 }
@@ -1508,6 +1520,7 @@ inline void unpack_visit(const char* data, size_t len, size_t& off, UnpackVisito
         off = noff;
         return;
     case UNPACK_CONTINUE:
+        v.insufficient_bytes(noff, noff);
         throw msgpack::insufficient_bytes("insufficient bytes");
     case UNPACK_PARSE_ERROR:
     default:
@@ -1537,21 +1550,20 @@ unpack_visit_imp(const char* data, size_t len, size_t& off, UnpackVisitor& v) {
         return UNPACK_CONTINUE;
     }
     detail::unpack_helper<UnpackVisitor> h(v);
-    unpack_return e = h.execute(data, len, noff);
-    if(e < 0) {
-        return UNPACK_PARSE_ERROR;
+    unpack_return ret = h.execute(data, len, noff);
+    switch (ret) {
+    case UNPACK_CONTINUE:
+        off = noff;
+        return ret;
+    case UNPACK_SUCCESS:
+        off = noff;
+        if(noff < len) {
+            return UNPACK_EXTRA_BYTES;
+        }
+        return ret;
+    default:
+        return ret;
     }
-    off = noff;
-
-    if(e == 0) {
-        return UNPACK_CONTINUE;
-    }
-
-    if(noff < len) {
-        return UNPACK_EXTRA_BYTES;
-    }
-
-    return UNPACK_SUCCESS;
 }
 
 inline unpack_return
