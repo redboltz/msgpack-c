@@ -37,11 +37,6 @@ public:
          m_stack(std::move(other.m_stack)),
          m_zone(other.m_zone),
          m_referenced(other.m_referenced) {
-        std::cout  << __FILE__ << "(" << __LINE__ << ")" << std::endl;
-        std::cout << m_stack.size() << std::endl;
-        std::cout << m_stack[0] << std::endl;
-        std::cout << m_obj << std::endl;
-        std::cout << other.m_obj << std::endl;
         other.m_zone = nullptr;
         m_stack[0] = &m_obj;
     }
@@ -59,8 +54,6 @@ public:
     }
     msgpack::object const& data() const
     {
-        std::cout  << __FILE__ << "(" << __LINE__ << ")" << std::endl;
-        std::cout << m_obj << std::endl;
         return m_obj;
     }
     msgpack::zone const& zone() const { return *m_zone; }
@@ -70,24 +63,20 @@ public:
     void set_referenced(bool referenced) { m_referenced = referenced; }
     // visit functions
     bool visit_nil() {
-        std::cout << __LINE__ << ":" << "nil" << std::endl;
         msgpack::object* obj = m_stack.back();
         obj->type = msgpack::type::NIL;
         return true;
     }
     bool visit_boolean(bool v) {
-        std::cout << __LINE__ << ":" << v << std::endl;
         msgpack::object* obj = m_stack.back();
         obj->type = msgpack::type::BOOLEAN;
         obj->via.boolean = v;
         return true;
     }
     bool visit_positive_integer(uint64_t v) {
-        std::cout << __LINE__ << ":" << v << std::endl;
         msgpack::object* obj = m_stack.back();
         obj->type = msgpack::type::POSITIVE_INTEGER;
         obj->via.u64 = v;
-        std::cout << obj << std::endl;
         return true;
     }
     bool visit_negative_integer(int64_t v) {
@@ -125,7 +114,6 @@ public:
         return true;
     }
     bool visit_bin(const char* v, uint32_t size) {
-        std::cout << __LINE__ << ":" << size << std::endl;
         if (size > m_limit.bin()) throw msgpack::bin_size_overflow("bin size overflow");
         msgpack::object* obj = m_stack.back();
         obj->type = msgpack::type::BIN;
@@ -142,7 +130,6 @@ public:
         return true;
     }
     bool visit_ext(const char* v, uint32_t size) {
-        std::cout << __LINE__ << ":" << size << std::endl;
         if (size > m_limit.ext()) throw msgpack::ext_size_overflow("ext size overflow");
         msgpack::object* obj = m_stack.back();
         obj->type = msgpack::type::EXT;
@@ -159,7 +146,6 @@ public:
         return true;
     }
     bool start_array(uint32_t num_elements) {
-        std::cout << "[(" << num_elements << ")" << std::endl;
         if (num_elements > m_limit.array()) throw msgpack::array_size_overflow("array size overflow");
         if (m_stack.size() > m_limit.depth()) throw msgpack::depth_size_overflow("depth size overflow");
         msgpack::object* obj = m_stack.back();
@@ -176,21 +162,17 @@ public:
         return true;
     }
     bool start_array_item() {
-        //        std::cout << "<" << std::endl;
         return true;
     }
     bool end_array_item() {
-        //        std::cout << ">" << std::endl;
         ++m_stack.back();
         return true;
     }
     bool end_array() {
-        //        std::cout << "]" << std::endl;
         m_stack.pop_back();
         return true;
     }
     bool start_map(uint32_t num_kv_pairs) {
-        std::cout << __LINE__ << ":" << num_kv_pairs << std::endl;
         if (num_kv_pairs > m_limit.map()) throw msgpack::map_size_overflow("map size overflow");
         if (m_stack.size() > m_limit.depth()) throw msgpack::depth_size_overflow("depth size overflow");
         msgpack::object* obj = m_stack.back();
@@ -221,7 +203,6 @@ public:
         return true;
     }
     bool end_map() {
-        std::cout << __LINE__ << std::endl;
         m_stack.pop_back();
         return true;
     }
@@ -992,7 +973,6 @@ inline basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::basic_unpa
     }
 
     m_buffer = buffer;
-    std::cout << __LINE__ << ":" << static_cast<void*>(m_buffer) << std::endl;
     m_used = COUNTER_SIZE;
     m_free = initial_buffer_size - m_used;
     m_off = COUNTER_SIZE;
@@ -1015,7 +995,6 @@ inline basic_unpacker<unpack_visitor_holder, referenced_buffer_hook>::basic_unpa
      m_parsed(other.m_parsed),
      m_initial_buffer_size(other.m_initial_buffer_size),
      m_referenced_buffer_hook(other.m_referenced_buffer_hook) {
-    std::cout << __LINE__ << ":" << static_cast<void*>(m_buffer) << std::endl;
     other.m_buffer = nullptr;
     other.m_used = 0;
     other.m_free = 0;
@@ -1253,8 +1232,6 @@ public:
          detail::create_object_visitor(std::move(other)),
          m_z(std::move(other.m_z)),
          m_finalizer(std::move(other.m_finalizer)) {
-        std::cout  << __FILE__ << "(" << __LINE__ << ")" << std::endl;
-        std::cout << detail::create_object_visitor::m_stack.size() << std::endl;
     }
     unpacker& operator=(unpacker&& other) {
         this->~unpacker();
