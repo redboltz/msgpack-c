@@ -301,7 +301,7 @@ private:
 
     struct array_sv {
         array_sv(unpack_visitor_holder& visitor_holder):m_visitor_holder(visitor_holder) {}
-        bool operator()(std::uint32_t size) const {
+        bool operator()(uint32_t size) const {
             return m_visitor_holder.visitor().start_array(size);
         }
         msgpack_container_type type() const { return MSGPACK_CT_ARRAY_ITEM; }
@@ -318,7 +318,7 @@ private:
     };
     struct map_sv {
         map_sv(unpack_visitor_holder& visitor_holder):m_visitor_holder(visitor_holder) {}
-        bool operator()(std::uint32_t size) const {
+        bool operator()(uint32_t size) const {
             return m_visitor_holder.visitor().start_map(size);
         }
         msgpack_container_type type() const { return MSGPACK_CT_MAP_KEY; }
