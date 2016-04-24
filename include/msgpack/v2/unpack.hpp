@@ -1133,16 +1133,7 @@ template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
     inline bool basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::next()
 {
     unpack_return ret = execute_imp();
-    if(ret < 0) {
-        throw msgpack::parse_error("parse error");
-    }
-
-    if(ret == 0) {
-        return false;
-
-    } else {
-        return true;
-    }
+    return ret == UNPACK_SUCCESS;
 }
 
 template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
@@ -1155,9 +1146,8 @@ inline unpack_return basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::
     case UNPACK_CONTINUE:
         m_off = off;
         break;
-    case UNPACK_PARSE_ERROR:
     default:
-        throw msgpack::parse_error("parse error");
+        break;
     }
     return ret;
 }
@@ -1348,11 +1338,8 @@ inline msgpack::object_handle unpack(
     case UNPACK_EXTRA_BYTES:
         off = noff;
         return msgpack::object_handle(obj, msgpack::move(z));
-    case UNPACK_CONTINUE:
-        throw msgpack::insufficient_bytes("insufficient bytes");
-    case UNPACK_PARSE_ERROR:
     default:
-        throw msgpack::parse_error("parse error");
+        break;
     }
     return msgpack::object_handle();
 }
@@ -1409,11 +1396,8 @@ inline void unpack(
         result.set(obj);
         result.zone() = msgpack::move(z);
         return;
-    case UNPACK_CONTINUE:
-        throw msgpack::insufficient_bytes("insufficient bytes");
-    case UNPACK_PARSE_ERROR:
     default:
-        throw msgpack::parse_error("parse error");
+        return;
     }
 }
 
@@ -1468,11 +1452,8 @@ inline msgpack::object unpack(
     case UNPACK_EXTRA_BYTES:
         off = noff;
         return obj;
-    case UNPACK_CONTINUE:
-        throw msgpack::insufficient_bytes("insufficient bytes");
-    case UNPACK_PARSE_ERROR:
     default:
-        throw msgpack::parse_error("parse error");
+        break;
     }
     return obj;
 }
@@ -1510,22 +1491,7 @@ inline msgpack::object unpack(
 
 template <typename UnpackVisitor>
 inline void unpack_visit(const char* data, size_t len, size_t& off, UnpackVisitor& v) {
-    std::size_t noff = off;
-    unpack_return ret = unpack_visit_imp(data, len, noff, v);
-    switch(ret) {
-    case UNPACK_SUCCESS:
-        off = noff;
-        return;
-    case UNPACK_EXTRA_BYTES:
-        off = noff;
-        return;
-    case UNPACK_CONTINUE:
-        v.insufficient_bytes(noff, noff);
-        throw msgpack::insufficient_bytes("insufficient bytes");
-    case UNPACK_PARSE_ERROR:
-    default:
-        throw msgpack::parse_error("parse error");
-    }
+    unpack_visit_imp(data, len, off, v);
 }
 
 namespace detail {
@@ -1547,6 +1513,7 @@ unpack_visit_imp(const char* data, size_t len, size_t& off, UnpackVisitor& v) {
 
     if(len <= noff) {
         // FIXME
+        v.insufficient_bytes(noff, noff);
         return UNPACK_CONTINUE;
     }
     detail::unpack_helper<UnpackVisitor> h(v);
@@ -1554,6 +1521,7 @@ unpack_visit_imp(const char* data, size_t len, size_t& off, UnpackVisitor& v) {
     switch (ret) {
     case UNPACK_CONTINUE:
         off = noff;
+        v.insufficient_bytes(noff, noff);
         return ret;
     case UNPACK_SUCCESS:
         off = noff;
@@ -1572,12 +1540,6 @@ unpack_imp(const char* data, std::size_t len, std::size_t& off,
            unpack_reference_func f = nullptr, void* user_data = nullptr,
            unpack_limit const& limit = unpack_limit())
 {
-    std::size_t noff = off;
-
-    if(len <= noff) {
-        // FIXME
-        return UNPACK_CONTINUE;
-    }
     create_object_visitor v(f, user_data, limit);
     v.set_zone(result_zone);
     referenced = false;
