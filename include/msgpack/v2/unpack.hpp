@@ -1140,14 +1140,9 @@ template <typename UnpackVisitorHolder, typename ReferencedBufferHook>
 inline unpack_return basic_unpacker<UnpackVisitorHolder, ReferencedBufferHook>::execute_imp()
 {
     std::size_t off = m_off;
-    unpack_return ret = context_type::execute(m_buffer, m_used, off);
-    switch(ret) {
-    case UNPACK_SUCCESS:
-    case UNPACK_CONTINUE:
-        m_off = off;
-        break;
-    default:
-        break;
+    unpack_return ret = context_type::execute(m_buffer, m_used, m_off);
+    if(m_off > off) {
+        m_parsed += m_off - off;
     }
     return ret;
 }
