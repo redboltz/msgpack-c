@@ -301,7 +301,7 @@ msgpack::object unpack(
     unpack_reference_func f = nullptr, void* user_data = nullptr, unpack_limit const& limit = unpack_limit());
 
 template <typename UnpackVisitor>
-void unpack_visit(const char* data, size_t len, size_t& off, UnpackVisitor&);
+bool unpack_visit(const char* data, size_t len, size_t& off, UnpackVisitor&);
 
 
 namespace detail {
@@ -311,6 +311,10 @@ unpack_imp(const char* data, std::size_t len, std::size_t& off,
            msgpack::zone& result_zone, msgpack::object& result, bool& referenced,
            unpack_reference_func f, void* user_data,
            unpack_limit const& limit);
+
+template <typename UnpackVisitor>
+unpack_return
+unpack_visit_imp(const char* data, size_t len, size_t& off, UnpackVisitor& v);
 
 } // detail
 
