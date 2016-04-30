@@ -39,7 +39,7 @@ struct json_visitor : msgpack::null_visitor {
         return true;
     }
     bool end_array() {
-        m_s.pop_back(); // remove the last ','
+        m_s.erase(m_s.size() - 1, 1); // remove the last ','
         m_s += "]";
         return true;
     }
