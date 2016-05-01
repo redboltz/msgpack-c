@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <sstream>
 
-struct json_visitor : msgpack::null_visitor {
+struct json_visitor : msgpack::v2::null_visitor {
     json_visitor(std::string& s):m_s(s) {}
 
     bool visit_nil() {
@@ -83,7 +83,7 @@ TEST(unpack_visitor, json)
     EXPECT_EQ("{\"key\":[42,null,true]}", json);
 }
 
-struct parse_error_check_visitor : msgpack::null_visitor {
+struct parse_error_check_visitor : msgpack::v2::null_visitor {
     parse_error_check_visitor(bool& called):m_called(called) {}
     void parse_error(size_t parsed_offset, size_t error_offset) {
         EXPECT_EQ(1, parsed_offset);
@@ -104,7 +104,7 @@ TEST(unpack_visitor, parse_error)
     EXPECT_TRUE(called);
 }
 
-struct insuf_bytes_check_visitor : msgpack::null_visitor {
+struct insuf_bytes_check_visitor : msgpack::v2::null_visitor {
     insuf_bytes_check_visitor(bool& called):m_called(called) {}
     void insufficient_bytes(size_t parsed_offset, size_t error_offset) {
         EXPECT_EQ(2, parsed_offset);
