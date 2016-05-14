@@ -86,9 +86,9 @@ struct basic_variant :
 #if defined(_MSC_VER) && _MSC_VER < 1700
     // The following redundant functions are required to avoid MSVC
     // See https://svn.boost.org/trac/boost/ticket/592
-    basic_varinat(basic_variant const& other):base(static_cast<base&>(other)) {}
+    basic_variant(basic_variant const& other):base(static_cast<base const&>(other)) {}
     basic_variant& operator=(basic_variant const& other) {
-        *static_cast<base*>(this) = static_cast<base&>(other);
+        *static_cast<base*>(this) = static_cast<base const&>(other);
         return *this;
     }
 #endif // defined(_MSC_VER) && _MSC_VER < 1700
