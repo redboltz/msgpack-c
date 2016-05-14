@@ -82,6 +82,17 @@ struct basic_variant :
     basic_variant() {}
     template <typename T>
     basic_variant(T const& t):base(t) {}
+
+#if defined(_MSC_VER) && _MSC_VER < 1700
+    // The following redundant functions are required to avoid MSVC
+    // See https://svn.boost.org/trac/boost/ticket/592
+    basic_varinat(basic_variant const& other):base(static_cast<base&>(other)) {}
+    basic_variant& operator=(basic_variant const& other) {
+        *static_cast<base*>(this) = static_cast<base&>(other);
+        return *this;
+    }
+#endif // defined(_MSC_VER) && _MSC_VER < 1700
+
     basic_variant(char const* p):base(std::string(p)) {}
     basic_variant(char v) {
         int_init(v);
