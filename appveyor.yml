@@ -46,7 +46,7 @@ build_script:
 - cd ..
 - md build
 - cd build
-- cmake -G %msvc% %cpp11% %boost% -DCMAKE_BUILD_TYPE=Release -DMSGPACK_BOOST_DIR=C:\Libraries\\boost_1_60_0 -DGTEST_LIBRARY=%APPVEYOR_BUILD_FOLDER%\gtest-1.7.0\build\Release\gtest.lib -DGTEST_MAIN_LIBRARY=%APPVEYOR_BUILD_FOLDER%\gtest-1.7.0\build\Release\gtest_main.lib -DGTEST_INCLUDE_DIR=%APPVEYOR_BUILD_FOLDER%\gtest-1.7.0\include -DZLIB_LIBRARY=%APPVEYOR_BUILD_FOLDER%\zlib-1.2.8\build\Release\zlib.lib -DZLIB_INCLUDE_DIR=%APPVEYOR_BUILD_FOLDER%\zlib-1.2.8 -DCMAKE_CXX_FLAGS='"/D_VARIADIC_MAX=10 /EHa /clr"' ..
+- cmake -G %msvc% %cpp11% %boost% -DMSGPACK_BOOST_DIR=C:\Libraries\\boost_1_60_0 -DGTEST_LIBRARY=%APPVEYOR_BUILD_FOLDER%\gtest-1.7.0\build\Release\gtest.lib -DGTEST_MAIN_LIBRARY=%APPVEYOR_BUILD_FOLDER%\gtest-1.7.0\build\Release\gtest_main.lib -DGTEST_INCLUDE_DIR=%APPVEYOR_BUILD_FOLDER%\gtest-1.7.0\include -DZLIB_LIBRARY=%APPVEYOR_BUILD_FOLDER%\zlib-1.2.8\build\Release\zlib.lib -DZLIB_INCLUDE_DIR=%APPVEYOR_BUILD_FOLDER%\zlib-1.2.8 -DCMAKE_CXX_FLAGS='"/D_VARIADIC_MAX=10 /EHa /clr /Gm- /RTC1"' ..
 - cmake --build . --config Release
 
 test_script:
