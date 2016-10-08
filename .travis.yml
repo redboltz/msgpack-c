@@ -1,7 +1,7 @@
 language: cpp
 os:
   - linux
-  - osx_image: beta-xcode6.2
+  - osx
 cache:
   - apt
 compiler:
@@ -50,6 +50,10 @@ before_script:
  - export PATH=/usr/local/bin:$PATH && rm -rf install
 
 matrix:
+  include:
+    - os: linux
+    - os: osx
+      osx_image: beta-xcode6.2
   exclude:
     - os: osx
       compiler: gcc
