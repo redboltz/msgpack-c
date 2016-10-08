@@ -4,9 +4,12 @@ cache:
 compiler:
   - clang
   - gcc
-os:
-  - linux
-  - osx
+
+matrix:
+  include:
+    - os: linux
+    - os: osx
+      osx_image: beta-xcode6.2
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test; fi
@@ -48,10 +51,6 @@ before_script:
  - export PATH=/usr/local/bin:$PATH && rm -rf install
 
 matrix:
-  include:
-    - os: linux
-    - os: osx
-      osx_image: beta-xcode6.2
   exclude:
     - os: osx
       compiler: gcc
