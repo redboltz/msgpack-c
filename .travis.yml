@@ -4,8 +4,9 @@ cache:
 compiler:
   - clang
   - gcc
-
-
+os:
+  - linux
+  - osx
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test; fi
