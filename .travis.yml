@@ -5,11 +5,12 @@ compiler:
   - clang
   - gcc
 
+
 matrix:
   include:
-    - os: linux
     - os: osx
       osx_image: beta-xcode6.2
+    - os: linux
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test; fi
