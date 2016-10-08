@@ -1,7 +1,4 @@
 language: cpp
-os:
-  - linux
-  - osx
 cache:
   - apt
 compiler:
@@ -27,7 +24,7 @@ install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -y bzip2; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -y libc6-dbg; fi
   - wget https://github.com/google/googletest/archive/release-1.7.0.zip -O googletest-release-1.7.0.zip
-  - wget http://valgrind.org/downloads/valgrind-3.11.0.tar.bz2 && tar xjf valgrind-3.11.0.tar.bz2 && cd valgrind-3.11.0 && ./configure && make && sudo make install && cd ..
+  - wget http://valgrind.org/downloads/valgrind-3.10.1.tar.bz2 && tar xjf valgrind-3.10.1.tar.bz2 && cd valgrind-3.10.1 && ./configure && make && sudo make install && cd ..
 
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew unlink boost; fi
   - if [ "$BOOST" == "boost" ]; then wget http://sourceforge.net/projects/boost/files/boost/1.58.0/boost_1_58_0.zip && unzip -q boost_1_58_0.zip && cd boost_1_58_0 && ./bootstrap.sh && ./b2 --with-timer --with-chrono address-model="$ARCH" > /dev/null && sudo ./b2 --with-timer --with-chrono address-model="$ARCH" install > /dev/null && cd ..; fi
