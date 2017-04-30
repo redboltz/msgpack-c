@@ -202,6 +202,22 @@ TARGET_INCLUDE_DIRECTORIES (msgpackc-static
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+IF (MSGPACK_ENABLE_CXX)
+    IF (NOT CMAKE_VERSION VERSION_LESS 3.0)
+        ADD_LIBRARY (msgpackcpp INTERFACE)
+    ELSE ()
+        ADD_LIBRARY (msgpackcpp STATIC "")
+        SET_TARGET_PROPERTIES (msgpackcpp PROPERTIES LINKER_LANGUAGE CXX)
+    ENDIF ()
+
+    TARGET_INCLUDE_DIRECTORIES (msgpackcpp
+        INTERFACE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+            $<INSTALL_INTERFACE:include>
+    )
+ENDIF ()
+
 # Add alias for subdirectories
 IF (MSGPACK_ENABLE_SHARED)
     ADD_LIBRARY (MsgPack::msgpackc ALIAS msgpackc)
@@ -209,6 +225,9 @@ ELSE ()
     ADD_LIBRARY (MsgPack::msgpackc ALIAS msgpackc-static)
 ENDIF ()
 ADD_LIBRARY (MsgPack::msgpackc-static ALIAS msgpackc-static)
+IF (MSGPACK_ENABLE_CXX)
+    ADD_LIBRARY (MsgPack::msgpackcpp ALIAS msgpackcpp)
+ENDIF ()
 
 SET_TARGET_PROPERTIES (msgpackc-static PROPERTIES OUTPUT_NAME "msgpackc")
 IF (MSGPACK_ENABLE_SHARED)
@@ -267,10 +286,14 @@ IF (MSGPACK_BUILD_EXAMPLES)
     ADD_SUBDIRECTORY (example)
 ENDIF ()
 
+LIST (APPEND MSGPACK_INSTALLTARGETS msgpackc-static)
+
 IF (MSGPACK_ENABLE_SHARED)
-    SET (MSGPACK_INSTALLTARGETS msgpackc msgpackc-static)
-ELSE()
-    SET (MSGPACK_INSTALLTARGETS msgpackc-static)
+    LIST (APPEND MSGPACK_INSTALLTARGETS msgpackc)
+ENDIF ()
+
+IF (MSGPACK_ENABLE_CXX)
+    LIST (APPEND MSGPACK_INSTALLTARGETS msgpackcpp)
 ENDIF ()
 
 INSTALL (TARGETS ${MSGPACK_INSTALLTARGETS} EXPORT msgpack-targets

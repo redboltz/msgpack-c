@@ -35,9 +35,8 @@ FOREACH (source_file ${exec_PROGRAMS})
         ${source_file_we}
         ${source_file}
     )
-    TARGET_INCLUDE_DIRECTORIES (${source_file_we}
-        PRIVATE
-            $<TARGET_PROPERTY:MsgPack::msgpackc,INTERFACE_INCLUDE_DIRECTORIES>
+    TARGET_LINK_LIBRARIES (${source_file_we}
+        MsgPack::msgpackcpp
     )
     IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         SET_PROPERTY (TARGET ${source_file_we} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wall -Wextra -Werror -g -O3")
@@ -57,11 +56,8 @@ FOREACH (source_file ${with_pthread_PROGRAMS})
         ${source_file_we}
         ${source_file}
     )
-    TARGET_INCLUDE_DIRECTORIES (${source_file_we}
-        PRIVATE
-            $<TARGET_PROPERTY:MsgPack::msgpackc,INTERFACE_INCLUDE_DIRECTORIES>
-    )
     TARGET_LINK_LIBRARIES (${source_file_we}
+        MsgPack::msgpackcpp
         ${CMAKE_THREAD_LIBS_INIT}
     )
     IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -86,12 +82,9 @@ FOREACH (source_file ${with_boost_lib_PROGRAMS})
         ${source_file_we}
         ${source_file}
     )
-    TARGET_INCLUDE_DIRECTORIES (${source_file_we}
-        PRIVATE
-            $<TARGET_PROPERTY:MsgPack::msgpackc,INTERFACE_INCLUDE_DIRECTORIES>
-    )
     LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
     TARGET_LINK_LIBRARIES (${source_file_we}
+        MsgPack::msgpackcpp
         ${Boost_TIMER_LIBRARY}
         ${Boost_CHRONO_LIBRARY}
         ${Boost_SYSTEM_LIBRARY}
