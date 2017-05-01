@@ -36,7 +36,7 @@ FOREACH (source_file ${exec_PROGRAMS})
         ${source_file}
     )
     TARGET_LINK_LIBRARIES (${source_file_we}
-        MsgPack::msgpackcpp
+        MsgPack::msgpack-cpp
     )
 ENDFOREACH ()
 
@@ -47,7 +47,7 @@ FOREACH (source_file ${with_pthread_PROGRAMS})
         ${source_file}
     )
     TARGET_LINK_LIBRARIES (${source_file_we}
-        MsgPack::msgpackcpp
+        MsgPack::msgpack-cpp
         ${CMAKE_THREAD_LIBS_INIT}
     )
 ENDFOREACH ()
@@ -63,7 +63,7 @@ FOREACH (source_file ${with_boost_lib_PROGRAMS})
     )
     LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
     TARGET_LINK_LIBRARIES (${source_file_we}
-        MsgPack::msgpackcpp
+        MsgPack::msgpack-cpp
         ${Boost_TIMER_LIBRARY}
         ${Boost_CHRONO_LIBRARY}
         ${Boost_SYSTEM_LIBRARY}

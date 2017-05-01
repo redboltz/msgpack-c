@@ -12,6 +12,6 @@ FOREACH (source_file ${exec_PROGRAMS})
         ${source_file}
     )
     TARGET_LINK_LIBRARIES (${source_file_we}
-        MsgPack::msgpackcpp
+        MsgPack::msgpack-cpp
     )
 ENDFOREACH ()

@@ -75,7 +75,7 @@ FOREACH (source_file ${check_C_PROGRAMS})
             ${GTEST_INCLUDE_DIRS}
     )
     TARGET_LINK_LIBRARIES (${source_file_we}
-        MsgPack::msgpackc
+        MsgPack::msgpack-c
         ${GTEST_BOTH_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
     )
@@ -95,7 +95,7 @@ FOREACH (source_file ${check_PROGRAMS})
             ${Boost_INCLUDE_DIRS}
     )
     TARGET_LINK_LIBRARIES (${source_file_we}
-        MsgPack::msgpackcpp
+        MsgPack::msgpack-cpp
         ${GTEST_BOTH_LIBRARIES}
         ${ZLIB_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
@@ -108,6 +108,6 @@ ADD_EXECUTABLE (
     multi_file1.cpp multi_file2.cpp
 )
 TARGET_LINK_LIBRARIES (multi_file
-    MsgPack::msgpackcpp
+    MsgPack::msgpack-cpp
 )
 ADD_TEST (multi_file multi_file)

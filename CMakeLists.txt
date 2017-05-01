@@ -182,12 +182,12 @@ CONFIGURE_FILE (
 )
 
 IF (MSGPACK_ENABLE_SHARED)
-    ADD_LIBRARY (msgpackc SHARED
+    ADD_LIBRARY (msgpack-c-shared SHARED
         ${msgpackc_SOURCES}
         ${msgpackc_HEADERS}
     )
 
-    TARGET_INCLUDE_DIRECTORIES (msgpackc
+    TARGET_INCLUDE_DIRECTORIES (msgpack-c-shared
         PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
@@ -197,12 +197,12 @@ IF (MSGPACK_ENABLE_SHARED)
     )
 ENDIF ()
 
-ADD_LIBRARY (msgpackc-static STATIC
+ADD_LIBRARY (msgpack-c-static STATIC
     ${msgpackc_SOURCES}
     ${msgpackc_HEADERS}
 )
 
-TARGET_INCLUDE_DIRECTORIES (msgpackc-static
+TARGET_INCLUDE_DIRECTORIES (msgpack-c-static
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
@@ -213,13 +213,13 @@ TARGET_INCLUDE_DIRECTORIES (msgpackc-static
 
 IF (MSGPACK_ENABLE_CXX)
     IF (NOT CMAKE_VERSION VERSION_LESS 3.0)
-        ADD_LIBRARY (msgpackcpp INTERFACE)
+        ADD_LIBRARY (msgpack-cpp INTERFACE)
     ELSE ()
-        ADD_LIBRARY (msgpackcpp STATIC "")
-        SET_TARGET_PROPERTIES (msgpackcpp PROPERTIES LINKER_LANGUAGE CXX)
+        ADD_LIBRARY (msgpack-cpp STATIC "")
+        SET_TARGET_PROPERTIES (msgpack-cpp PROPERTIES LINKER_LANGUAGE CXX)
     ENDIF ()
 
-    TARGET_INCLUDE_DIRECTORIES (msgpackcpp
+    TARGET_INCLUDE_DIRECTORIES (msgpack-cpp
         INTERFACE
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
@@ -229,23 +229,24 @@ ENDIF ()
 
 # Add alias for subdirectories
 IF (MSGPACK_ENABLE_SHARED)
-    ADD_LIBRARY (MsgPack::msgpackc ALIAS msgpackc)
+    ADD_LIBRARY (MsgPack::msgpack-c ALIAS msgpack-c-shared)
 ELSE ()
-    ADD_LIBRARY (MsgPack::msgpackc ALIAS msgpackc-static)
+    ADD_LIBRARY (MsgPack::msgpack-c ALIAS msgpack-c-static)
 ENDIF ()
-ADD_LIBRARY (MsgPack::msgpackc-static ALIAS msgpackc-static)
+ADD_LIBRARY (MsgPack::msgpack-c-static ALIAS msgpack-c-static)
 IF (MSGPACK_ENABLE_CXX)
-    ADD_LIBRARY (MsgPack::msgpackcpp ALIAS msgpackcpp)
+    ADD_LIBRARY (MsgPack::msgpack-cpp ALIAS msgpack-cpp)
 ENDIF ()
 
-SET_TARGET_PROPERTIES (msgpackc-static PROPERTIES OUTPUT_NAME "msgpackc")
+SET_TARGET_PROPERTIES (msgpack-c-shared PROPERTIES OUTPUT_NAME "msgpackc")
+SET_TARGET_PROPERTIES (msgpack-c-static PROPERTIES OUTPUT_NAME "msgpackc")
 IF (MSGPACK_ENABLE_SHARED)
     IF (MSVC)
-        SET_TARGET_PROPERTIES (msgpackc PROPERTIES IMPORT_SUFFIX "_import.lib")
+        SET_TARGET_PROPERTIES (msgpack-c-shared PROPERTIES IMPORT_SUFFIX "_import.lib")
     ELSEIF (MINGW)
-        SET_TARGET_PROPERTIES (msgpackc PROPERTIES IMPORT_SUFFIX ".dll.a")
+        SET_TARGET_PROPERTIES (msgpack-c-shared PROPERTIES IMPORT_SUFFIX ".dll.a")
     ENDIF ()
-    SET_TARGET_PROPERTIES (msgpackc PROPERTIES SOVERSION 2 VERSION 2.0.0)
+    SET_TARGET_PROPERTIES (msgpack-c-shared PROPERTIES SOVERSION 2 VERSION 2.0.0)
 ENDIF ()
 
 IF (MSGPACK_BUILD_TESTS)
@@ -273,14 +274,14 @@ IF (MSGPACK_BUILD_EXAMPLES)
     ADD_SUBDIRECTORY (example)
 ENDIF ()
 
-LIST (APPEND MSGPACK_INSTALLTARGETS msgpackc-static)
+LIST (APPEND MSGPACK_INSTALLTARGETS msgpack-c-static)
 
 IF (MSGPACK_ENABLE_SHARED)
-    LIST (APPEND MSGPACK_INSTALLTARGETS msgpackc)
+    LIST (APPEND MSGPACK_INSTALLTARGETS msgpack-c-shared)
 ENDIF ()
 
 IF (MSGPACK_ENABLE_CXX)
-    LIST (APPEND MSGPACK_INSTALLTARGETS msgpackcpp)
+    LIST (APPEND MSGPACK_INSTALLTARGETS msgpack-cpp)
 ENDIF ()
 
 INSTALL (TARGETS ${MSGPACK_INSTALLTARGETS} EXPORT msgpack-targets
