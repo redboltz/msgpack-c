@@ -38,16 +38,6 @@ FOREACH (source_file ${exec_PROGRAMS})
     TARGET_LINK_LIBRARIES (${source_file_we}
         MsgPack::msgpackcpp
     )
-    IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        SET_PROPERTY (TARGET ${source_file_we} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wall -Wextra -Werror -g -O3")
-    ENDIF ()
-    IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-        IF (CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-            STRING(REGEX REPLACE "/W[0-4]" "/W3 /WX" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-        ELSE ()
-            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3 /WX")
-        ENDIF ()
-    ENDIF ()
 ENDFOREACH ()
 
 FOREACH (source_file ${with_pthread_PROGRAMS})
@@ -60,16 +50,6 @@ FOREACH (source_file ${with_pthread_PROGRAMS})
         MsgPack::msgpackcpp
         ${CMAKE_THREAD_LIBS_INIT}
     )
-    IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        SET_PROPERTY (TARGET ${source_file_we} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wall -Wextra -Werror -g -O3")
-    ENDIF ()
-    IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-        IF (CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-            STRING(REGEX REPLACE "/W[0-4]" "/W3 /WX" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-        ELSE ()
-            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3 /WX")
-        ENDIF ()
-    ENDIF ()
 ENDFOREACH ()
 
 FOREACH (source_file ${with_boost_lib_PROGRAMS})
@@ -93,21 +73,5 @@ FOREACH (source_file ${with_boost_lib_PROGRAMS})
         TARGET_LINK_LIBRARIES (${source_file_we}
             rt
         )
-    ENDIF ()
-
-    IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        SET_PROPERTY (TARGET ${source_file_we} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wall -Wextra -Werror -O3")
-    ENDIF ()
-
-    IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        SET_PROPERTY (TARGET ${source_file_we} APPEND_STRING PROPERTY COMPILE_FLAGS " -Wno-mismatched-tags")
-    ENDIF ()
-
-    IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-        IF (CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-            STRING(REGEX REPLACE "/W[0-4]" "/W3 /WX" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-        ELSE ()
-            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3 /WX")
-        ENDIF ()
     ENDIF ()
 ENDFOREACH ()
