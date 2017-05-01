@@ -95,11 +95,6 @@ IF (MSGPACK_BOOST)
    SET (Boost_USE_MULTITHREADED      ON)
    SET (Boost_USE_STATIC_RUNTIME    OFF)
    FIND_PACKAGE (Boost COMPONENTS chrono context timer system)
-   IF (Boost_INCLUDE_DIRS)
-      INCLUDE_DIRECTORIES (
-         ${Boost_INCLUDE_DIRS}
-   )
-   ENDIF ()
 ENDIF ()
 
 IF (MSGPACK_CHAR_SIGN)

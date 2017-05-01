@@ -24,6 +24,9 @@ IF (MSGPACK_USE_X3_PARSE)
             ${source_file_we}
             ${source_file}
         )
+        TARGET_INCLUDE_DIRECTORIES (${source_file_we}
+            ${Boost_INCLUDE_DIRS}
+        )
         TARGET_LINK_LIBRARIES (${source_file_we}
             MsgPack::msgpackcpp
             ${Boost_CONTEXT_LIBRARY}
