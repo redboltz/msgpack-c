@@ -100,11 +100,6 @@ IF (MSGPACK_BOOST)
          ${Boost_INCLUDE_DIRS}
    )
    ENDIF ()
-   IF (MSGPACK_BOOST_DIR)
-      INCLUDE_DIRECTORIES (
-         ${MSGPACK_BOOST_DIR}
-      )
-   ENDIF ()
 ENDIF ()
 
 IF (MSGPACK_CHAR_SIGN)
