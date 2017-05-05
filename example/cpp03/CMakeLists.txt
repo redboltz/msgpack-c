@@ -53,20 +53,16 @@ FOREACH (source_file ${with_pthread_PROGRAMS})
 ENDFOREACH ()
 
 FOREACH (source_file ${with_boost_lib_PROGRAMS})
-    INCLUDE_DIRECTORIES (
-        ${Boost_INCLUDE_DIRS}
-    )
     GET_FILENAME_COMPONENT (source_file_we ${source_file} NAME_WE)
     ADD_EXECUTABLE (
         ${source_file_we}
         ${source_file}
     )
-    LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
     TARGET_LINK_LIBRARIES (${source_file_we}
         MsgPack::msgpack-cpp
         ${Boost_TIMER_LIBRARY}
         ${Boost_CHRONO_LIBRARY}
-        ${Boost_SYSTEM_LIBRARY}
+#        ${Boost_SYSTEM_LIBRARY}
     )
     IF (NOT MSVC AND NOT APPLE)
         TARGET_LINK_LIBRARIES (${source_file_we}

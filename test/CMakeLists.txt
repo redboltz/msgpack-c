@@ -1,3 +1,6 @@
+#PROJECT (tests)
+
+FIND_PACKAGE (MsgPack REQUIRED)
 FIND_PACKAGE (GTest REQUIRED)
 FIND_PACKAGE (ZLIB REQUIRED)
 FIND_PACKAGE (Threads REQUIRED)
@@ -92,7 +95,6 @@ FOREACH (source_file ${check_PROGRAMS})
         PRIVATE
             ${GTEST_INCLUDE_DIRS}
             ${ZLIB_INCLUDE_DIRS}
-            ${Boost_INCLUDE_DIRS}
     )
     TARGET_LINK_LIBRARIES (${source_file_we}
         MsgPack::msgpack-cpp

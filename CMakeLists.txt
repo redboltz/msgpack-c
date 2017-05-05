@@ -120,7 +120,7 @@ IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" ST
 ENDIF ()
 
 IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    ADD_COMPILE_OPTIONS (-Wno-mismatched-tags)
+    ADD_COMPILE_OPTIONS (-Wno-mismatched-tags -Wno-unused-parameter)
 ENDIF ()
 
 IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
@@ -225,37 +225,23 @@ IF (MSGPACK_ENABLE_CXX)
             $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
             $<INSTALL_INTERFACE:include>
     )
+    IF (MSGPACK_BOOST)
+        TARGET_INCLUDE_DIRECTORIES (msgpack-cpp
+            INTERFACE
+                $<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>
+        )
+    ENDIF ()
 ENDIF ()
 
-# Add alias for subdirectories
-IF (MSGPACK_ENABLE_SHARED)
-    ADD_LIBRARY (MsgPack::msgpack-c ALIAS msgpack-c-shared)
-ELSE ()
-    ADD_LIBRARY (MsgPack::msgpack-c ALIAS msgpack-c-static)
-ENDIF ()
-ADD_LIBRARY (MsgPack::msgpack-c-static ALIAS msgpack-c-static)
-IF (MSGPACK_ENABLE_CXX)
-    ADD_LIBRARY (MsgPack::msgpack-cpp ALIAS msgpack-cpp)
-ENDIF ()
-
-SET_TARGET_PROPERTIES (msgpack-c-shared PROPERTIES OUTPUT_NAME "msgpackc")
 SET_TARGET_PROPERTIES (msgpack-c-static PROPERTIES OUTPUT_NAME "msgpackc")
 IF (MSGPACK_ENABLE_SHARED)
+    SET_TARGET_PROPERTIES (msgpack-c-shared PROPERTIES OUTPUT_NAME "msgpackc")
     IF (MSVC)
         SET_TARGET_PROPERTIES (msgpack-c-shared PROPERTIES IMPORT_SUFFIX "_import.lib")
     ELSEIF (MINGW)
         SET_TARGET_PROPERTIES (msgpack-c-shared PROPERTIES IMPORT_SUFFIX ".dll.a")
     ENDIF ()
     SET_TARGET_PROPERTIES (msgpack-c-shared PROPERTIES SOVERSION 2 VERSION 2.0.0)
-ENDIF ()
-
-IF (MSGPACK_BUILD_TESTS)
-    ENABLE_TESTING ()
-    # MEMORYCHECK_COMMAND_OPTIONS needs to place prior to CTEST_MEMORYCHECK_COMMAND
-    SET (MEMORYCHECK_COMMAND_OPTIONS "--leak-check=full --show-leak-kinds=definite,possible --error-exitcode=1")
-    FIND_PROGRAM(CTEST_MEMORYCHECK_COMMAND NAMES valgrind)
-    INCLUDE(Dart)
-    ADD_SUBDIRECTORY (test)
 ENDIF ()
 
 IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC90" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC10")
@@ -268,10 +254,6 @@ ENDIF ()
 
 IF (NOT DEFINED CMAKE_INSTALL_LIBDIR)
     SET(CMAKE_INSTALL_LIBDIR lib)
-ENDIF ()
-
-IF (MSGPACK_BUILD_EXAMPLES)
-    ADD_SUBDIRECTORY (example)
 ENDIF ()
 
 LIST (APPEND MSGPACK_INSTALLTARGETS msgpack-c-static)
@@ -386,3 +368,18 @@ INSTALL (
     DESTINATION
         "${CMAKE_INSTALL_CMAKEDIR}"
 )
+
+SET (MsgPack_DIR ${CMAKE_CURRENT_BINARY_DIR})
+
+IF (MSGPACK_BUILD_TESTS)
+    ENABLE_TESTING ()
+    # MEMORYCHECK_COMMAND_OPTIONS needs to place prior to CTEST_MEMORYCHECK_COMMAND
+    SET (MEMORYCHECK_COMMAND_OPTIONS "--leak-check=full --show-leak-kinds=definite,possible --error-exitcode=1")
+    FIND_PROGRAM(CTEST_MEMORYCHECK_COMMAND NAMES valgrind)
+    INCLUDE(Dart)
+    ADD_SUBDIRECTORY (test)
+ENDIF ()
+
+IF (MSGPACK_BUILD_EXAMPLES)
+    ADD_SUBDIRECTORY (example)
+ENDIF ()

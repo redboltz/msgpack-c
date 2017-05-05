@@ -24,13 +24,10 @@ IF (MSGPACK_USE_X3_PARSE)
             ${source_file_we}
             ${source_file}
         )
-        TARGET_INCLUDE_DIRECTORIES (${source_file_we}
-            ${Boost_INCLUDE_DIRS}
-        )
         TARGET_LINK_LIBRARIES (${source_file_we}
             MsgPack::msgpack-cpp
-            ${Boost_CONTEXT_LIBRARY}
-            ${Boost_SYSTEM_LIBRARY}
+#            ${Boost_CONTEXT_LIBRARY}
+#            ${Boost_SYSTEM_LIBRARY}
             ${CMAKE_THREAD_LIBS_INIT}
         )
     ENDFOREACH ()
