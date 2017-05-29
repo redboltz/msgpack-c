@@ -119,6 +119,25 @@ ELSE ()
    SET (CMAKE_CXX_FLAGS "-DMSGPACK_DEFAULT_API_VERSION=2 ${CMAKE_CXX_FLAGS}")
 ENDIF ()
 
+include(CheckCXXCompilerFlag)
+
+IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    ADD_COMPILE_OPTIONS (-Wall -Wextra -Werror -O3)
+
+    CHECK_CXX_COMPILER_FLAG (-Wno-maybe-uninitialized COMPILER_SUPPORTS_UNINITIALIZED)
+    IF (COMPILER_SUPPORTS_UNINITIALIZED)
+        ADD_COMPILE_OPTIONS (-Wno-maybe-uninitialized)
+    ENDIF ()
+ENDIF ()
+
+IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    ADD_COMPILE_OPTIONS (-Wno-mismatched-tags -Wno-unused-parameter)
+ENDIF ()
+
+IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    ADD_COMPILE_OPTIONS (/W3 /WX)
+ENDIF ()
+
 FILE (GLOB_RECURSE PREDEF_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/external/boost/predef/include/boost ${CMAKE_CURRENT_SOURCE_DIR}/external/boost/predef/include/boost/*.h)
 FOREACH (F ${PREDEF_FILES})
    SET(M "Converting ${F}")
@@ -174,12 +193,12 @@ CONFIGURE_FILE (
 )
 
 IF (MSGPACK_ENABLE_SHARED)
-    ADD_LIBRARY (msgpackc SHARED
+    ADD_LIBRARY (msgpack-c-shared SHARED
         ${msgpackc_SOURCES}
         ${msgpackc_HEADERS}
     )
 
-    TARGET_INCLUDE_DIRECTORIES (msgpackc
+    TARGET_INCLUDE_DIRECTORIES (msgpack-c-shared
         PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
@@ -189,12 +208,12 @@ IF (MSGPACK_ENABLE_SHARED)
     )
 ENDIF ()
 
-ADD_LIBRARY (msgpackc-static STATIC
+ADD_LIBRARY (msgpack-c-static STATIC
     ${msgpackc_SOURCES}
     ${msgpackc_HEADERS}
 )
 
-TARGET_INCLUDE_DIRECTORIES (msgpackc-static
+TARGET_INCLUDE_DIRECTORIES (msgpack-c-static
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
@@ -203,50 +222,37 @@ TARGET_INCLUDE_DIRECTORIES (msgpackc-static
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-IF (NOT MSGPACK_ENABLE_SHARED)
-    # Add alias for subdirectories
-    ADD_LIBRARY (msgpackc ALIAS msgpackc-static)
-ENDIF ()
-
-SET_TARGET_PROPERTIES (msgpackc-static PROPERTIES OUTPUT_NAME "msgpackc")
-IF (MSGPACK_ENABLE_SHARED)
-    IF (MSVC)
-        SET_TARGET_PROPERTIES (msgpackc PROPERTIES IMPORT_SUFFIX "_import.lib")
-    ELSEIF (MINGW)
-        SET_TARGET_PROPERTIES (msgpackc PROPERTIES IMPORT_SUFFIX ".dll.a")
-    ENDIF ()
-    SET_TARGET_PROPERTIES (msgpackc PROPERTIES SOVERSION 2 VERSION 2.0.0)
-ENDIF ()
-
-IF (MSGPACK_BUILD_TESTS)
-    ENABLE_TESTING ()
-    # MEMORYCHECK_COMMAND_OPTIONS needs to place prior to CTEST_MEMORYCHECK_COMMAND
-    SET (MEMORYCHECK_COMMAND_OPTIONS "--leak-check=full --show-leak-kinds=definite,possible --error-exitcode=1")
-    FIND_PROGRAM(CTEST_MEMORYCHECK_COMMAND NAMES valgrind)
-    INCLUDE(Dart)
-    ADD_SUBDIRECTORY (test)
-ENDIF ()
-
-IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    IF (MSGPACK_ENABLE_SHARED)
-        SET_PROPERTY (TARGET msgpackc APPEND_STRING PROPERTY COMPILE_FLAGS "-Wall -Wextra -Werror -g -O3 -DPIC")
-    ENDIF ()
-    SET_PROPERTY (TARGET msgpackc-static APPEND_STRING PROPERTY COMPILE_FLAGS "-Wall -Wextra -Werror -g -O3" )
-ENDIF ()
-
-IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    IF (MSGPACK_ENABLE_SHARED)
-        SET_PROPERTY (TARGET msgpackc APPEND_STRING PROPERTY COMPILE_FLAGS " -Wno-mismatched-tags")
-    ENDIF ()
-    SET_PROPERTY (TARGET msgpackc-static APPEND_STRING PROPERTY COMPILE_FLAGS " -Wno-mismatched-tags")
-ENDIF ()
-
-IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    IF (CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-        STRING(REGEX REPLACE "/W[0-4]" "/W3 /WX" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+IF (MSGPACK_ENABLE_CXX)
+    IF (NOT CMAKE_VERSION VERSION_LESS 3.0)
+        ADD_LIBRARY (msgpack-cpp INTERFACE)
     ELSE ()
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3 /WX")
+        ADD_LIBRARY (msgpack-cpp STATIC "")
+        SET_TARGET_PROPERTIES (msgpack-cpp PROPERTIES LINKER_LANGUAGE CXX)
     ENDIF ()
+
+    TARGET_INCLUDE_DIRECTORIES (msgpack-cpp
+        INTERFACE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+            $<INSTALL_INTERFACE:include>
+    )
+    IF (MSGPACK_BOOST)
+        TARGET_INCLUDE_DIRECTORIES (msgpack-cpp
+            INTERFACE
+                $<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>
+        )
+    ENDIF ()
+ENDIF ()
+
+SET_TARGET_PROPERTIES (msgpack-c-static PROPERTIES OUTPUT_NAME "msgpackc")
+IF (MSGPACK_ENABLE_SHARED)
+    SET_TARGET_PROPERTIES (msgpack-c-shared PROPERTIES OUTPUT_NAME "msgpackc")
+    IF (MSVC)
+        SET_TARGET_PROPERTIES (msgpack-c-shared PROPERTIES IMPORT_SUFFIX "_import.lib")
+    ELSEIF (MINGW)
+        SET_TARGET_PROPERTIES (msgpack-c-shared PROPERTIES IMPORT_SUFFIX ".dll.a")
+    ENDIF ()
+    SET_TARGET_PROPERTIES (msgpack-c-shared PROPERTIES SOVERSION 2 VERSION 2.0.0)
 ENDIF ()
 
 IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC90" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC10")
@@ -261,14 +267,14 @@ IF (NOT DEFINED CMAKE_INSTALL_LIBDIR)
     SET(CMAKE_INSTALL_LIBDIR lib)
 ENDIF ()
 
-IF (MSGPACK_BUILD_EXAMPLES)
-    ADD_SUBDIRECTORY (example)
-ENDIF ()
+LIST (APPEND MSGPACK_INSTALLTARGETS msgpack-c-static)
 
 IF (MSGPACK_ENABLE_SHARED)
-    SET (MSGPACK_INSTALLTARGETS msgpackc msgpackc-static)
-ELSE()
-    SET (MSGPACK_INSTALLTARGETS msgpackc-static)
+    LIST (APPEND MSGPACK_INSTALLTARGETS msgpack-c-shared)
+ENDIF ()
+
+IF (MSGPACK_ENABLE_CXX)
+    LIST (APPEND MSGPACK_INSTALLTARGETS msgpack-cpp)
 ENDIF ()
 
 INSTALL (TARGETS ${MSGPACK_INSTALLTARGETS} EXPORT msgpack-targets
@@ -336,33 +342,55 @@ INCLUDE (CMakePackageConfigHelpers)
 SET (CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/msgpack")
 
 WRITE_BASIC_PACKAGE_VERSION_FILE (
-    msgpack-config-version.cmake
+    MsgPackConfigVersion.cmake
     VERSION ${VERSION}
     COMPATIBILITY SameMajorVersion
 )
 
 IF (NOT CMAKE_VERSION VERSION_LESS 3.0)
     EXPORT (EXPORT msgpack-targets
-        FILE "${CMAKE_CURRENT_BINARY_DIR}/msgpack-targets.cmake"
+        NAMESPACE MsgPack::
+        FILE "${CMAKE_CURRENT_BINARY_DIR}/MsgPackTargets.cmake"
+    )
+ELSE ()
+    EXPORT (TARGETS ${MSGPACK_INSTALLTARGETS}
+        NAMESPACE MsgPack::
+        FILE "${CMAKE_CURRENT_BINARY_DIR}/MsgPackTargets.cmake"
     )
 ENDIF ()
 
-CONFIGURE_PACKAGE_CONFIG_FILE (msgpack-config.cmake.in
-    msgpack-config.cmake
+CONFIGURE_PACKAGE_CONFIG_FILE (MsgPackConfig.cmake.in
+    MsgPackConfig.cmake
     INSTALL_DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
 )
 
 INSTALL (EXPORT msgpack-targets
+        NAMESPACE MsgPack::
     FILE
-        msgpack-targets.cmake
+        MsgPackTargets.cmake
     DESTINATION
         "${CMAKE_INSTALL_CMAKEDIR}"
 )
 
 INSTALL (
     FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/msgpack-config.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/msgpack-config-version.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/MsgPackConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/MsgPackConfigVersion.cmake"
     DESTINATION
         "${CMAKE_INSTALL_CMAKEDIR}"
 )
+
+SET (MsgPack_DIR ${CMAKE_CURRENT_BINARY_DIR})
+
+IF (MSGPACK_BUILD_TESTS)
+    ENABLE_TESTING ()
+    # MEMORYCHECK_COMMAND_OPTIONS needs to place prior to CTEST_MEMORYCHECK_COMMAND
+    SET (MEMORYCHECK_COMMAND_OPTIONS "--leak-check=full --show-leak-kinds=definite,possible --error-exitcode=1")
+    FIND_PROGRAM(CTEST_MEMORYCHECK_COMMAND NAMES valgrind)
+    INCLUDE(Dart)
+    ADD_SUBDIRECTORY (test)
+ENDIF ()
+
+IF (MSGPACK_BUILD_EXAMPLES)
+    ADD_SUBDIRECTORY (example)
+ENDIF ()

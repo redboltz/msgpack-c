@@ -1,10 +1,15 @@
+#PROJECT (tests)
+
+FIND_PACKAGE (MsgPack REQUIRED)
 FIND_PACKAGE (GTest REQUIRED)
 FIND_PACKAGE (ZLIB REQUIRED)
 FIND_PACKAGE (Threads REQUIRED)
 
-INCLUDE_DIRECTORIES (
-    ${GTEST_INCLUDE_DIRS}
-    ${ZLIB_INCLUDE_DIRS}
+LIST (APPEND check_C_PROGRAMS
+    fixint_c.cpp
+    msgpack_c.cpp
+    pack_unpack_c.cpp
+    streaming_c.cpp
 )
 
 LIST (APPEND check_PROGRAMS
@@ -14,12 +19,10 @@ LIST (APPEND check_PROGRAMS
     cases.cpp
     convert.cpp
     fixint.cpp
-    fixint_c.cpp
     inc_adaptor_define.cpp
     json.cpp
     limit.cpp
     msgpack_basic.cpp
-    msgpack_c.cpp
     msgpack_container.cpp
     msgpack_stream.cpp
     msgpack_tuple.cpp
@@ -27,12 +30,10 @@ LIST (APPEND check_PROGRAMS
     object.cpp
     object_with_zone.cpp
     pack_unpack.cpp
-    pack_unpack_c.cpp
     raw.cpp
     reference.cpp
     size_equal_only.cpp
     streaming.cpp
-    streaming_c.cpp
     user_class.cpp
     version.cpp
     visitor.cpp
@@ -66,41 +67,49 @@ IF (MSGPACK_CXX11)
     )
 ENDIF ()
 
+FOREACH (source_file ${check_C_PROGRAMS})
+    GET_FILENAME_COMPONENT (source_file_we ${source_file} NAME_WE)
+    ADD_EXECUTABLE (
+        ${source_file_we}
+        ${source_file}
+    )
+    TARGET_INCLUDE_DIRECTORIES (${source_file_we}
+        PRIVATE
+            ${GTEST_INCLUDE_DIRS}
+    )
+    TARGET_LINK_LIBRARIES (${source_file_we}
+        MsgPack::msgpack-c
+        ${GTEST_BOTH_LIBRARIES}
+        ${CMAKE_THREAD_LIBS_INIT}
+    )
+    ADD_TEST (${source_file_we} ${source_file_we})
+ENDFOREACH ()
+
 FOREACH (source_file ${check_PROGRAMS})
     GET_FILENAME_COMPONENT (source_file_we ${source_file} NAME_WE)
     ADD_EXECUTABLE (
         ${source_file_we}
         ${source_file}
     )
+    TARGET_INCLUDE_DIRECTORIES (${source_file_we}
+        PRIVATE
+            ${GTEST_INCLUDE_DIRS}
+            ${ZLIB_INCLUDE_DIRS}
+    )
     TARGET_LINK_LIBRARIES (${source_file_we}
-        msgpackc
+        MsgPack::msgpack-cpp
         ${GTEST_BOTH_LIBRARIES}
         ${ZLIB_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
     )
     ADD_TEST (${source_file_we} ${source_file_we})
-    IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        SET_PROPERTY (TARGET ${source_file_we} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wall -Wextra -Werror -g -O3 ")
-    ENDIF ()
-    IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        SET_PROPERTY (TARGET ${source_file_we} APPEND_STRING PROPERTY COMPILE_FLAGS " -Wno-mismatched-tags")
-    ENDIF ()
-
-    IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-        IF (CMAKE_CXX_FLAGS MATCHES "/W[0-4] /WX")
-            STRING(REGEX REPLACE "/W[0-4]" "/W3 /WX" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-        ELSE ()
-            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
-        ENDIF ()
-    ENDIF ()
 ENDFOREACH ()
 
 ADD_EXECUTABLE (
     multi_file
     multi_file1.cpp multi_file2.cpp
 )
-TARGET_INCLUDE_DIRECTORIES (multi_file
-    PRIVATE
-        $<TARGET_PROPERTY:msgpackc,INTERFACE_INCLUDE_DIRECTORIES>
+TARGET_LINK_LIBRARIES (multi_file
+    MsgPack::msgpack-cpp
 )
 ADD_TEST (multi_file multi_file)
