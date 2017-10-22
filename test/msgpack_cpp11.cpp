@@ -856,4 +856,15 @@ TEST(MSGPACK_NO_DEF_CON_ARRAY, simple_buffer)
     EXPECT_EQ(val1, val2);
 }
 
+TEST(MSGPACK_CHRONO, system_clock)
+{
+    std::chrono::system_clock::time_point val1;
+    msgpack::sbuffer sbuf;
+    msgpack::pack(sbuf, val1);
+    msgpack::object_handle oh =
+        msgpack::unpack(sbuf.data(), sbuf.size());
+    std::chrono::system_clock::time_point val2 = oh.get().as<std::chrono::system_clock::time_point>();
+    EXPECT_EQ(val1, val2);
+}
+
 #endif // !defined(MSGPACK_USE_CPP03)
