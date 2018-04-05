@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <limits>
+#include <cmath>
 
 #if defined(MSGPACK_USE_X3_PARSE)
 

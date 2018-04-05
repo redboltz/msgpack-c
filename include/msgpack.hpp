@@ -12,6 +12,8 @@
 #include "msgpack/zone.hpp"
 #include "msgpack/pack.hpp"
 #include "msgpack/unpack.hpp"
+#include "msgpack/x3_parse.hpp"
+#include "msgpack/x3_unpack.hpp"
 #include "msgpack/sbuffer.hpp"
 #include "msgpack/vrefbuffer.hpp"
 #include "msgpack/version.hpp"

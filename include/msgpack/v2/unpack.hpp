@@ -11,8 +11,8 @@
 #define MSGPACK_V2_UNPACK_HPP
 
 #include "msgpack/unpack_decl.hpp"
-#include "msgpack/v2/create_object_visitor.hpp"
-#include "msgpack/v2/parse.hpp"
+#include "msgpack/parse.hpp"
+#include "msgpack/create_object_visitor.hpp"
 
 namespace msgpack {
 
