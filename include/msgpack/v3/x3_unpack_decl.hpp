@@ -20,6 +20,12 @@ namespace msgpack {
 MSGPACK_API_VERSION_NAMESPACE(v3) {
 /// @endcond
 
+namespace detail {
+
+using v2::detail::unpack_imp;
+
+} // detail
+
 template <typename Iterator>
 msgpack::object_handle unpack(
     Iterator&& begin, Iterator&& end,

@@ -294,7 +294,7 @@ msgpack::object unpack(
 
 namespace detail {
 
-msgpack::parse_return
+parse_return
 unpack_imp(const char* data, std::size_t len, std::size_t& off,
            msgpack::zone& result_zone, msgpack::object& result, bool& referenced,
            msgpack::v2::unpack_reference_func f, void* user_data,

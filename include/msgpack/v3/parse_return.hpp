@@ -18,14 +18,13 @@ namespace msgpack {
 MSGPACK_API_VERSION_NAMESPACE(v3) {
 /// @endcond
 
-// for internal use
-typedef enum {
-    PARSE_SUCCESS              = v2::PARSE_SUCCESS,
-    PARSE_EXTRA_BYTES          = v2::PARSE_EXTRA_BYTES,
-    PARSE_CONTINUE             = v2::PARSE_CONTINUE,
-    PARSE_PARSE_ERROR          = v2::PARSE_PARSE_ERROR,
-    PARSE_STOP_VISITOR         = v2::PARSE_STOP_VISITOR
-} parse_return;
+using v2::parse_return;
+
+using v2::PARSE_SUCCESS;
+using v2::PARSE_EXTRA_BYTES;
+using v2::PARSE_CONTINUE;
+using v2::PARSE_PARSE_ERROR;
+using v2::PARSE_STOP_VISITOR;
 
 /// @cond
 }  // MSGPACK_API_VERSION_NAMESPACE(v3)

@@ -616,9 +616,9 @@ inline parse_return context<VisitorHolder>::execute(const char* data, std::size_
 /// Parsing class for a stream deserialization.
 
 template <typename VisitorHolder, typename ReferencedBufferHook>
-class parser : public detail::context<VisitorHolder> {
+class parser : public msgpack::detail::context<VisitorHolder> {
     typedef parser<VisitorHolder, ReferencedBufferHook> this_type;
-    typedef detail::context<VisitorHolder> context_type;
+    typedef msgpack::detail::context<VisitorHolder> context_type;
 public:
     /// Constructor
     /**
@@ -1012,10 +1012,10 @@ inline bool parse(const char* data, size_t len, Visitor& v) {
 namespace detail {
 
 template <typename Visitor>
-struct parse_helper : context<parse_helper<Visitor> > {
+struct parse_helper : msgpack::detail::context<parse_helper<Visitor> > {
     parse_helper(Visitor& v):m_visitor(v) {}
     parse_return execute(const char* data, std::size_t len, std::size_t& off) {
-        return context<parse_helper<Visitor> >::execute(data, len, off);
+        return msgpack::detail::context<parse_helper<Visitor> >::execute(data, len, off);
     }
     Visitor& visitor() const { return m_visitor; }
     Visitor& m_visitor;
