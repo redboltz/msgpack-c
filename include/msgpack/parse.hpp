@@ -13,5 +13,6 @@
 #include "msgpack/parse_decl.hpp"
 
 #include "msgpack/v2/parse.hpp"
+#include "msgpack/v3/parse.hpp"
 
 #endif // MSGPACK_PARSE_HPP

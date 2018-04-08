@@ -20,7 +20,8 @@ MSGPACK_API_VERSION_NAMESPACE(v3) {
 
 namespace detail {
 
-using v2::detail::context;
+template <typename VisitorHolder>
+class context;
 
 } // detail
 
@@ -29,8 +30,12 @@ using v2::parse;
 
 namespace detail {
 
-using v2::detail::parse_helper;
-using v2::detail::parse_imp;
+template <typename Visitor>
+struct parse_helper;
+
+template <typename Visitor>
+inline parse_return
+parse_imp(const char* data, size_t len, size_t& off, Visitor& v);
 
 } // detail
 

@@ -1,35 +1,28 @@
 //
 // MessagePack for C++ deserializing routine
 //
-// Copyright (C) 2016-2017 KONDO Takatoshi
+// Copyright (C) 2018 KONDO Takatoshi
 //
 //    Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //    http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef MSGPACK_V2_PARSE_HPP
-#define MSGPACK_V2_PARSE_HPP
+#ifndef MSGPACK_V3_PARSE_HPP
+#define MSGPACK_V3_PARSE_HPP
 
 #if MSGPACK_DEFAULT_API >= 2
 
 #include <cstddef>
 
-#include "msgpack/unpack_define.h"
 #include "msgpack/parse_return.hpp"
-#include "msgpack/unpack_exception.hpp"
-#include "msgpack/unpack_decl.hpp"
 
 namespace msgpack {
 
 /// @cond
-MSGPACK_API_VERSION_NAMESPACE(v2) {
+MSGPACK_API_VERSION_NAMESPACE(v3) {
 /// @endcond
 
 namespace detail {
-
-using v1::detail::fix_tag;
-using v1::detail::value;
-using v1::detail::load;
 
 template <typename VisitorHolder>
 class context {
@@ -68,7 +61,6 @@ private:
         std::size_t& off) {
         typename value<T>::type size;
         load<T>(size, load_pos);
-        ++m_current;
         if (size == 0) {
             if (!sv(size)) {
                 off = m_current - m_start;
@@ -78,7 +70,7 @@ private:
                 off = m_current - m_start;
                 return PARSE_STOP_VISITOR;
             }
-            parse_return ret = m_stack.consume(holder());
+            parse_return ret = m_stack.consume(holder(), m_current);
             if (ret != PARSE_CONTINUE) {
                 off = m_current - m_start;
                 return ret;
@@ -95,17 +87,18 @@ private:
                 return ret;
             }
         }
+        ++m_current;
         m_cs = MSGPACK_CS_HEADER;
         return PARSE_CONTINUE;
     }
 
     parse_return after_visit_proc(bool visit_result, std::size_t& off) {
-        ++m_current;
         if (!visit_result) {
             off = m_current - m_start;
             return PARSE_STOP_VISITOR;
         }
-        parse_return ret = m_stack.consume(holder());
+        parse_return ret = m_stack.consume(holder(), m_current);
+        ++m_current;
         if (ret != PARSE_CONTINUE) {
             off = m_current - m_start;
         }
@@ -171,15 +164,21 @@ private:
             assert(0);
             return PARSE_STOP_VISITOR;
         }
-        parse_return consume(VisitorHolder& visitor_holder) {
+        parse_return consume(VisitorHolder& visitor_holder, char const*& current) {
             while (!m_stack.empty()) {
                 stack_elem& e = m_stack.back();
                 switch (e.m_type) {
                 case MSGPACK_CT_ARRAY_ITEM:
-                    if (!visitor_holder.visitor().end_array_item()) return PARSE_STOP_VISITOR;
+                    if (!visitor_holder.visitor().end_array_item()) {
+                        --current;
+                        return PARSE_STOP_VISITOR;
+                    }
                     if (--e.m_rest == 0)  {
                         m_stack.pop_back();
-                        if (!visitor_holder.visitor().end_array()) return PARSE_STOP_VISITOR;
+                        if (!visitor_holder.visitor().end_array()) {
+                            --current;
+                            return PARSE_STOP_VISITOR;
+                        }
                     }
                     else {
                         if (!visitor_holder.visitor().start_array_item()) return PARSE_STOP_VISITOR;
@@ -187,15 +186,24 @@ private:
                     }
                     break;
                 case MSGPACK_CT_MAP_KEY:
-                    if (!visitor_holder.visitor().end_map_key()) return PARSE_STOP_VISITOR;
+                    if (!visitor_holder.visitor().end_map_key()) {
+                        --current;
+                        return PARSE_STOP_VISITOR;
+                    }
                     if (!visitor_holder.visitor().start_map_value()) return PARSE_STOP_VISITOR;
                     e.m_type = MSGPACK_CT_MAP_VALUE;
                     return PARSE_CONTINUE;
                 case MSGPACK_CT_MAP_VALUE:
-                    if (!visitor_holder.visitor().end_map_value()) return PARSE_STOP_VISITOR;
+                    if (!visitor_holder.visitor().end_map_value()) {
+                        --current;
+                        return PARSE_STOP_VISITOR;
+                    }
                     if (--e.m_rest == 0) {
                         m_stack.pop_back();
-                        if (!visitor_holder.visitor().end_map()) return PARSE_STOP_VISITOR;
+                        if (!visitor_holder.visitor().end_map()) {
+                            --current;
+                            return PARSE_STOP_VISITOR;
+                        }
                     }
                     else {
                         e.m_type = MSGPACK_CT_MAP_KEY;
@@ -619,407 +627,6 @@ inline parse_return context<VisitorHolder>::execute(const char* data, std::size_
     return PARSE_CONTINUE;
 }
 
-} // detail
-
-
-/// Parsing class for a stream deserialization.
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-class parser : public detail::context<VisitorHolder> {
-    typedef parser<VisitorHolder, ReferencedBufferHook> this_type;
-    typedef detail::context<VisitorHolder> context_type;
-public:
-    /// Constructor
-    /**
-     * @param hook The handler that is called when buffer is allocated internally.
-     *             `hook` should be callable with char* parameter.
-     *             `parser` gives a chance to prepare finalizer.
-     *              See https://github.com/msgpack/msgpack-c/wiki/v2_0_cpp_visitor#parse-api
-     * @param initial_buffer_size The memory size to allocate when unpacker is constructed.
-     *
-     */
-    parser(ReferencedBufferHook& hook,
-           std::size_t initial_buffer_size = MSGPACK_UNPACKER_INIT_BUFFER_SIZE);
-
-#if !defined(MSGPACK_USE_CPP03)
-    parser(this_type&& other);
-    this_type& operator=(this_type&& other);
-#endif // !defined(MSGPACK_USE_CPP03)
-
-    ~parser();
-
-public:
-    /// Reserve a buffer memory.
-    /**
-     * @param size The size of allocating memory.
-     *
-     * After returning this function, buffer_capacity() returns at least 'size'.
-     * See:
-     * https://github.com/msgpack/msgpack-c/wiki/v1_1_cpp_unpacker#msgpack-controls-a-buffer
-     */
-    void reserve_buffer(std::size_t size = MSGPACK_UNPACKER_RESERVE_SIZE);
-
-    /// Get buffer pointer.
-    /**
-     * You need to care about the memory is enable between buffer() and buffer() + buffer_capacity()
-     * See:
-     * https://github.com/msgpack/msgpack-c/wiki/v1_1_cpp_unpacker#msgpack-controls-a-buffer
-     */
-    char* buffer();
-
-    /// Get buffer capacity.
-    /**
-     * @return The memory size that you can write.
-     *
-     * See:
-     * https://github.com/msgpack/msgpack-c/wiki/v1_1_cpp_unpacker#msgpack-controls-a-buffer
-     */
-    std::size_t buffer_capacity() const;
-
-    /// Notify a buffer consumed information to msgpack::unpacker.
-    /**
-     * @param size The size of memory that you consumed.
-     *
-     * After copying the data to the memory that is pointed by buffer(), you need to call the
-     * function to notify how many bytes are consumed. Then you can call next() functions.
-     *
-     * See:
-     * https://github.com/msgpack/msgpack-c/wiki/v1_1_cpp_unpacker#msgpack-controls-a-buffer
-     */
-    void buffer_consumed(std::size_t size);
-
-    /// Unpack one msgpack::object.
-    /**
-     *
-     *
-     * @return If one msgpack::object is unpacked, then return true, if msgpack::object is incomplete
-     *         and additional data is required, then return false. If data format is invalid, throw
-     *         msgpack::parse_error.
-     *
-     * See:
-     * https://github.com/msgpack/msgpack-c/wiki/v1_1_cpp_unpacker#msgpack-controls-a-buffer
-     */
-    bool next();
-
-    /// Get message size.
-    /**
-     * @return Returns parsed_size() + nonparsed_size()
-     */
-    std::size_t message_size() const;
-
-public:
-    /// Get parsed message size.
-    /**
-     * @return Parsed message size.
-     *
-     * This function is usable when non-MessagePack message follows after
-     * MessagePack message.
-     */
-    std::size_t parsed_size() const;
-
-    /// Get the address that is not parsed in the buffer.
-    /**
-     * @return Address of the buffer that is not parsed
-     *
-     * This function is usable when non-MessagePack message follows after
-     * MessagePack message.
-     */
-    char* nonparsed_buffer();
-
-    /// Get the size of the buffer that is not parsed.
-    /**
-     * @return Size of the buffer that is not parsed
-     *
-     * This function is usable when non-MessagePack message follows after
-     * MessagePack message.
-     */
-    std::size_t nonparsed_size() const;
-
-    /// Skip the specified size of non-parsed buffer.
-    /**
-     * @param size to skip
-     *
-     * Note that the `size' argument must be smaller than nonparsed_size().
-     * This function is usable when non-MessagePack message follows after
-     * MessagePack message.
-     */
-    void skip_nonparsed_buffer(std::size_t size);
-
-    /// Remove nonparsed buffer and reset the current position as a new start point.
-    /**
-     * This function is usable when non-MessagePack message follows after
-     * MessagePack message.
-     */
-    void remove_nonparsed_buffer();
-
-    void reset();
-
-protected:
-    char* get_raw_buffer() {
-        return m_buffer;
-    }
-private:
-    void expand_buffer(std::size_t size);
-    parse_return execute_imp();
-
-private:
-    char* m_buffer;
-    std::size_t m_used;
-    std::size_t m_free;
-    std::size_t m_off;
-    std::size_t m_parsed;
-    std::size_t m_initial_buffer_size;
-    ReferencedBufferHook& m_referenced_buffer_hook;
-
-#if defined(MSGPACK_USE_CPP03)
-private:
-    parser(const this_type&);
-    this_type& operator=(const this_type&);
-#else  // defined(MSGPACK_USE_CPP03)
-public:
-    parser(const this_type&) = delete;
-    this_type& operator=(const this_type&) = delete;
-#endif // defined(MSGPACK_USE_CPP03)
-};
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline parser<VisitorHolder, ReferencedBufferHook>::parser(
-    ReferencedBufferHook& hook,
-    std::size_t initial_buffer_size)
-    :m_referenced_buffer_hook(hook)
-{
-    if(initial_buffer_size < COUNTER_SIZE) {
-        initial_buffer_size = COUNTER_SIZE;
-    }
-
-    char* buffer = static_cast<char*>(::malloc(initial_buffer_size));
-    if(!buffer) {
-        throw std::bad_alloc();
-    }
-
-    m_buffer = buffer;
-    m_used = COUNTER_SIZE;
-    m_free = initial_buffer_size - m_used;
-    m_off = COUNTER_SIZE;
-    m_parsed = 0;
-    m_initial_buffer_size = initial_buffer_size;
-
-    detail::init_count(m_buffer);
-}
-
-#if !defined(MSGPACK_USE_CPP03)
-// Move constructor and move assignment operator
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline parser<VisitorHolder, ReferencedBufferHook>::parser(this_type&& other)
-    :context_type(std::move(other)),
-     m_buffer(other.m_buffer),
-     m_used(other.m_used),
-     m_free(other.m_free),
-     m_off(other.m_off),
-     m_parsed(other.m_parsed),
-     m_initial_buffer_size(other.m_initial_buffer_size),
-     m_referenced_buffer_hook(other.m_referenced_buffer_hook) {
-    other.m_buffer = MSGPACK_NULLPTR;
-    other.m_used = 0;
-    other.m_free = 0;
-    other.m_off = 0;
-    other.m_parsed = 0;
-}
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline parser<VisitorHolder, ReferencedBufferHook>& parser<VisitorHolder, ReferencedBufferHook>::operator=(this_type&& other) {
-    this->~parser();
-    new (this) this_type(std::move(other));
-    return *this;
-}
-
-#endif // !defined(MSGPACK_USE_CPP03)
-
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline parser<VisitorHolder, ReferencedBufferHook>::~parser()
-{
-    // These checks are required for move operations.
-    if (m_buffer) detail::decr_count(m_buffer);
-}
-
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline void parser<VisitorHolder, ReferencedBufferHook>::reserve_buffer(std::size_t size)
-{
-    if(m_free >= size) return;
-    expand_buffer(size);
-}
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline void parser<VisitorHolder, ReferencedBufferHook>::expand_buffer(std::size_t size)
-{
-    if(m_used == m_off && detail::get_count(m_buffer) == 1
-       && !static_cast<VisitorHolder&>(*this).visitor().referenced()) {
-        // rewind buffer
-        m_free += m_used - COUNTER_SIZE;
-        m_used = COUNTER_SIZE;
-        m_off  = COUNTER_SIZE;
-
-        if(m_free >= size) return;
-    }
-
-    if(m_off == COUNTER_SIZE) {
-        std::size_t next_size = (m_used + m_free) * 2;    // include COUNTER_SIZE
-        while(next_size < size + m_used) {
-            std::size_t tmp_next_size = next_size * 2;
-            if (tmp_next_size <= next_size) {
-                next_size = size + m_used;
-                break;
-            }
-            next_size = tmp_next_size;
-        }
-
-        char* tmp = static_cast<char*>(::realloc(m_buffer, next_size));
-        if(!tmp) {
-            throw std::bad_alloc();
-        }
-
-        m_buffer = tmp;
-        m_free = next_size - m_used;
-
-    } else {
-        std::size_t next_size = m_initial_buffer_size;  // include COUNTER_SIZE
-        std::size_t not_parsed = m_used - m_off;
-        while(next_size < size + not_parsed + COUNTER_SIZE) {
-            std::size_t tmp_next_size = next_size * 2;
-            if (tmp_next_size <= next_size) {
-                next_size = size + not_parsed + COUNTER_SIZE;
-                break;
-            }
-            next_size = tmp_next_size;
-        }
-
-        char* tmp = static_cast<char*>(::malloc(next_size));
-        if(!tmp) {
-            throw std::bad_alloc();
-        }
-
-        detail::init_count(tmp);
-
-        std::memcpy(tmp+COUNTER_SIZE, m_buffer + m_off, not_parsed);
-
-        if(static_cast<VisitorHolder&>(*this).referenced()) {
-            try {
-                m_referenced_buffer_hook(m_buffer);
-            }
-            catch (...) {
-                ::free(tmp);
-                throw;
-            }
-            static_cast<VisitorHolder&>(*this).set_referenced(false);
-        } else {
-            detail::decr_count(m_buffer);
-        }
-
-        m_buffer = tmp;
-        m_used  = not_parsed + COUNTER_SIZE;
-        m_free  = next_size - m_used;
-        m_off   = COUNTER_SIZE;
-    }
-}
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline char* parser<VisitorHolder, ReferencedBufferHook>::buffer()
-{
-    return m_buffer + m_used;
-}
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline std::size_t parser<VisitorHolder, ReferencedBufferHook>::buffer_capacity() const
-{
-    return m_free;
-}
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline void parser<VisitorHolder, ReferencedBufferHook>::buffer_consumed(std::size_t size)
-{
-    m_used += size;
-    m_free -= size;
-}
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-    inline bool parser<VisitorHolder, ReferencedBufferHook>::next()
-{
-    parse_return ret = execute_imp();
-    return ret == PARSE_SUCCESS;
-}
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline parse_return parser<VisitorHolder, ReferencedBufferHook>::execute_imp()
-{
-    std::size_t off = m_off;
-    parse_return ret = context_type::execute(m_buffer, m_used, m_off);
-    if(m_off > off) {
-        m_parsed += m_off - off;
-    }
-    return ret;
-}
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline void parser<VisitorHolder, ReferencedBufferHook>::reset()
-{
-    context_type::init();
-    // don't reset referenced flag
-    m_parsed = 0;
-}
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline std::size_t parser<VisitorHolder, ReferencedBufferHook>::message_size() const
-{
-    return m_parsed - m_off + m_used;
-}
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline std::size_t parser<VisitorHolder, ReferencedBufferHook>::parsed_size() const
-{
-    return m_parsed;
-}
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline char* parser<VisitorHolder, ReferencedBufferHook>::nonparsed_buffer()
-{
-    return m_buffer + m_off;
-}
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline std::size_t parser<VisitorHolder, ReferencedBufferHook>::nonparsed_size() const
-{
-    return m_used - m_off;
-}
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline void parser<VisitorHolder, ReferencedBufferHook>::skip_nonparsed_buffer(std::size_t size)
-{
-    m_off += size;
-}
-
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline void parser<VisitorHolder, ReferencedBufferHook>::remove_nonparsed_buffer()
-{
-    m_used = m_off;
-}
-
-template <typename Visitor>
-inline bool parse(const char* data, size_t len, size_t& off, Visitor& v) {
-    parse_return ret = msgpack::detail::parse_imp(data, len, off, v);
-    return ret == PARSE_SUCCESS || ret == PARSE_EXTRA_BYTES;
-}
-
-template <typename Visitor>
-inline bool parse(const char* data, size_t len, Visitor& v) {
-    std::size_t off = 0;
-    return msgpack::parse(data, len, off, v);
-}
-
-namespace detail {
-
 template <typename Visitor>
 struct parse_helper : detail::context<parse_helper<Visitor> > {
     parse_helper(Visitor& v):m_visitor(v) {}
@@ -1034,7 +641,6 @@ template <typename Visitor>
 inline parse_return
 parse_imp(const char* data, size_t len, size_t& off, Visitor& v) {
     std::size_t noff = off;
-
     if(len <= noff) {
         // FIXME
         v.insufficient_bytes(noff, noff);
@@ -1042,13 +648,12 @@ parse_imp(const char* data, size_t len, size_t& off, Visitor& v) {
     }
     detail::parse_helper<Visitor> h(v);
     parse_return ret = h.execute(data, len, noff);
+    off = noff;
     switch (ret) {
     case PARSE_CONTINUE:
-        off = noff;
         v.insufficient_bytes(noff - 1, noff);
         return ret;
     case PARSE_SUCCESS:
-        off = noff;
         if(noff < len) {
             return PARSE_EXTRA_BYTES;
         }
@@ -1060,13 +665,12 @@ parse_imp(const char* data, size_t len, size_t& off, Visitor& v) {
 
 } // detail
 
-
 /// @cond
-}  // MSGPACK_API_VERSION_NAMESPACE(v2)
+}  // MSGPACK_API_VERSION_NAMESPACE(v3)
 /// @endcond
 
 }  // namespace msgpack
 
 #endif // MSGPACK_DEFAULT_API >= 2
 
-#endif // MSGPACK_V2_PARSE_HPP
+#endif // MSGPACK_V3_PARSE_HPP

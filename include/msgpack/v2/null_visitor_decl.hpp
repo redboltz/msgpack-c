@@ -18,7 +18,7 @@ namespace msgpack {
 MSGPACK_API_VERSION_NAMESPACE(v2) {
 /// @endcond
 
-struct null_visitorl;
+struct null_visitor;
 
 /// @cond
 }  // MSGPACK_API_VERSION_NAMESPACE(v2)

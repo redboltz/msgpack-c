@@ -11,6 +11,8 @@
 #include "msgpack/iterator.hpp"
 #include "msgpack/zone.hpp"
 #include "msgpack/pack.hpp"
+#include "msgpack/null_visitor.hpp"
+#include "msgpack/parse.hpp"
 #include "msgpack/unpack.hpp"
 #include "msgpack/x3_parse.hpp"
 #include "msgpack/x3_unpack.hpp"
