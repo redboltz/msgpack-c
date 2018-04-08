@@ -153,7 +153,7 @@ inline msgpack::object_handle unpack(
     msgpack::unique_ptr<msgpack::zone> z(new msgpack::zone);
     referenced = false;
     std::size_t noff = off;
-    parse_return ret = detail::unpack_imp(
+    msgpack::parse_return ret = detail::unpack_imp(
         data, len, noff, *z, obj, referenced, f, user_data, limit);
 
     switch(ret) {
@@ -207,7 +207,7 @@ inline void unpack(
     msgpack::unique_ptr<msgpack::zone> z(new msgpack::zone);
     referenced = false;
     std::size_t noff = off;
-    parse_return ret = detail::unpack_imp(
+    msgpack::parse_return ret = detail::unpack_imp(
         data, len, noff, *z, obj, referenced, f, user_data, limit);
 
     switch(ret) {
@@ -267,7 +267,7 @@ inline msgpack::object unpack(
     msgpack::object obj;
     std::size_t noff = off;
     referenced = false;
-    parse_return ret = detail::unpack_imp(
+    msgpack::parse_return ret = detail::unpack_imp(
         data, len, noff, z, obj, referenced, f, user_data, limit);
 
     switch(ret) {
@@ -316,7 +316,7 @@ inline msgpack::object unpack(
 
 namespace detail {
 
-inline parse_return
+inline msgpack::parse_return
 unpack_imp(const char* data, std::size_t len, std::size_t& off,
            msgpack::zone& result_zone, msgpack::object& result, bool& referenced,
            unpack_reference_func f = MSGPACK_NULLPTR, void* user_data = MSGPACK_NULLPTR,
@@ -326,7 +326,7 @@ unpack_imp(const char* data, std::size_t len, std::size_t& off,
     v.set_zone(result_zone);
     referenced = false;
     v.set_referenced(referenced);
-    parse_return ret = parse_imp(data, len, off, v);
+    msgpack::parse_return ret = parse_imp(data, len, off, v);
     referenced = v.referenced();
     result = v.data();
     return ret;

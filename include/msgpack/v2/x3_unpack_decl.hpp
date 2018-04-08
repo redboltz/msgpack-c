@@ -13,7 +13,6 @@
 #if defined(MSGPACK_USE_X3_PARSE)
 
 #include "msgpack/versioning.hpp"
-#include "msgpack/v2/x3_unpack_decl.hpp"
 
 namespace msgpack {
 
