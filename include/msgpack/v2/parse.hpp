@@ -10,7 +10,7 @@
 #ifndef MSGPACK_V2_PARSE_HPP
 #define MSGPACK_V2_PARSE_HPP
 
-#if MSGPACK_DEFAULT_API >= 2
+#if MSGPACK_DEFAULT_API_VERSION >= 2
 
 #include <cstddef>
 
@@ -1067,6 +1067,6 @@ parse_imp(const char* data, size_t len, size_t& off, Visitor& v) {
 
 }  // namespace msgpack
 
-#endif // MSGPACK_DEFAULT_API >= 2
+#endif // MSGPACK_DEFAULT_API_VERSION >= 2
 
 #endif // MSGPACK_V2_PARSE_HPP

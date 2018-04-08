@@ -10,7 +10,7 @@
 #ifndef MSGPACK_V2_UNPACK_HPP
 #define MSGPACK_V2_UNPACK_HPP
 
-#if MSGPACK_DEFAULT_API >= 2
+#if MSGPACK_DEFAULT_API_VERSION >= 2
 
 #include "msgpack/unpack_decl.hpp"
 #include "msgpack/parse.hpp"
@@ -343,6 +343,6 @@ unpack_imp(const char* data, std::size_t len, std::size_t& off,
 
 }  // namespace msgpack
 
-#endif // MSGPACK_DEFAULT_API >= 2
+#endif // MSGPACK_DEFAULT_API_VERSION >= 2
 
 #endif // MSGPACK_V2_UNPACK_HPP
