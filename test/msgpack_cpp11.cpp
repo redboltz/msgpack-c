@@ -867,4 +867,123 @@ TEST(MSGPACK_CHRONO, system_clock)
     EXPECT_EQ(val1, val2);
 }
 
+TEST(MSGPACK_CHRONO, system_clock_32)
+{
+    std::chrono::system_clock::time_point val1(std::chrono::seconds(0x12345678L));
+    msgpack::sbuffer sbuf;
+    msgpack::pack(sbuf, val1);
+    char packed[] = {
+        static_cast<char>(0xd6),
+        static_cast<char>(-1),
+        static_cast<char>(0x12),
+        static_cast<char>(0x34),
+        static_cast<char>(0x56),
+        static_cast<char>(0x78)
+    };
+    EXPECT_EQ(memcmp(sbuf.data(), packed, sizeof(packed)), 0);
+    msgpack::object_handle oh =
+        msgpack::unpack(sbuf.data(), sbuf.size());
+    std::chrono::system_clock::time_point val2 = oh.get().as<std::chrono::system_clock::time_point>();
+    EXPECT_EQ(val1, val2);
+}
+
+TEST(MSGPACK_CHRONO, system_clock_32_max)
+{
+    std::chrono::system_clock::time_point val1(std::chrono::seconds(0xffffffffL));
+    msgpack::sbuffer sbuf;
+    msgpack::pack(sbuf, val1);
+    char packed[] = {
+        static_cast<char>(0xd6),
+        static_cast<char>(-1),
+        static_cast<char>(0xff),
+        static_cast<char>(0xff),
+        static_cast<char>(0xff),
+        static_cast<char>(0xff)
+    };
+    EXPECT_EQ(memcmp(sbuf.data(), packed, sizeof(packed)), 0);
+    msgpack::object_handle oh =
+        msgpack::unpack(sbuf.data(), sbuf.size());
+    std::chrono::system_clock::time_point val2 = oh.get().as<std::chrono::system_clock::time_point>();
+    EXPECT_EQ(val1, val2);
+}
+
+TEST(MSGPACK_CHRONO, system_clock_64)
+{
+    std::chrono::system_clock::time_point val1(std::chrono::seconds(0x31234567L));
+    val1 += std::chrono::nanoseconds(0x312345678L);
+    msgpack::sbuffer sbuf;
+    msgpack::pack(sbuf, val1);
+    msgpack::object_handle oh =
+        msgpack::unpack(sbuf.data(), sbuf.size());
+    std::chrono::system_clock::time_point val2 = oh.get().as<std::chrono::system_clock::time_point>();
+    EXPECT_EQ(val1, val2);
+}
+
+TEST(MSGPACK_CHRONO, system_clock_64_max)
+{
+    //std::chrono::system_clock::time_point val1(std::chrono::seconds(0x3fffffffL));
+    std::chrono::system_clock::time_point val1(std::chrono::seconds(0));
+    val1 += std::chrono::nanoseconds(0x3ffffffffL);
+    msgpack::sbuffer sbuf;
+    msgpack::pack(sbuf, val1);
+    char packed[] = {
+        static_cast<char>(0xd7),
+        static_cast<char>(-1),
+        static_cast<char>(0xff),
+        static_cast<char>(0xff),
+        static_cast<char>(0xff),
+        static_cast<char>(0xfc),
+        static_cast<char>(0x00),
+        static_cast<char>(0x00),
+        static_cast<char>(0x00),
+        static_cast<char>(0x00)
+    };
+    EXPECT_EQ(memcmp(sbuf.data(), packed, sizeof(packed)), 0);
+    msgpack::object_handle oh =
+        msgpack::unpack(sbuf.data(), sbuf.size());
+    std::chrono::system_clock::time_point val2 = oh.get().as<std::chrono::system_clock::time_point>();
+    EXPECT_EQ(val1, val2);
+}
+
+TEST(MSGPACK_CHRONO, system_clock_96)
+{
+    std::chrono::system_clock::time_point val1(std::chrono::seconds(0x12345678L));
+    val1 += std::chrono::nanoseconds(0x123456789abcdef0LL);
+    msgpack::sbuffer sbuf;
+    msgpack::pack(sbuf, val1);
+    msgpack::object_handle oh =
+        msgpack::unpack(sbuf.data(), sbuf.size());
+    std::chrono::system_clock::time_point val2 = oh.get().as<std::chrono::system_clock::time_point>();
+    EXPECT_EQ(val1, val2);
+}
+
+TEST(MSGPACK_CHRONO, system_clock_96_max)
+{
+    std::chrono::system_clock::time_point val1(std::chrono::seconds(0xffffffffL));
+    val1 += std::chrono::nanoseconds(0xffffffffffffffffLL);
+    msgpack::sbuffer sbuf;
+    msgpack::pack(sbuf, val1);
+    char packed[] = {
+        static_cast<char>(0xc7),
+        static_cast<char>(-1),
+        static_cast<char>(0xff),
+        static_cast<char>(0xff),
+        static_cast<char>(0xff),
+        static_cast<char>(0xff),
+        static_cast<char>(0xff),
+        static_cast<char>(0xff),
+        static_cast<char>(0xff),
+        static_cast<char>(0xff),
+        static_cast<char>(0xff),
+        static_cast<char>(0xff),
+        static_cast<char>(0xff),
+        static_cast<char>(0xff)
+    };
+    EXPECT_EQ(memcmp(sbuf.data(), packed, sizeof(packed)), 0);
+    msgpack::object_handle oh =
+        msgpack::unpack(sbuf.data(), sbuf.size());
+    std::chrono::system_clock::time_point val2 = oh.get().as<std::chrono::system_clock::time_point>();
+    EXPECT_EQ(val1, val2);
+}
+
 #endif // !defined(MSGPACK_USE_CPP03)
