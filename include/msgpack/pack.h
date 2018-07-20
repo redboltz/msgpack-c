@@ -98,6 +98,9 @@ static int msgpack_pack_bin_body(msgpack_packer* pk, const void* b, size_t l);
 static int msgpack_pack_ext(msgpack_packer* pk, size_t l, int8_t type);
 static int msgpack_pack_ext_body(msgpack_packer* pk, const void* b, size_t l);
 
+static int msgpack_pack_timestamp(msgpack_packer* pk, struct timespec time);
+static int msgpack_pack_timestamp_now(msgpack_packer* pk);
+
 MSGPACK_DLLEXPORT
 int msgpack_pack_object(msgpack_packer* pk, msgpack_object d);
 

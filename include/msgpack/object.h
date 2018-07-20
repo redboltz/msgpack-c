@@ -39,7 +39,8 @@ typedef enum {
     MSGPACK_OBJECT_ARRAY                = 0x06,
     MSGPACK_OBJECT_MAP                  = 0x07,
     MSGPACK_OBJECT_BIN                  = 0x08,
-    MSGPACK_OBJECT_EXT                  = 0x09
+    MSGPACK_OBJECT_EXT                  = 0x09,
+    MSGPACK_OBJECT_TIMESTAMP            = 0x0B
 } msgpack_object_type;
 
 
@@ -72,6 +73,11 @@ typedef struct {
     const char* ptr;
 } msgpack_object_ext;
 
+typedef struct {
+    int8_t type;
+    struct timespec timespec;
+} msgpack_object_timestamp;
+
 typedef union {
     bool boolean;
     uint64_t u64;
@@ -85,6 +91,7 @@ typedef union {
     msgpack_object_str str;
     msgpack_object_bin bin;
     msgpack_object_ext ext;
+    msgpack_object_timestamp time;
 } msgpack_object_union;
 
 typedef struct msgpack_object {
