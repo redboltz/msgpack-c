@@ -12,6 +12,7 @@
 
 #include "zone.h"
 #include <stdio.h>
+#include <time.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,8 +40,10 @@ typedef enum {
     MSGPACK_OBJECT_ARRAY                = 0x06,
     MSGPACK_OBJECT_MAP                  = 0x07,
     MSGPACK_OBJECT_BIN                  = 0x08,
-    MSGPACK_OBJECT_EXT                  = 0x09,
-    MSGPACK_OBJECT_TIMESTAMP            = 0x0B
+#ifdef TIME_UTC
+    MSGPACK_OBJECT_TIMESTAMP            = 0x0B,
+#endif
+    MSGPACK_OBJECT_EXT                  = 0x09
 } msgpack_object_type;
 
 

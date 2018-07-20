@@ -13,7 +13,6 @@
 #include "msgpack/sysdep.h"
 #include <limits.h>
 #include <string.h>
-#include <time.h>
 
 #endif /* msgpack/pack_define.h */
 

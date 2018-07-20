@@ -894,6 +894,8 @@ msgpack_pack_inline_func(_ext_body)(msgpack_pack_user x, const void* b, size_t l
  * Timestamp
  */
 
+#ifdef TIME_UTC
+
 msgpack_pack_inline_func(_timestamp)(msgpack_pack_user x, struct timespec time)
 {
     if (sizeof(time.tv_sec) < 34 || (time.tv_sec >> 34) == 0) {
@@ -925,6 +927,8 @@ msgpack_pack_inline_func(_timestamp_now)(msgpack_pack_user x)
     if (ret) {return ret;}
     return msgpack_pack_timestamp(x, time);
 }
+
+#endif
 
 #undef msgpack_pack_inline_func
 #undef msgpack_pack_user
