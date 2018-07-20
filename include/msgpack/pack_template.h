@@ -890,6 +890,46 @@ msgpack_pack_inline_func(_ext_body)(msgpack_pack_user x, const void* b, size_t l
     msgpack_pack_append_buffer(x, (const unsigned char*)b, l);
 }
 
+/*
+ * Timestamp
+ */
+
+#ifdef TIME_UTC
+
+msgpack_pack_inline_func(_timestamp)(msgpack_pack_user x, struct timespec time)
+{
+    if (sizeof(time.tv_sec) < 34 || (time.tv_sec >> 34) == 0) {
+        uint64_t data64 = ((uint64_t) time.tv_nsec << 34) | time.tv_sec;
+        if (data64 & 0xffffffff00000000L)   {
+            // timestamp 64
+            msgpack_pack_ext(x, 8, -1);
+            msgpack_pack_real_uint64(x, data64);
+        } else {
+            // timestamp 32
+            uint32_t data32 = data64;
+            msgpack_pack_ext(x, 4, -1);
+            msgpack_pack_real_uint32(x, data32);
+        }
+    } else  {
+        // timestamp 96
+        uint32_t ns = time.tv_nsec;
+        uint64_t s = time.tv_sec;
+        msgpack_pack_ext(x, 12, -1);
+        msgpack_pack_real_uint32(x, ns);
+        msgpack_pack_real_uint64(x, s);
+    }
+}
+
+msgpack_pack_inline_func(_timestamp_now)(msgpack_pack_user x)
+{
+    struct timespec time;
+    int ret = timespec_get(&time, TIME_UTC);
+    if (ret) {return ret;}
+    return msgpack_pack_timestamp(x, time);
+}
+
+#endif
+
 #undef msgpack_pack_inline_func
 #undef msgpack_pack_user
 #undef msgpack_pack_append_buffer

@@ -65,6 +65,13 @@ int msgpack_pack_object(msgpack_packer* pk, msgpack_object d)
             return msgpack_pack_bin_body(pk, d.via.bin.ptr, d.via.bin.size);
         }
 
+#ifdef TIME_UTC
+    case MSGPACK_OBJECT_TIMESTAMP:
+        {
+            return msgpack_pack_timestamp(pk, d.via.time.timespec);
+        }
+#endif
+
     case MSGPACK_OBJECT_EXT:
         {
             int ret = msgpack_pack_ext(pk, d.via.ext.size, d.via.ext.type);
