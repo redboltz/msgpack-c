@@ -896,8 +896,8 @@ msgpack_pack_inline_func(_ext_body)(msgpack_pack_user x, const void* b, size_t l
 
 msgpack_pack_inline_func(_timestamp)(msgpack_pack_user x, struct timespec time)
 {
-    if ((time.tv_sec >> 34) == 0) {
-        uint64_t data64 = (time.tv_nsec << 34) | time.tv_sec;
+    if (sizeof(time.tv_sec) < 34 || (time.tv_sec >> 34) == 0) {
+        uint64_t data64 = ((uint64_t) time.tv_nsec << 34) | time.tv_sec;
         if (data64 & 0xffffffff00000000L)   {
             // timestamp 64
             msgpack_pack_ext(x, 8, -1);
