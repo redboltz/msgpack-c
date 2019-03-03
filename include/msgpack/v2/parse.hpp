@@ -31,7 +31,7 @@ using v1::detail::fix_tag;
 using v1::detail::value;
 using v1::detail::load;
 
-template <typename VisitorHolder>
+template <typename VisitorHolder, template <class> typename Allocator>
 class context {
 public:
     context()
@@ -210,7 +210,7 @@ private:
         bool empty() const { return m_stack.empty(); }
         void clear() { m_stack.clear(); }
     private:
-        std::vector<stack_elem> m_stack;
+        std::vector<stack_elem, Allocator<stack_elem> > m_stack;
     };
 
     char const* m_start;
@@ -231,8 +231,8 @@ inline void check_ext_size<4>(std::size_t size) {
     if (size == 0xffffffff) throw msgpack::ext_size_overflow("ext size overflow");
 }
 
-template <typename VisitorHolder>
-inline parse_return context<VisitorHolder>::execute(const char* data, std::size_t len, std::size_t& off)
+template <typename VisitorHolder, template <class> typename Allocator>
+inline parse_return context<VisitorHolder, Allocator>::execute(const char* data, std::size_t len, std::size_t& off)
 {
     assert(len >= off);
 
@@ -624,29 +624,29 @@ inline parse_return context<VisitorHolder>::execute(const char* data, std::size_
 
 /// Parsing class for a stream deserialization.
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-class parser : public detail::context<VisitorHolder> {
-    typedef parser<VisitorHolder, ReferencedBufferHook> this_type;
-    typedef detail::context<VisitorHolder> context_type;
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+class basic_parser : public detail::context<VisitorHolder, Allocator> {
+    typedef basic_parser<VisitorHolder, ReferencedBufferHook, Allocator> this_type;
+    typedef detail::context<VisitorHolder, Allocator> context_type;
 public:
     /// Constructor
     /**
      * @param hook The handler that is called when buffer is allocated internally.
      *             `hook` should be callable with char* parameter.
-     *             `parser` gives a chance to prepare finalizer.
+     *             `basic_parser` gives a chance to prepare finalizer.
      *              See https://github.com/msgpack/msgpack-c/wiki/v2_0_cpp_visitor#parse-api
      * @param initial_buffer_size The memory size to allocate when unpacker is constructed.
      *
      */
-    parser(ReferencedBufferHook& hook,
+    basic_parser(ReferencedBufferHook& hook,
            std::size_t initial_buffer_size = MSGPACK_UNPACKER_INIT_BUFFER_SIZE);
 
 #if !defined(MSGPACK_USE_CPP03)
-    parser(this_type&& other);
+    basic_parser(this_type&& other);
     this_type& operator=(this_type&& other);
 #endif // !defined(MSGPACK_USE_CPP03)
 
-    ~parser();
+    ~basic_parser();
 
 public:
     /// Reserve a buffer memory.
@@ -773,17 +773,17 @@ private:
 
 #if defined(MSGPACK_USE_CPP03)
 private:
-    parser(const this_type&);
+    basic_parser(const this_type&);
     this_type& operator=(const this_type&);
 #else  // defined(MSGPACK_USE_CPP03)
 public:
-    parser(const this_type&) = delete;
+    basic_parser(const this_type&) = delete;
     this_type& operator=(const this_type&) = delete;
 #endif // defined(MSGPACK_USE_CPP03)
 };
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline parser<VisitorHolder, ReferencedBufferHook>::parser(
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+inline basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::basic_parser(
     ReferencedBufferHook& hook,
     std::size_t initial_buffer_size)
     :m_referenced_buffer_hook(hook)
@@ -810,8 +810,8 @@ inline parser<VisitorHolder, ReferencedBufferHook>::parser(
 #if !defined(MSGPACK_USE_CPP03)
 // Move constructor and move assignment operator
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline parser<VisitorHolder, ReferencedBufferHook>::parser(this_type&& other)
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+inline basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::basic_parser(this_type&& other)
     :context_type(std::move(other)),
      m_buffer(other.m_buffer),
      m_used(other.m_used),
@@ -827,9 +827,9 @@ inline parser<VisitorHolder, ReferencedBufferHook>::parser(this_type&& other)
     other.m_parsed = 0;
 }
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline parser<VisitorHolder, ReferencedBufferHook>& parser<VisitorHolder, ReferencedBufferHook>::operator=(this_type&& other) {
-    this->~parser();
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+inline basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>& basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::operator=(this_type&& other) {
+    this->~basic_parser();
     new (this) this_type(std::move(other));
     return *this;
 }
@@ -837,23 +837,23 @@ inline parser<VisitorHolder, ReferencedBufferHook>& parser<VisitorHolder, Refere
 #endif // !defined(MSGPACK_USE_CPP03)
 
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline parser<VisitorHolder, ReferencedBufferHook>::~parser()
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+inline basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::~basic_parser()
 {
     // These checks are required for move operations.
     if (m_buffer) detail::decr_count(m_buffer);
 }
 
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline void parser<VisitorHolder, ReferencedBufferHook>::reserve_buffer(std::size_t size)
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+inline void basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::reserve_buffer(std::size_t size)
 {
     if(m_free >= size) return;
     expand_buffer(size);
 }
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline void parser<VisitorHolder, ReferencedBufferHook>::expand_buffer(std::size_t size)
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+inline void basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::expand_buffer(std::size_t size)
 {
     if(m_used == m_off && detail::get_count(m_buffer) == 1
        && !static_cast<VisitorHolder&>(*this).visitor().referenced()) {
@@ -925,34 +925,34 @@ inline void parser<VisitorHolder, ReferencedBufferHook>::expand_buffer(std::size
     }
 }
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline char* parser<VisitorHolder, ReferencedBufferHook>::buffer()
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+inline char* basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::buffer()
 {
     return m_buffer + m_used;
 }
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline std::size_t parser<VisitorHolder, ReferencedBufferHook>::buffer_capacity() const
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+inline std::size_t basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::buffer_capacity() const
 {
     return m_free;
 }
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline void parser<VisitorHolder, ReferencedBufferHook>::buffer_consumed(std::size_t size)
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+inline void basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::buffer_consumed(std::size_t size)
 {
     m_used += size;
     m_free -= size;
 }
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-    inline bool parser<VisitorHolder, ReferencedBufferHook>::next()
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+    inline bool basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::next()
 {
     parse_return ret = execute_imp();
     return ret == PARSE_SUCCESS;
 }
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline parse_return parser<VisitorHolder, ReferencedBufferHook>::execute_imp()
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+inline parse_return basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::execute_imp()
 {
     std::size_t off = m_off;
     parse_return ret = context_type::execute(m_buffer, m_used, m_off);
@@ -962,75 +962,75 @@ inline parse_return parser<VisitorHolder, ReferencedBufferHook>::execute_imp()
     return ret;
 }
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline void parser<VisitorHolder, ReferencedBufferHook>::reset()
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+inline void basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::reset()
 {
     context_type::init();
     // don't reset referenced flag
     m_parsed = 0;
 }
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline std::size_t parser<VisitorHolder, ReferencedBufferHook>::message_size() const
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+inline std::size_t basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::message_size() const
 {
     return m_parsed - m_off + m_used;
 }
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline std::size_t parser<VisitorHolder, ReferencedBufferHook>::parsed_size() const
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+inline std::size_t basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::parsed_size() const
 {
     return m_parsed;
 }
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline char* parser<VisitorHolder, ReferencedBufferHook>::nonparsed_buffer()
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+inline char* basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::nonparsed_buffer()
 {
     return m_buffer + m_off;
 }
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline std::size_t parser<VisitorHolder, ReferencedBufferHook>::nonparsed_size() const
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+inline std::size_t basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::nonparsed_size() const
 {
     return m_used - m_off;
 }
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline void parser<VisitorHolder, ReferencedBufferHook>::skip_nonparsed_buffer(std::size_t size)
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+inline void basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::skip_nonparsed_buffer(std::size_t size)
 {
     m_off += size;
 }
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-inline void parser<VisitorHolder, ReferencedBufferHook>::remove_nonparsed_buffer()
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+inline void basic_parser<VisitorHolder, ReferencedBufferHook, Allocator>::remove_nonparsed_buffer()
 {
     m_used = m_off;
 }
 
-template <typename Visitor>
+template <typename Visitor, template <class> typename Allocator>
 inline bool parse(const char* data, size_t len, size_t& off, Visitor& v) {
-    parse_return ret = msgpack::detail::parse_imp(data, len, off, v);
+    parse_return ret = msgpack::detail::parse_imp<Visitor, Allocator>(data, len, off, v);
     return ret == PARSE_SUCCESS || ret == PARSE_EXTRA_BYTES;
 }
 
-template <typename Visitor>
+template <typename Visitor, template <class> typename Allocator>
 inline bool parse(const char* data, size_t len, Visitor& v) {
     std::size_t off = 0;
-    return msgpack::parse(data, len, off, v);
+    return msgpack::parse<Visitor, Allocator>(data, len, off, v);
 }
 
 namespace detail {
 
-template <typename Visitor>
-struct parse_helper : detail::context<parse_helper<Visitor> > {
+template <typename Visitor, template <class> typename Allocator>
+struct parse_helper : detail::context<parse_helper<Visitor, Allocator>, Allocator > {
     parse_helper(Visitor& v):m_visitor(v) {}
     parse_return execute(const char* data, std::size_t len, std::size_t& off) {
-        return detail::context<parse_helper<Visitor> >::execute(data, len, off);
+        return detail::context<parse_helper<Visitor, Allocator>, Allocator>::execute(data, len, off);
     }
     Visitor& visitor() const { return m_visitor; }
     Visitor& m_visitor;
 };
 
-template <typename Visitor>
+template <typename Visitor, template <class> typename Allocator>
 inline parse_return
 parse_imp(const char* data, size_t len, size_t& off, Visitor& v) {
     std::size_t noff = off;
@@ -1040,7 +1040,7 @@ parse_imp(const char* data, size_t len, size_t& off, Visitor& v) {
         v.insufficient_bytes(noff, noff);
         return PARSE_CONTINUE;
     }
-    detail::parse_helper<Visitor> h(v);
+    detail::parse_helper<Visitor, Allocator> h(v);
     parse_return ret = h.execute(data, len, noff);
     switch (ret) {
     case PARSE_CONTINUE:
@@ -1064,6 +1064,9 @@ parse_imp(const char* data, size_t len, size_t& off, Visitor& v) {
 /// @cond
 }  // MSGPACK_API_VERSION_NAMESPACE(v2)
 /// @endcond
+
+template <typename VisitorHolder, typename ReferencedBufferHook>
+using parser = basic_parser<VisitorHolder, ReferencedBufferHook, std::allocator>;
 
 }  // namespace msgpack
 

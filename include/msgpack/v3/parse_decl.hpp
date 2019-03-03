@@ -20,20 +20,20 @@ MSGPACK_API_VERSION_NAMESPACE(v3) {
 
 namespace detail {
 
-template <typename VisitorHolder>
+template <typename VisitorHolder, template <class> typename Allocator>
 class context;
 
 } // detail
 
-using v2::parser;
+using v2::basic_parser;
 using v2::parse;
 
 namespace detail {
 
-template <typename Visitor>
+template <typename Visitor, template <class> typename Allocator>
 struct parse_helper;
 
-template <typename Visitor>
+template <typename Visitor, template <class> typename Allocator = std::allocator>
 inline parse_return
 parse_imp(const char* data, size_t len, size_t& off, Visitor& v);
 

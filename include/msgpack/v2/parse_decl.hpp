@@ -20,7 +20,7 @@ MSGPACK_API_VERSION_NAMESPACE(v2) {
 
 namespace detail {
 
-template <typename VisitorHolder>
+template <typename VisitorHolder, template <class> typename Allocator>
 class context;
 
 } // detail
@@ -28,8 +28,8 @@ class context;
 
 /// Parsing class for a stream deserialization.
 
-template <typename VisitorHolder, typename ReferencedBufferHook>
-class parser;
+template <typename VisitorHolder, typename ReferencedBufferHook, template <class> typename Allocator>
+class basic_parser;
 
 
 /// Unpack msgpack formatted data via a visitor
@@ -42,7 +42,7 @@ class parser;
  * @return if unpacking process finishes without error then return true, otherwise return false.
  *
  */
-template <typename Visitor>
+template <typename Visitor, template <class> typename Allocator = std::allocator>
 bool parse(const char* data, size_t len, size_t& off, Visitor& v);
 
 
@@ -55,15 +55,15 @@ bool parse(const char* data, size_t len, size_t& off, Visitor& v);
  * @return if unpacking process finishes without error then return true, otherwise return false.
  *
  */
-template <typename Visitor>
+template <typename Visitor, template <class> typename Allocator = std::allocator>
 bool parse(const char* data, size_t len, Visitor& v);
 
 namespace detail {
 
-template <typename Visitor>
+template <typename Visitor, template <class> typename Allocator>
 struct parse_helper;
 
-template <typename Visitor>
+template <typename Visitor, template <class> typename Allocator = std::allocator>
 inline parse_return
 parse_imp(const char* data, size_t len, size_t& off, Visitor& v);
 

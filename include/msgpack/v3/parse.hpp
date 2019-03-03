@@ -24,7 +24,7 @@ MSGPACK_API_VERSION_NAMESPACE(v3) {
 
 namespace detail {
 
-template <typename VisitorHolder>
+template <typename VisitorHolder, template <class> typename Allocator>
 class context {
 public:
     context()
@@ -219,7 +219,7 @@ private:
         bool empty() const { return m_stack.empty(); }
         void clear() { m_stack.clear(); }
     private:
-        std::vector<stack_elem> m_stack;
+        std::vector<stack_elem, Allocator<stack_elem> > m_stack;
     };
 
     char const* m_start;
@@ -240,8 +240,8 @@ inline void check_ext_size<4>(std::size_t size) {
     if (size == 0xffffffff) throw msgpack::ext_size_overflow("ext size overflow");
 }
 
-template <typename VisitorHolder>
-inline parse_return context<VisitorHolder>::execute(const char* data, std::size_t len, std::size_t& off)
+template <typename VisitorHolder, template <class> typename Allocator>
+inline parse_return context<VisitorHolder, Allocator>::execute(const char* data, std::size_t len, std::size_t& off)
 {
     assert(len >= off);
 
@@ -628,17 +628,17 @@ inline parse_return context<VisitorHolder>::execute(const char* data, std::size_
     return PARSE_CONTINUE;
 }
 
-template <typename Visitor>
-struct parse_helper : detail::context<parse_helper<Visitor> > {
+template <typename Visitor, template <class> typename Allocator>
+struct parse_helper : detail::context<parse_helper<Visitor, Allocator>, Allocator> {
     parse_helper(Visitor& v):m_visitor(v) {}
     parse_return execute(const char* data, std::size_t len, std::size_t& off) {
-        return detail::context<parse_helper<Visitor> >::execute(data, len, off);
+        return detail::context<parse_helper<Visitor, Allocator>, Allocator>::execute(data, len, off);
     }
     Visitor& visitor() const { return m_visitor; }
     Visitor& m_visitor;
 };
 
-template <typename Visitor>
+template <typename Visitor, template <class> typename Allocator>
 inline parse_return
 parse_imp(const char* data, size_t len, size_t& off, Visitor& v) {
     std::size_t noff = off;
@@ -647,7 +647,7 @@ parse_imp(const char* data, size_t len, size_t& off, Visitor& v) {
         v.insufficient_bytes(noff, noff);
         return PARSE_CONTINUE;
     }
-    detail::parse_helper<Visitor> h(v);
+    detail::parse_helper<Visitor, Allocator> h(v);
     parse_return ret = h.execute(data, len, noff);
     off = noff;
     switch (ret) {
