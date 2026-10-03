@@ -28,6 +28,7 @@ LIST (APPEND check_PROGRAMS
     reference.cpp
     size_equal_only.cpp
     streaming.cpp
+    unpack_iterator.cpp
     user_class.cpp
     version.cpp
     visitor.cpp

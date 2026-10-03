@@ -296,6 +296,64 @@ msgpack::object unpack(
 
 
 /// @cond
+/// Unpack msgpack::object from an iterator range.
+/**
+ * Unpacks one msgpack::object from the byte range [begin, end).
+ * Any input iterator over byte-sized values is accepted. The range does not
+ * need to be contiguous nor random access.
+ *
+ * On success `begin` is advanced to the position just after the unpacked
+ * object, so the function can be called repeatedly to unpack consecutive
+ * objects from the same range. The range is never read beyond the end of the
+ * unpacked object, which also holds for single-pass input iterators.
+ *
+ * If the range is contiguous (a pointer, or a contiguous iterator when
+ * std::contiguous_iterator is available), the data is unpacked in place with
+ * no copy, exactly like unpack(data, len, off). Otherwise the bytes are copied
+ * into an internal buffer first, and the resulting object never references
+ * the caller's range.
+ *
+ * @param begin The beginning of the range. It is advanced past the object.
+ * @param end The end of the range.
+ * @param referenced Set to true if the unpacked object references the
+ *                   caller's range (only possible for contiguous ranges),
+ *                   otherwise false.
+ * @param f A judging function that msgpack::object refer to the buffer.
+ * @param user_data This parameter is passed to f.
+ * @param limit The size limit information of msgpack::object.
+ *
+ * @return object_handle that contains unpacked data.
+ *
+ * @throw msgpack::insufficient_bytes if the range ends before the object is
+ *        complete.
+ *
+ * On error `begin` is left unchanged for contiguous and forward (multi-pass)
+ * ranges, like `off` in unpack(data, len, off). For a single-pass input
+ * iterator the bytes already read cannot be given back; on a parse error the
+ * range has been consumed up to and including the offending byte.
+ */
+template <typename Iterator>
+msgpack::object_handle unpack(
+    Iterator& begin, Iterator end, bool& referenced,
+    unpack_reference_func f = MSGPACK_NULLPTR, void* user_data = MSGPACK_NULLPTR, unpack_limit const& limit = unpack_limit());
+
+/// Unpack msgpack::object from an iterator range.
+/**
+ * See unpack(Iterator& begin, Iterator end, bool& referenced, ...).
+ *
+ * @param begin The beginning of the range. It is advanced past the object.
+ * @param end The end of the range.
+ * @param f A judging function that msgpack::object refer to the buffer.
+ * @param user_data This parameter is passed to f.
+ * @param limit The size limit information of msgpack::object.
+ *
+ * @return object_handle that contains unpacked data.
+ */
+template <typename Iterator>
+msgpack::object_handle unpack(
+    Iterator& begin, Iterator end,
+    unpack_reference_func f = MSGPACK_NULLPTR, void* user_data = MSGPACK_NULLPTR, unpack_limit const& limit = unpack_limit());
+
 }  // MSGPACK_API_VERSION_NAMESPACE(v3)
 /// @endcond
 
